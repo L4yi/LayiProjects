@@ -1,0 +1,415 @@
+/* LANDING PAGE CSS */
+
+.background-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.background-container .content-wrapper {
+    height: 300px;
+    width: 700px;
+    background-color: var(--white-color);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    margin-top: 50px;
+
+}
+
+.background-container .content-wrapper .logo-container {
+    width: 200px;
+}
+
+.background-container .content-wrapper .logo-container img {
+    width: 100%;
+}
+
+.background-container .content-wrapper .btn-wrapper {
+    display: flex;
+    gap: 20px;
+}
+
+.background-container .content-wrapper .btn-wrapper .btn {
+    background-color: var(--secondary-color);
+    color: var(--white-color);
+    height: 60px;
+    width: 200px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-family: sub-title-font;
+    transition: all ease 0.2s;
+    -webkit-transition: all ease 0.2s;
+    -ms-transition: all ease 0.2s;
+    -o-transition: all ease 0.2s;
+    -moz-transition: all ease 0.2s;
+    margin-top: 10px;
+}
+
+.background-container .content-wrapper .btn-wrapper .sign-up-btn {
+    background-color: var(--primary-color);
+}
+
+.background-container .content-wrapper .btn-wrapper .btn:hover {
+    background-color: var(--semiblack-color);
+}
+
+@media all and (max-width:780px) {
+    .background-container .content-wrapper {
+        width: calc(100% - 80px);
+    }
+
+}
+
+@media all and (max-width:650px) {
+    .background-container .content-wrapper {
+        min-height: 300px;
+        height: auto;
+
+    }
+
+    .background-container .content-wrapper .btn-wrapper {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+
+    }
+
+    .background-container .content-wrapper .btn-wrapper .btn {
+        width: 100%;
+    }
+
+    .background-container .content-wrapper h1 {
+        font-size: 25px;
+    }
+
+}
+
+@media all and (max-width:520px) {
+    .background-container .content-wrapper {
+        width: calc(100% - 60px);
+    }
+
+}
+
+/* END OF LANDING PAGE CSS */
+
+
+
+
+/* AUTHENTICATION CSS */
+
+.auth-background {
+    height: 100%;
+    width: 100%;
+    background: url(../all-images/body-images/niit-auth-bg.jpg) no-repeat;
+    background-size: cover;
+    position: absolute;
+    background-position: 100%;
+
+}
+
+.auth-background .overlay-bg {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .4);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-background .overlay-bg .form-container {
+    height: 450px;
+    min-height: 400px;
+    width: 800px;
+    min-width: 300px;
+    background-color: var(--white-color);
+    border-radius: 10px;
+    display: flex;
+
+
+}
+
+.auth-background .overlay-bg .form-container .form-content {
+    width: 50%;
+    height: 100%;
+    border-radius: 10px 0px 0px 10px;
+    background-color: var(--white-color);
+    display: flex;
+    align-items: center;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form {
+    height: 400px;
+    padding: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+
+
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .top-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .top-container h2 {
+    font-family: sub-title-font;
+    font-size: 22px;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .top-container .icon-container {
+    display: flex;
+    gap: 20px;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .top-container .icon-container .icon {
+    height: 35px;
+    width: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100px;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container {
+    width: 100%;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .input-wrapper label {
+    font-size: 14px;
+    color: var(--black-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .input-wrapper label span {
+    color: var(--secondary-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .input-wrapper .text-field {
+    height: 50px;
+    padding: 0px 20px;
+    border-radius: 100px;
+    border: var(--gray-color) 1px solid;
+    background: var(--input-bg-color);
+    color: var(--semiblack-color);
+    -webkit-text-fill-color: var(--semiblack-color);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none !important;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .input-wrapper .text-field:focus {
+    border: 1px solid var(--primary-color);
+    background: var(--white-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .btn {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    color: var(--white-color);
+    height: 50px;
+    width: 100%;
+    padding: 0px 30px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-family: sub-title-font;
+    transition: all ease 0.2s;
+    -webkit-transition: all ease 0.2s;
+    -ms-transition: all ease 0.2s;
+    -o-transition: all ease 0.2s;
+    -moz-transition: all ease 0.2s;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .input-container .btn:hover {
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .bottom-container {
+    display: flex;
+    padding: 10px 0px;
+    justify-content: space-between;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .bottom-container .bottom-text {
+    font-size: 12px;
+    color: var(--primary-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .bottom-container .bottom-text .forgot-password {
+    color: var(--semiblack-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content {
+    background-color: var(--primary-color);
+    border-radius: 0px 10px 10px 0px;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .logo-container {
+    width: 200px;
+    padding: 20px;
+    background-color: var(--white-color);
+    border-radius: 20px;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .logo-container img {
+    width: 100%;
+    object-fit: cover;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .title {
+    text-align: center;
+    color: var(--white-color);
+
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .title h1 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .title p {
+    font-size: 14px;
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .btn {
+    background: var(--primary-color);
+    color: var(--white-color);
+    height: 50px;
+    width: fit-content;
+    padding: 0px 20px;
+    border-radius: 100px;
+    border: var(--white-color) 1px solid;
+    cursor: pointer;
+    font-family: sub-title-font;
+    transition: all ease 0.2s;
+    -webkit-transition: all ease 0.2s;
+    -ms-transition: all ease 0.2s;
+    -o-transition: all ease 0.2s;
+    -moz-transition: all ease 0.2s;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content.text-content .text-wrapper .btn:hover {
+    background: var(--white-color);
+    color: var(--primary-color);
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .alert-success {
+    background-color: #e8fff1;
+    border: #b2f0c0 2px solid;
+    color: #636364;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .alert-warning {
+    background-color: #fff6f6;
+    border: #f5c2c7 2px solid;
+    color: #636364;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 12px;
+
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .alert-success .alert-highlight {
+    color: #094381;
+    font-weight: 600;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .signin-footer {
+    font-family: body-font;
+    font-size: 12px;
+    color: var(--semiblack-color);
+    text-align: center;
+    width: 100%;
+    margin-top:-10px;
+    display: none;
+}
+
+.auth-background .overlay-bg .form-container .form-content .inner-form .signin-footer .signup-link {
+    color: var(--primary-color);
+    text-decoration: underline;
+    font-family: sub-title-font;
+    transition: color ease 0.2s;
+    -webkit-transition: color ease 0.2s;
+}
+
+@media all and (max-width:850px) {
+    .auth-background .overlay-bg .form-container {
+        width: calc(100% - 40px);
+
+    }
+
+
+}
+
+@media all and (max-width:750px) {
+    .auth-background .overlay-bg .form-container .form-content.text-content {
+        display: none;
+    }
+
+
+    .auth-background .overlay-bg .form-container .form-content {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    .auth-background .overlay-bg .form-container {
+        height: 550px;
+    }
+
+    .auth-background .overlay-bg .form-container .form-content .inner-form .signin-footer {
+        display: block;
+    }
+
+}
+
+@media all and (max-width:380px) {
+    .auth-background .overlay-bg .form-container .form-content .inner-form .top-container .icon-container {
+        display: none;
+    }
+}

@@ -1,0 +1,572 @@
+.page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.page-wrapper .container {
+    width: 1000px;
+    height: 680px;
+    background-color: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    display: flex;
+    overflow: hidden;
+}
+
+.page-wrapper .container .left-box {
+    width: 500px;
+    height: 100%;
+    background-color: #452b4f;
+    padding: 55px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+.page-wrapper .container .left-box .left-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-wrapper .container .left-box .left-header .logo {
+    font-family: Georgia, serif;
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.page-wrapper .container .left-box .left-header .subtitle {
+    font-family: body-font, sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 300;
+}
+
+.page-wrapper .container .left-box .left-graphics {
+    position: relative;
+    height: 400px;
+    width: 390px;
+}
+
+.page-wrapper .container .left-box .left-graphics .phones-display-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.page-wrapper .container .left-box .left-footer {
+    display: flex;
+    align-items: center;
+}
+
+.page-wrapper .container .left-box .left-footer .badge-container {
+    display: flex;
+    gap: 12px;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge {
+    display: flex;
+    align-items: center;
+    background-color: #000000;
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 7px;
+    width: 135px;
+    height: 42px;
+    box-sizing: border-box;
+    cursor: pointer;
+    border: 1px solid #a6a6a6;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .store-svg {
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .badge-svg-play {
+    width: 16px;
+    height: 18px;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .badge-svg-apple {
+    width: 18px;
+    height: 18px;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .store-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .store-text .store-sub {
+    font-family: body-font, sans-serif;
+    font-size: 7px;
+    color: #cccccc;
+    text-transform: uppercase;
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.page-wrapper .container .left-box .left-footer .store-badge .store-text .store-main {
+    font-family: body-font, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.page-wrapper .container .right-box {
+    width: 500px;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 55px 65px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.page-wrapper .container .right-box .right-header {
+    margin-bottom: 25px;
+}
+
+.page-wrapper .container .right-box .right-header .right-heading {
+    font-family: Georgia, serif;
+    font-size: 30px;
+    font-weight: bold;
+    color: #222222;
+    margin-bottom: 8px;
+}
+
+.page-wrapper .container .right-box .right-header .welcome-text {
+    font-family: body-font, sans-serif;
+    font-size: 13px;
+    color: #777777;
+    line-height: 1.5;
+}
+
+.page-wrapper .container .right-box .social-login-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.page-wrapper .container .right-box .social-login-container .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 48px;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    font-family: body-font, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333333;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.page-wrapper .container .right-box .social-login-container .social-btn .google-svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.page-wrapper .container .right-box .social-login-container .social-btn .facebook-icon {
+    color: #1877F2;
+    font-size: 18px;
+}
+
+.page-wrapper .container .right-box .divider-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-wrapper .container .right-box .divider-container .divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: #e8e8e8;
+}
+
+.page-wrapper .container .right-box .divider-container .divider-text {
+    padding: 0 15px;
+    color: #999999;
+    font-size: 12px;
+    font-family: body-font, sans-serif;
+}
+
+.page-wrapper .container .right-box .auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box {
+    display: flex;
+    align-items: center;
+    background-color: #F5F5F4;
+    border-radius: 12px;
+    height: 62px;
+    padding: 0 15px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #452b4f;
+    color: #ffffff;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-icon-container i {
+    font-size: 14px;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-content label {
+    font-family: title-font, sans-serif;
+    font-size: 14px;
+    color: #000000;
+    margin-bottom: 2px;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-content input {
+    font-family: subtitle-font, title-font;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333333;
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-action-container {
+    display: flex;
+    align-items: center;
+    color: #777777;
+    cursor: pointer;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+.page-wrapper .container .right-box .auth-form .input-box .input-action-container i {
+    font-size: 16px;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options .remember-me-container {
+    display: flex;
+    align-items: center;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options .remember-me-container .checkbox-input {
+    margin: 0 8px 0 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options .remember-me-container .checkbox-label {
+    font-family: body-font, sans-serif;
+    font-size: 13px;
+    color: #666666;
+    cursor: pointer;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options .forgot-link {
+    font-family: body-font, sans-serif;
+    font-size: 13px;
+    color: #555555;
+    text-decoration: underline;
+}
+
+.page-wrapper .container .right-box .auth-form .form-options .forgot-link:hover {
+    color: #452b4f;
+}
+
+.page-wrapper .container .right-box .auth-form .auth-btn {
+    width: 100%;
+    height: 50px;
+    background-color: #f07857;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: sub-title-font, sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(240, 120, 87, 0.3);
+}
+
+.page-wrapper .container .right-box .register-container {
+    text-align: center;
+}
+
+.page-wrapper .container .right-box .register-container .register-text {
+    font-family: body-font, sans-serif;
+    font-size: 13px;
+    color: #666666;
+}
+
+.page-wrapper .container .right-box .register-container .register-link {
+    font-weight: bold;
+    text-decoration: underline;
+    color: #452b4f;
+}
+
+@media (max-width: 1024px) {
+    body {
+        background-color: #ffffff;
+        display: block;
+        min-height: 100vh;
+        height: auto;
+    }
+
+    .page-wrapper {
+        display: block;
+        width: 100%;
+        height: auto;
+        padding: 0;
+    }
+
+    .page-wrapper .container {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: visible;
+    }
+
+    .page-wrapper .container .left-box {
+        width: 100%;
+        height: auto;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .page-wrapper .container .left-box .left-graphics {
+        position: relative;
+        height: 280px;
+        width: 100%;
+        max-width: 320px;
+        margin: 25px auto;
+        display: block;
+    }
+
+    .page-wrapper .container .left-box .left-graphics .phones-display-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .page-wrapper .container .left-box .left-footer {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 25px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .badge-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .page-wrapper .container .right-box {
+        width: 100%;
+        height: auto;
+        padding: 45px 20px 60px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+        background-color: #ffffff;
+    }
+    
+    .page-wrapper .container .right-box .right-header,
+    .page-wrapper .container .right-box .social-login-container,
+    .page-wrapper .container .right-box .divider-container,
+    .page-wrapper .container .right-box .login-form,
+    .page-wrapper .container .right-box .auth-form,
+    .page-wrapper .container .right-box .register-container {
+        width: 100%;
+        max-width: 380px;
+        box-sizing: border-box;
+    }
+    
+    .page-wrapper .container .right-box .right-header {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .page-wrapper .container .right-box .right-header .right-heading {
+        font-size: 26px;
+    }
+    
+    .page-wrapper .container .right-box .social-login-container {
+        margin-bottom: 15px;
+    }
+    
+    .page-wrapper .container .right-box .divider-container {
+        margin-bottom: 15px;
+    }
+    
+    .page-wrapper .container .right-box .auth-form .input-box {
+        height: 58px;
+        margin-bottom: 12px;
+    }
+    
+    .page-wrapper .container .right-box .auth-form .form-options {
+        margin-bottom: 20px;
+    }
+    
+    .page-wrapper .container .right-box .auth-form .auth-btn {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .page-wrapper .container .left-box {
+        padding: 40px 16px 30px 16px;
+    }
+
+    .page-wrapper .container .left-box .left-header {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .page-wrapper .container .left-box .left-header .logo {
+        font-size: 32px;
+        margin-bottom: 6px;
+    }
+
+    .page-wrapper .container .left-box .left-header .subtitle {
+        font-size: 14px;
+    }
+
+    .page-wrapper .container .left-box .left-graphics {
+        position: relative;
+        height: 280px;
+        width: 100%;
+        max-width: 320px;
+        margin: 15px auto 20px auto;
+        display: block;
+    }
+
+    .page-wrapper .container .left-box .left-footer {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .badge-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: nowrap;
+    }
+
+    .page-wrapper .container .right-box {
+        padding: 35px 16px 45px 16px;
+    }
+
+    .page-wrapper .container .right-box .right-header .right-heading {
+        font-size: 26px;
+    }
+
+    .page-wrapper .container .right-box .right-header .welcome-text {
+        font-size: 13px;
+    }
+
+    .page-wrapper .container .right-box .auth-form .form-options {
+        display: flex;
+        flex-direction: row !important;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .page-wrapper .container .right-box .auth-form .form-options .remember-me-container .checkbox-label,
+    .page-wrapper .container .right-box .auth-form .form-options .forgot-link {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 359px) {
+    .page-wrapper .container .left-box .left-graphics {
+        height: 240px;
+        max-width: 280px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .badge-container {
+        gap: 8px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .store-badge {
+        width: 124px;
+        height: 38px;
+        padding: 4px 8px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .store-badge .store-text .store-main {
+        font-size: 11px;
+    }
+
+    .page-wrapper .container .left-box .left-footer .store-badge .store-text .store-sub {
+        font-size: 6px;
+    }
+
+    .page-wrapper .container .right-box .auth-form .form-options .remember-me-container .checkbox-label,
+    .page-wrapper .container .right-box .auth-form .form-options .forgot-link {
+        font-size: 11px;
+    }
+}
