@@ -11,9 +11,12 @@ body {
     --semiblack-color : #444;
     --gray-color : #ccc;
     --input-bg-color: #F5F5F4;
-    --black-color: #000;
-    --success-color: #46ECD5;
+    --black-color: #252424;
+    --dark-text: #111827;
     --danger-color:#CA3519;
+    --primary-light:rgba(244, 160, 70, 0.08);
+      
+ 
 }
 
 @font-face {
