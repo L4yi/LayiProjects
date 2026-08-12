@@ -5,18 +5,24 @@ body {
 }
 
 :root {
-    --primary-color: #f4a046 ;
+    --primary-color: #f4a046;
     --secondary-color: #f07857;
     --white-color: #fff;
-    --semiblack-color : #444;
-    --gray-color : #ccc;
+    --semiblack-color: #444;
+    --gray-color: #ccc;
     --input-bg-color: #F5F5F4;
     --black-color: #252424;
     --dark-text: #111827;
-    --danger-color:#CA3519;
-    --primary-light:rgba(244, 160, 70, 0.08);
-      
- 
+    --danger-color: #CA3519;
+    --primary-light: rgba(244, 160, 70, 0.08);
+    --gray-light: #F8F8F8 ;
+
+    --bg-light: #f8fafc;
+    --border-light: #e2e8f0;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --blue-color: #f4a046;
+    --teal-color: #00d2b1;
 }
 
 @font-face {
@@ -33,7 +39,6 @@ body {
     font-family: body-font;
     src: url(Poppins/Poppins-Regular.ttf);
 }
-
 
 h1,
 h2,
