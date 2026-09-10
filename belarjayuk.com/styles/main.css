@@ -629,7 +629,8 @@
 
 
      .page-wrapper .container .right-box .auth-form .form-options {
-      
+      display: flex;
+flex-direction: row;
 
      }
 
