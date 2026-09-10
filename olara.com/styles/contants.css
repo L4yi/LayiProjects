@@ -1,0 +1,76 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    font-family: body-font;
+    background-color: #f8fafc;
+    color: var(--black-color);
+}
+
+:root {
+    --primary-color: #143526;
+    --primary-hover: #0e271c;
+    --secondary-color: #2d5a43;
+    --accent-green: #38a169;
+    --accent-green-hover: #2f855a;
+    --accent-blue: #3b82f6;
+    --warning-color: #eab308;
+    --white-color: #ffffff;
+    --black-color: #111827;
+    --semiblack-color: #374151;
+    --text-muted: #6b7280;
+    --gray-color: #e5e7eb;
+    --border-color: #e5e7eb;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #4b5563;
+    --sidebar-active-bg: #38a169;
+    --sidebar-active-text: #ffffff;
+    --dashboard-bg: #f8fafc;
+    --input-bg-color: #ffffff;
+    --input-border-color: #e2e8f0;
+    --input-focus-border: #143526;
+    --card-bg-color: #ffffff;
+    --banner-bg-color: #143526;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --alert-success-bg: #e8fff1;
+    --alert-success-border: #b2f0c0;
+    --alert-danger-bg: #fff6f6;
+    --alert-danger-border: #f5c2c7;
+}
+
+@font-face {
+    font-family: title-font;
+    src: url(Poppins/Poppins-Bold.ttf);
+}
+
+@font-face {
+    font-family: sub-title-font;
+    src: url(Poppins/Poppins-Medium.ttf);
+}
+
+@font-face {
+    font-family: body-font;
+    src: url(Poppins/Poppins-Regular.ttf);
+}
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: title-font;
+    margin: 0px;
+    padding: 0px;
+}
+
+p {
+    margin: 0px;
+    padding: 0px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}

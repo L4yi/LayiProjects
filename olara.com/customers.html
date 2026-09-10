@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Engine" content="all" />
+    <meta name="distribution" content="global" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:type" content="Website" />
+
+    <link href="all-images/icon-images/icon.png" rel="shortcut icon" type="image/png" />
+    <link href="styles/icons-1.11.3/font/bootstrap-icons.css" type="text/css" rel="stylesheet" />
+    <link href="styles/contants.css" type="text/css" rel="stylesheet" />
+    <link href="styles/main.css" type="text/css" rel="stylesheet" />
+
+    <title>TradeFlow | Customers</title>
+</head>
+
+<body>
+    <section class="dashboard-section">
+        <div class="dashboard-layout">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-top">
+                    <div class="sidebar-header">
+                        <a href="dashboard.html" class="solara-logo">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                          <span>TradeFlow</span>
+                        </a>
+                        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                            <i class="bi bi-layout-sidebar-inset"></i>
+                        </button>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <div class="nav-group-title">Main menu</div>
+                        <a href="dashboard.html" class="nav-item">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="staffs.html" class="nav-item">
+                            <i class="bi bi-person-badge"></i>
+                            <span>Staffs</span>
+                        </a>
+                        <a href="categories.html" class="nav-item">
+                            <i class="bi bi-tags"></i>
+                            <span>Categories</span>
+                        </a>
+                        <a href="products.html" class="nav-item">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Products</span>
+                        </a>
+                        <a href="customers.html" class="nav-item active">
+                            <i class="bi bi-people"></i>
+                            <span>Customers</span>
+                        </a>
+                        <a href="orders.html" class="nav-item">
+                            <i class="bi bi-cart-check"></i>
+                            <span>Orders</span>
+                        </a>
+                        <a href="transactions.html" class="nav-item">
+                            <i class="bi bi-credit-card-2-front"></i>
+                            <span>Transactions</span>
+                        </a>
+                        <a href="report.html" class="nav-item">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Report</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile-widget">
+                        <div class="user-info-row" onclick="window.location.href='profile.html'" title="View Profile">
+                            <div class="user-avatar-img" id="dashboardAvatarInitial">M</div>
+                            <div class="user-text">
+                                <span class="user-name" id="dashboardUserName">Solara User</span>
+                                <span class="user-email" id="dashboardUserEmail">user@solara.com</span>
+                            </div>
+                        </div>
+                        <button type="button" class="logout-icon-btn" onclick="logoutDashboard()" title="Sign Out">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <a href="profile.html" class="shop-btn">
+                        <div class="shop-left">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Profile</span>
+                        </div>
+                        <i class="bi bi-arrow-right-short" style="font-size: 18px;"></i>
+                    </a>
+                </div>
+            </aside>
+            <main class="main-content">
+                <header class="top-header">
+                    <h2 class="page-title">Customers</h2>
+
+                    <div class="header-search">
+                        <input type="text" class="search-input" placeholder="Search data, users, or reports" />
+                        <i class="bi bi-search search-icon"></i>
+                    </div>
+
+                    <div class="header-actions">
+                        <button type="button" class="header-icon-btn" title="Notifications">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge-dot"></span>
+                        </button>
+
+                        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                            <div class="toggle-handle">
+                                <i class="bi bi-brightness-high"></i>
+                            </div>
+                        </div>
+
+                        <div class="user-avatar" id="dashboardHeaderAvatarInitial" onclick="window.location.href='profile.html'" title="User Profile">
+                            M
+                        </div>
+                    </div>
+                </header>
+                <div class="dashboard-body">
+                    <div class="module-top-badge-wrap">
+                        <div class="module-badge-pill">
+                            <i class="bi bi-people"></i>
+                            <span>Customers</span>
+                        </div>
+                        <div class="module-breadcrumb">
+                            Users &rarr; View customer accounts, activity logs, and status.
+                        </div>
+                    </div>
+
+                    <div class="module-header-bar">
+                        <div class="header-left">
+                            <h2 class="module-main-title">All Customers</h2>
+                            <span class="module-count-subtitle">25 registered customers</span>
+                        </div>
+                        <div class="header-right">
+                            <div class="filter-select-wrap">
+                                <i class="bi bi-funnel"></i>
+                                <select class="filter-dropdown-select" title="Filter by Status">
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-add-entity">
+                                <i class="bi bi-plus-lg"></i> Add Customer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="module-table-card">
+                        <div class="table-responsive">
+                            <table class="solara-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Email Address <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Last Login <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Status <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-forest">AW</div>
+                                                <span class="cust-text">Alexander Wright</span>
+                                            </div>
+                                        </td>
+                                        <td>alexander.w@example.com</td>
+                                        <td>2026-09-02 08:30 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-pine">SM</div>
+                                                <span class="cust-text">Sophia Martinez</span>
+                                            </div>
+                                        </td>
+                                        <td>sophia.m@example.com</td>
+                                        <td>2026-09-01 04:15 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-emerald">DS</div>
+                                                <span class="cust-text">Daniel Sterling</span>
+                                            </div>
+                                        </td>
+                                        <td>daniel.s@example.com</td>
+                                        <td>2026-08-28 11:20 AM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-moss">OC</div>
+                                                <span class="cust-text">Olivia Chen</span>
+                                            </div>
+                                        </td>
+                                        <td>olivia.c@example.com</td>
+                                        <td>2026-08-31 02:40 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-sage">MJ</div>
+                                                <span class="cust-text">Marcus Johnson</span>
+                                            </div>
+                                        </td>
+                                        <td>marcus.j@example.com</td>
+                                        <td>2026-09-03 09:10 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-olive">ER</div>
+                                                <span class="cust-text">Emma Richardson</span>
+                                            </div>
+                                        </td>
+                                        <td>emma.r@example.com</td>
+                                        <td>2026-09-04 10:05 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-forest">LT</div>
+                                                <span class="cust-text">Lucas Taylor</span>
+                                            </div>
+                                        </td>
+                                        <td>lucas.t@example.com</td>
+                                        <td>2026-08-25 01:14 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-pine">AB</div>
+                                                <span class="cust-text">Amelia Brown</span>
+                                            </div>
+                                        </td>
+                                        <td>amelia.b@example.com</td>
+                                        <td>2026-08-19 06:45 PM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-emerald">NH</div>
+                                                <span class="cust-text">Noah Henderson</span>
+                                            </div>
+                                        </td>
+                                        <td>noah.h@example.com</td>
+                                        <td>2026-09-05 11:30 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-moss">IG</div>
+                                                <span class="cust-text">Isabella Garcia</span>
+                                            </div>
+                                        </td>
+                                        <td>isabella.g@example.com</td>
+                                        <td>2026-09-02 03:22 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-sage">EW</div>
+                                                <span class="cust-text">Ethan Walker</span>
+                                            </div>
+                                        </td>
+                                        <td>ethan.w@example.com</td>
+                                        <td>2026-08-30 08:50 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-olive">MA</div>
+                                                <span class="cust-text">Mia Adams</span>
+                                            </div>
+                                        </td>
+                                        <td>mia.a@example.com</td>
+                                        <td>2026-08-22 05:10 PM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-forest">BS</div>
+                                                <span class="cust-text">Benjamin Scott</span>
+                                            </div>
+                                        </td>
+                                        <td>benjamin.s@example.com</td>
+                                        <td>2026-09-06 09:40 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-pine">CE</div>
+                                                <span class="cust-text">Charlotte Evans</span>
+                                            </div>
+                                        </td>
+                                        <td>charlotte.e@example.com</td>
+                                        <td>2026-09-05 02:18 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-emerald">HC</div>
+                                                <span class="cust-text">Henry Collins</span>
+                                            </div>
+                                        </td>
+                                        <td>henry.c@example.com</td>
+                                        <td>2026-08-29 10:55 AM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-moss">AM</div>
+                                                <span class="cust-text">Ava Morgan</span>
+                                            </div>
+                                        </td>
+                                        <td>ava.m@example.com</td>
+                                        <td>2026-09-07 08:12 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-sage">JC</div>
+                                                <span class="cust-text">Jack Campbell</span>
+                                            </div>
+                                        </td>
+                                        <td>jack.c@example.com</td>
+                                        <td>2026-09-06 04:30 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-olive">CM</div>
+                                                <span class="cust-text">Chloe Mitchell</span>
+                                            </div>
+                                        </td>
+                                        <td>chloe.m@example.com</td>
+                                        <td>2026-08-27 07:25 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-forest">WR</div>
+                                                <span class="cust-text">William Reed</span>
+                                            </div>
+                                        </td>
+                                        <td>william.r@example.com</td>
+                                        <td>2026-09-04 12:44 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-pine">GT</div>
+                                                <span class="cust-text">Grace Turner</span>
+                                            </div>
+                                        </td>
+                                        <td>grace.t@example.com</td>
+                                        <td>2026-08-21 03:15 PM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-emerald">JP</div>
+                                                <span class="cust-text">James Parker</span>
+                                            </div>
+                                        </td>
+                                        <td>james.p@example.com</td>
+                                        <td>2026-09-07 11:05 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-moss">HR</div>
+                                                <span class="cust-text">Harper Ross</span>
+                                            </div>
+                                        </td>
+                                        <td>harper.r@example.com</td>
+                                        <td>2026-09-03 01:50 PM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-sage">SB</div>
+                                                <span class="cust-text">Samuel Bell</span>
+                                            </div>
+                                        </td>
+                                        <td>samuel.b@example.com</td>
+                                        <td>2026-08-26 09:35 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-olive">EH</div>
+                                                <span class="cust-text">Ella Hughes</span>
+                                            </div>
+                                        </td>
+                                        <td>ella.h@example.com</td>
+                                        <td>2026-09-08 10:20 AM</td>
+                                        <td><span class="status-badge-pill active">ACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-name-box">
+                                                <div class="cust-avatar bg-forest">LF</div>
+                                                <span class="cust-text">Leo Foster</span>
+                                            </div>
+                                        </td>
+                                        <td>leo.f@example.com</td>
+                                        <td>2026-08-24 04:10 PM</td>
+                                        <td><span class="status-badge-pill inactive">INACTIVE</span></td>
+                                        <td><button type="button" class="action-pill-btn">View</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function logoutDashboard() {
+            sessionStorage.clear();
+            window.location.href = 'sign-in.html';
+        }
+
+        function loadDashboardUser() {
+            try {
+                const raw = sessionStorage.getItem('userSignUpSession');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    const info = data.data || data;
+                    const name = info.fullName || info.name || (info.emailAddress ? info.emailAddress.split('@')[0] : 'Solara User');
+                    const email = info.emailAddress || 'user@solara.com';
+                    const initial = name.charAt(0).toUpperCase();
+
+                    const nameEl = document.getElementById('dashboardUserName');
+                    const emailEl = document.getElementById('dashboardUserEmail');
+                    const avatarEl = document.getElementById('dashboardAvatarInitial');
+                    const headerAvatarEl = document.getElementById('dashboardHeaderAvatarInitial');
+
+                    if (nameEl) nameEl.textContent = name;
+                    if (emailEl) emailEl.textContent = email;
+                    if (avatarEl) avatarEl.textContent = initial;
+                    if (headerAvatarEl) headerAvatarEl.textContent = initial;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardUser);
+        loadDashboardUser();
+    </script>
+</body>
+
+</html>

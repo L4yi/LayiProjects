@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Engine" content="all" />
+    <meta name="distribution" content="global" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:type" content="Website" />
+
+    <link href="all-images/icon-images/icon.png" rel="shortcut icon" type="image/png" />
+    <link href="styles/icons-1.11.3/font/bootstrap-icons.css" type="text/css" rel="stylesheet" />
+    <link href="styles/contants.css" type="text/css" rel="stylesheet" />
+    <link href="styles/main.css" type="text/css" rel="stylesheet" />
+
+    <title>TradeFlow | Dashboard</title>
+</head>
+
+<body>
+    <section class="dashboard-section">
+        <div class="dashboard-layout">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-top">
+                    <div class="sidebar-header">
+                        <a href="dashboard.html" class="solara-logo">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <span>TradeFlow</span>
+                        </a>
+                        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                            <i class="bi bi-layout-sidebar-inset"></i>
+                        </button>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <div class="nav-group-title">Main menu</div>
+                        <a href="dashboard.html" class="nav-item active">
+                            <i class="bi bi-house-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="staffs.html" class="nav-item">
+                            <i class="bi bi-person-badge"></i>
+                            <span>Staffs</span>
+                        </a>
+                        <a href="categories.html" class="nav-item">
+                            <i class="bi bi-tags"></i>
+                            <span>Categories</span>
+                        </a>
+                        <a href="products.html" class="nav-item">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Products</span>
+                        </a>
+                        <a href="customers.html" class="nav-item">
+                            <i class="bi bi-people"></i>
+                            <span>Customers</span>
+                        </a>
+                        <a href="orders.html" class="nav-item">
+                            <i class="bi bi-cart-check"></i>
+                            <span>Orders</span>
+                        </a>
+                        <a href="transactions.html" class="nav-item">
+                            <i class="bi bi-credit-card-2-front"></i>
+                            <span>Transactions</span>
+                        </a>
+                        <a href="report.html" class="nav-item">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Report</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile-widget">
+                        <div class="user-info-row" onclick="window.location.href='profile.html'" title="View Profile">
+                            <div class="user-avatar-img" id="dashboardAvatarInitial">M</div>
+                            <div class="user-text">
+                                <span class="user-name" id="dashboardUserName">Solara User</span>
+                                <span class="user-email" id="dashboardUserEmail">user@solara.com</span>
+                            </div>
+                        </div>
+                        <button type="button" class="logout-icon-btn" onclick="logoutDashboard()" title="Sign Out">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <a href="profile.html" class="shop-btn">
+                        <div class="shop-left">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Profile</span>
+                        </div>
+                        <i class="bi bi-arrow-right-short" style="font-size: 18px;"></i>
+                    </a>
+                </div>
+            </aside>
+            <main class="main-content">
+                <header class="top-header">
+                    <h2 class="page-title">Dashboard</h2>
+
+                    <div class="header-search">
+                        <input type="text" class="search-input" placeholder="Search data, users, or reports" />
+                        <i class="bi bi-search search-icon"></i>
+                    </div>
+
+                    <div class="header-actions">
+                        <button type="button" class="header-icon-btn" title="Notifications">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge-dot"></span>
+                        </button>
+
+                        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                            <div class="toggle-handle">
+                                <i class="bi bi-brightness-high"></i>
+                            </div>
+                        </div>
+
+                        <div class="user-avatar" id="dashboardHeaderAvatarInitial" onclick="window.location.href='profile.html'" title="User Profile">
+                            M
+                        </div>
+                    </div>
+                </header>
+                <div class="dashboard-body">
+                    <div class="metric-cards-grid">
+                        <div class="metric-card">
+                            <div class="card-top">
+                                <div class="title-group">
+                                    <h3>Total Sales</h3>
+                                    <span class="time-subtitle">Last 7 days</span>
+                                </div>
+                                <button type="button" class="menu-dots-btn">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-number">$350K</span>
+                                <span class="stat-tag">Sales</span>
+                                <span class="trend-badge trend-up">
+                                    <i class="bi bi-arrow-up-short"></i> 10.4%
+                                </span>
+                            </div>
+
+                            <div class="card-bottom">
+                                <span class="compare-text">Previous 7days <span class="val-blue">($235)</span></span>
+                                <a href="transactions.html" class="card-outline-btn">Details</a>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="card-top">
+                                <div class="title-group">
+                                    <h3>Total Orders</h3>
+                                    <span class="time-subtitle">Last 7 days</span>
+                                </div>
+                                <button type="button" class="menu-dots-btn">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                            </div>
+
+                            <div class="stat-row">
+                                <span class="stat-number">10.7K</span>
+                                <span class="stat-tag">order</span>
+                                <span class="trend-badge trend-up">
+                                    <i class="bi bi-arrow-up-short"></i> 14.4%
+                                </span>
+                            </div>
+
+                            <div class="card-bottom">
+                                <span class="compare-text">Previous 7days <span class="val-blue">(7.6k)</span></span>
+                                <a href="orders.html" class="card-outline-btn">Details</a>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="card-top">
+                                <div class="title-group">
+                                    <h3>Pending &amp; Canceled</h3>
+                                    <span class="time-subtitle">Last 7 days</span>
+                                </div>
+                                <button type="button" class="menu-dots-btn">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                            </div>
+
+                            <div class="pending-canceled-row">
+                                <div class="split-col">
+                                    <span class="col-label">Pending</span>
+                                    <div class="stat-val-group">
+                                        <span class="val-num">509</span>
+                                        <span class="sub-user-tag">user 204</span>
+                                    </div>
+                                </div>
+                                <div class="split-divider"></div>
+                                <div class="split-col">
+                                    <span class="col-label">Canceled</span>
+                                    <div class="stat-val-group">
+                                        <span class="val-num val-red">94</span>
+                                        <span class="trend-red"><i class="bi bi-arrow-down-short"></i> 14.4%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-bottom justify-end">
+                                <a href="orders.html" class="card-outline-btn">Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-main-grid">
+                        <div class="dashboard-card transaction-card">
+                            <div class="dash-card-header">
+                                <h3 class="dash-card-title">Transaction</h3>
+                                <button type="button" class="btn-filter-solid">
+                                    <i class="bi bi-filter"></i>
+                                    <span>Filter</span>
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="solara-dash-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>  Customer ID</th>
+                                            <th>Order Date</th>
+                                            <th>Status</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="col-no">1.</td>
+                                            <td class="col-cust-id">#6545</td>
+                                            <td class="col-date">01 Oct | 11:29 am</td>
+                                            <td>
+                                                <div class="dash-status-dot-cell">
+                                                    <span class="status-dot green"></span>
+                                                    <span>Paid</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-dash-amt">$64</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="col-no">2.</td>
+                                            <td class="col-cust-id">#5412</td>
+                                            <td class="col-date">01 Oct | 11:29 am</td>
+                                            <td>
+                                                <div class="dash-status-dot-cell">
+                                                    <span class="status-dot yellow"></span>
+                                                    <span>Pending</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-dash-amt">$557</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="col-no">3.</td>
+                                            <td class="col-cust-id">#6622</td>
+                                            <td class="col-date">01 Oct | 11:29 am</td>
+                                            <td>
+                                                <div class="dash-status-dot-cell">
+                                                    <span class="status-dot green"></span>
+                                                    <span>Paid</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-dash-amt">$156</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="col-no">4.</td>
+                                            <td class="col-cust-id">#6462</td>
+                                            <td class="col-date">01 Oct | 11:29 am</td>
+                                            <td>
+                                                <div class="dash-status-dot-cell">
+                                                    <span class="status-dot green"></span>
+                                                    <span>Paid</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-dash-amt">$265</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="col-no">5.</td>
+                                            <td class="col-cust-id">#6462</td>
+                                            <td class="col-date">01 Oct | 11:29 am</td>
+                                            <td>
+                                                <div class="dash-status-dot-cell">
+                                                    <span class="status-dot green"></span>
+                                                    <span>Paid</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-dash-amt">$265</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="dash-card-footer">
+                                <a href="transactions.html" class="card-outline-btn">Details</a>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card top-products-card">
+                            <div class="dash-card-header">
+                                <h3 class="dash-card-title">Top Products</h3>
+                                <a href="products.html" class="link-all-product">All product</a>
+                            </div>
+
+                            <div class="top-prod-search-wrap">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="top-prod-search-input" placeholder="Search" />
+                            </div>
+
+                            <div class="top-products-list">
+                                <div class="top-prod-item">
+                                    <div class="prod-left">
+                                        <img src="all-images/product-images/iphone-13.png" alt="Apple iPhone 13" class="top-prod-img" />
+                                        <div class="prod-text">
+                                            <span class="prod-name">Apple iPhone 13</span>
+                                            <span class="prod-item-code">Item: #FXZ-4567</span>
+                                        </div>
+                                    </div>
+                                    <span class="prod-price">$999.00</span>
+                                </div>
+
+                                <div class="top-prod-item">
+                                    <div class="prod-left">
+                                        <img src="all-images/product-images/nike-air-jordan.png" alt="Nike Air Jordan" class="top-prod-img" />
+                                        <div class="prod-text">
+                                            <span class="prod-name">Nike Air Jordan</span>
+                                            <span class="prod-item-code">Item: #FXZ-4567</span>
+                                        </div>
+                                    </div>
+                                    <span class="prod-price">$72.40</span>
+                                </div>
+
+                                <div class="top-prod-item">
+                                    <div class="prod-left">
+                                        <img src="all-images/product-images/tshirt.png" alt="T-shirt" class="top-prod-img" />
+                                        <div class="prod-text">
+                                            <span class="prod-name">T-shirt</span>
+                                            <span class="prod-item-code">Item: #FXZ-4567</span>
+                                        </div>
+                                    </div>
+                                    <span class="prod-price">$35.40</span>
+                                </div>
+
+                                <div class="top-prod-item">
+                                    <div class="prod-left">
+                                        <img src="all-images/product-images/cross-bag.png" alt="Assorted Cross Bag" class="top-prod-img" />
+                                        <div class="prod-text">
+                                            <span class="prod-name">Assorted Cross Bag</span>
+                                            <span class="prod-item-code">Item: #FXZ-4567</span>
+                                        </div>
+                                    </div>
+                                    <span class="prod-price">$80.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function logoutDashboard() {
+            sessionStorage.clear();
+            window.location.href = 'sign-in.html';
+        }
+
+        function loadDashboardUser() {
+            try {
+                const raw = sessionStorage.getItem('userSignUpSession');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    const info = data.data || data;
+                    const name = info.fullName || info.name || (info.emailAddress ? info.emailAddress.split('@')[0] : 'Solara User');
+                    const email = info.emailAddress || 'user@solara.com';
+                    const initial = name.charAt(0).toUpperCase();
+
+                    const nameEl = document.getElementById('dashboardUserName');
+                    const emailEl = document.getElementById('dashboardUserEmail');
+                    const avatarEl = document.getElementById('dashboardAvatarInitial');
+                    const headerAvatarEl = document.getElementById('dashboardHeaderAvatarInitial');
+
+                    if (nameEl) nameEl.textContent = name;
+                    if (emailEl) emailEl.textContent = email;
+                    if (avatarEl) avatarEl.textContent = initial;
+                    if (headerAvatarEl) headerAvatarEl.textContent = initial;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardUser);
+        loadDashboardUser();
+    </script>
+</body>
+
+</html>

@@ -15,6 +15,10 @@
     <link href="styles/icons-1.11.3/font/bootstrap-icons.css" type="text/css" rel="stylesheet" />
     <link href="styles/contants.css" type="text/css" rel="stylesheet" />
     <link href="styles/main.css" type="text/css" rel="stylesheet" />
+
+    <script src="js/api.js"> </script>
+    <script src="js/auth.js"> </script>
+
     <title>NIITITCORE | Sign Up</title>
 </head>
 
@@ -41,7 +45,7 @@
                                 </div>
                             </div>
                             <div class="input-container">
-                                 <div class="input-wrapper">
+                                <div class="input-wrapper">
                                     <label>Full Name <span>*</span> </label>
                                     <input type="text" class="text-field" id="fullName"
                                         placeholder="Enter Your Full Name" />
@@ -53,7 +57,7 @@
                                 </div>
                                 <div class="input-wrapper">
                                     <label>Phone Number <span>*</span> </label>
-                                    <input type="text" class="text-field" id="phone_number"
+                                    <input type="text" class="text-field" id="phoneNumber"
                                         placeholder="Enter Your Phone Number" />
                                 </div>
                                 <div class="input-wrapper">
@@ -61,13 +65,15 @@
                                     <input type="password" class="text-field" id="password"
                                         placeholder="Enter Your Password" />
                                 </div>
-                                <a href="">
-                                    <button class="btn " title="Sign Up">Sign Up</button>
-                                </a>
+
+                                <button class="btn " type="button" id="submitBtnId" title="Sign Up"
+                                    onclick="signUpHandle();">Sign
+                                    Up</button>
+
 
 
                             </div>
-                           
+
                         </div>
                     </div>
                     <div class="form-content text-content">
@@ -76,7 +82,7 @@
                                 <img src="all-images/icon-images/niit-logo.png" alt="Niit Logo">
                             </div>
                             <div class="title">
-                                <h1>Welcome to Student Portal Sign Up</h1>
+                                <h1>Welcome to Student Sign Up</h1>
                                 <p>Already have an account? </p>
                             </div>
                             <a href="sign-in.html">
