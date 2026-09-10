@@ -629,7 +629,7 @@
 
 
      .page-wrapper .container .right-box .auth-form .form-options {
-         display: none;
+      
 
      }
 
@@ -653,6 +653,17 @@
          gap: 5px;
          font-size: 10px;
           
+
+     }
+         .page-wrapper .container .right-box .auth-form .form-options .remember-me-container .checkbox-label {
+
+         font-size: 10px;
+
+     }
+
+     .page-wrapper .container .right-box .auth-form .form-options .forgot-link {
+
+         font-size: 10px;
 
      }
   }
