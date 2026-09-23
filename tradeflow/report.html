@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Engine" content="all" />
+    <meta name="distribution" content="global" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:type" content="Website" />
+
+    <link href="all-images/icon-images/icon.png" rel="shortcut icon" type="image/png" />
+    <link href="styles/icons-1.11.3/font/bootstrap-icons.css" type="text/css" rel="stylesheet" />
+    <link href="styles/contants.css" type="text/css" rel="stylesheet" />
+    <link href="styles/main.css" type="text/css" rel="stylesheet" />
+
+    <title>Solara | Report</title>
+</head>
+
+<body>
+    <section class="dashboard-section">
+        <div class="dashboard-layout">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-top">
+                    <div class="sidebar-header">
+                        <a href="dashboard.html" class="solara-logo">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <span>Solara</span>
+                        </a>
+                        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
+                            <i class="bi bi-layout-sidebar-inset"></i>
+                        </button>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <div class="nav-group-title">Main menu</div>
+                        <a href="dashboard.html" class="nav-item">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="staffs.html" class="nav-item">
+                            <i class="bi bi-person-badge"></i>
+                            <span>Staffs</span>
+                        </a>
+                        <a href="categories.html" class="nav-item">
+                            <i class="bi bi-tags"></i>
+                            <span>Categories</span>
+                        </a>
+                        <a href="products.html" class="nav-item">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Products</span>
+                        </a>
+                        <a href="customers.html" class="nav-item">
+                            <i class="bi bi-people"></i>
+                            <span>Customers</span>
+                        </a>
+                        <a href="orders.html" class="nav-item">
+                            <i class="bi bi-cart-check"></i>
+                            <span>Orders</span>
+                        </a>
+                        <a href="transactions.html" class="nav-item">
+                            <i class="bi bi-credit-card-2-front"></i>
+                            <span>Transactions</span>
+                        </a>
+                        <a href="report.html" class="nav-item active">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Report</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile-widget">
+                        <div class="user-info-row" onclick="window.location.href='profile.html'" title="View Profile">
+                            <div class="user-avatar-img" id="dashboardAvatarInitial">M</div>
+                            <div class="user-text">
+                                <span class="user-name" id="dashboardUserName">Solara User</span>
+                                <span class="user-email" id="dashboardUserEmail">user@solara.com</span>
+                            </div>
+                        </div>
+                        <button type="button" class="logout-icon-btn" onclick="logoutDashboard()" title="Sign Out">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <a href="profile.html" class="shop-btn">
+                        <div class="shop-left">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Profile</span>
+                        </div>
+                        <i class="bi bi-arrow-right-short" style="font-size: 18px;"></i>
+                    </a>
+                </div>
+            </aside>
+            <main class="main-content">
+                <header class="top-header">
+                    <h2 class="page-title">Report</h2>
+
+                    <div class="header-search">
+                        <input type="text" class="search-input" placeholder="Search data, users, or reports" />
+                        <i class="bi bi-search search-icon"></i>
+                    </div>
+
+                    <div class="header-actions">
+                        <button type="button" class="header-icon-btn" title="Notifications">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge-dot"></span>
+                        </button>
+
+                        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                            <div class="toggle-handle">
+                                <i class="bi bi-brightness-high"></i>
+                            </div>
+                        </div>
+
+                        <div class="user-avatar" id="dashboardHeaderAvatarInitial" onclick="window.location.href='profile.html'" title="User Profile">
+                            M
+                        </div>
+                    </div>
+                </header>
+                <div class="dashboard-body">
+                    <div class="module-top-badge-wrap">
+                        <div class="module-badge-pill">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Report</span>
+                        </div>
+                        <div class="module-breadcrumb">
+                            Analytics &rarr; Generate financial, operational, and customer audit reports.
+                        </div>
+                    </div>
+
+                    <div class="report-stats-grid">
+                        <div class="report-stat-box">
+                            <span class="report-label">Total Generated</span>
+                            <span class="report-val">15</span>
+                        </div>
+                        <div class="report-stat-box">
+                            <span class="report-label">Scheduled Audits</span>
+                            <span class="report-val">4</span>
+                        </div>
+                        <div class="report-stat-box">
+                            <span class="report-label">Storage Consumed</span>
+                            <span class="report-val">32.2 MB</span>
+                        </div>
+                        <div class="report-stat-box">
+                            <span class="report-label">System Health</span>
+                            <span class="report-val" style="color: #10b981;">99.9%</span>
+                        </div>
+                    </div>
+
+                    <div class="module-header-bar">
+                        <div class="header-left">
+                            <h2 class="module-main-title">All Generated Reports</h2>
+                            <span class="module-count-subtitle">15 reports generated</span>
+                        </div>
+                        <div class="header-right">
+                            <div class="filter-select-wrap">
+                                <i class="bi bi-funnel"></i>
+                                <select class="filter-dropdown-select" title="Filter by Type">
+                                    <option value="">All Types</option>
+                                    <option value="financial">Financial</option>
+                                    <option value="inventory">Inventory</option>
+                                    <option value="operations">Operations</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-add-entity">
+                                <i class="bi bi-plus-lg"></i> Generate Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="module-table-card">
+                        <div class="table-responsive">
+                            <table class="solara-data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SN <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Report Title <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Generated Date <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Status <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="col-sn">1</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Monthly Revenue & Sales Summary</span>
+                                                    <span class="report-ref">#REP-2026-09</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-09-01 08:00 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.8 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">2</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Customer Acquisition & Retention</span>
+                                                    <span class="report-ref">#REP-2026-08</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-31 09:30 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 2.4 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">3</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Inventory Valuation & Reorder Audit</span>
+                                                    <span class="report-ref">#REP-2026-07</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-25 02:15 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 3.1 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">4</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Payment Gateways & Settlement Report</span>
+                                                    <span class="report-ref">#REP-2026-06</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-20 11:45 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 950 KB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">5</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Tax & VAT Quarterly Filing Breakdown</span>
+                                                    <span class="report-ref">#REP-2026-05</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-15 04:20 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 4.2 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">6</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Staff Performance & Activity Metrics</span>
+                                                    <span class="report-ref">#REP-2026-04</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-10 10:00 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.2 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">7</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Order Fulfillment & Delivery Times</span>
+                                                    <span class="report-ref">#REP-2026-03</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-05 01:10 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.5 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">8</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Discount Codes & Promotion ROI</span>
+                                                    <span class="report-ref">#REP-2026-02</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-08-01 03:40 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 820 KB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">9</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Customer Support Tickets & Resolution</span>
+                                                    <span class="report-ref">#REP-2026-01</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-07-28 09:15 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.1 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">10</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Category Sales Share & Popularity</span>
+                                                    <span class="report-ref">#REP-2025-12</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-07-20 04:55 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 2.8 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">11</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Cart Abandonment & Conversion Rates</span>
+                                                    <span class="report-ref">#REP-2025-11</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-07-15 11:30 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.9 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">12</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Refunds & Returns Analysis Report</span>
+                                                    <span class="report-ref">#REP-2025-10</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-07-10 02:25 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 1.4 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">13</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Annual Gross Margin & Profit Audit</span>
+                                                    <span class="report-ref">#REP-2025-09</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-07-05 08:45 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 5.6 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">14</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Regional Orders & Geographic Heatmap</span>
+                                                    <span class="report-ref">#REP-2025-08</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-06-30 01:20 PM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 3.7 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="col-sn">15</td>
+                                        <td>
+                                            <div class="report-name-cell">
+                                                <div class="report-icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                                                <div class="report-text-group">
+                                                    <span class="report-title">Supplier Cost & Purchase Log Analysis</span>
+                                                    <span class="report-ref">#REP-2025-07</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-gen-date">2026-06-25 10:10 AM</td>
+                                        <td><span class="status-badge-pill active">Generated</span></td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn-download"><i class="bi bi-download"></i> 2.2 MB</button>
+                                                <button type="button" class="action-pill-btn">View</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function logoutDashboard() {
+            sessionStorage.clear();
+            window.location.href = 'sign-in.html';
+        }
+
+        function loadDashboardUser() {
+            try {
+                const raw = sessionStorage.getItem('userSignUpSession');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    const info = data.data || data;
+                    const name = info.fullName || info.name || (info.emailAddress ? info.emailAddress.split('@')[0] : 'Solara User');
+                    const email = info.emailAddress || 'user@solara.com';
+                    const initial = name.charAt(0).toUpperCase();
+
+                    const nameEl = document.getElementById('dashboardUserName');
+                    const emailEl = document.getElementById('dashboardUserEmail');
+                    const avatarEl = document.getElementById('dashboardAvatarInitial');
+                    const headerAvatarEl = document.getElementById('dashboardHeaderAvatarInitial');
+
+                    if (nameEl) nameEl.textContent = name;
+                    if (emailEl) emailEl.textContent = email;
+                    if (avatarEl) avatarEl.textContent = initial;
+                    if (headerAvatarEl) headerAvatarEl.textContent = initial;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardUser);
+        loadDashboardUser();
+    </script>
+</body>
+
+</html>

@@ -2203,3 +2203,22 @@ html, body {
     background-color: #e2e8f0;
     color: var(--black-color);
 }
+
+
+.col-prod-category {
+    font-family: sub-title-font;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--semiblack-color);
+}
+
+.col-prod-category .category-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--semiblack-color);
+}

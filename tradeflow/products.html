@@ -28,7 +28,7 @@
                             <svg viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                             </svg>
-                            <span>TradeFlow</span>
+                            <span>Solara</span>
                         </a>
                         <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">
                             <i class="bi bi-layout-sidebar-inset"></i>
@@ -140,11 +140,14 @@
                         <div class="header-right">
                             <div class="filter-select-wrap">
                                 <i class="bi bi-funnel"></i>
-                                <select class="filter-dropdown-select" title="Filter by Status">
-                                    <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="out_of_stock">Out of Stock</option>
+                                <select class="filter-dropdown-select" title="Filter by Category">
+                                    <option value="">All Categories</option>
+                                    <option value="mobile">Mobile Devices</option>
+                                    <option value="footwear">Footwear</option>
+                                    <option value="apparel">Apparel</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="wearable">Wearable Tech</option>
+                                    <option value="audio">Audio Devices</option>
                                 </select>
                             </div>
                             <button type="button" class="btn-add-entity">
@@ -161,6 +164,7 @@
                                         <th>SN <span class="sort-icon">&uarr;&darr;</span></th>
                                         <th>Name <span class="sort-icon">&uarr;&darr;</span></th>
                                         <th>ID <span class="sort-icon">&uarr;&darr;</span></th>
+                                        <th>Category <span class="sort-icon">&uarr;&darr;</span></th>
                                         <th>Status <span class="sort-icon">&uarr;&darr;</span></th>
                                         <th>Action</th>
                                     </tr>
@@ -175,6 +179,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-001</td>
+                                        <td class="col-prod-category"><span class="category-pill">Mobile Devices</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -192,6 +197,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-002</td>
+                                        <td class="col-prod-category"><span class="category-pill">Footwear</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -209,6 +215,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-003</td>
+                                        <td class="col-prod-category"><span class="category-pill">Apparel</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -226,6 +233,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-004</td>
+                                        <td class="col-prod-category"><span class="category-pill">Accessories</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -243,6 +251,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-005</td>
+                                        <td class="col-prod-category"><span class="category-pill">Wearable Tech</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -260,6 +269,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-006</td>
+                                        <td class="col-prod-category"><span class="category-pill">Audio Devices</span></td>
                                         <td><span class="status-badge-pill inactive">INACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -277,6 +287,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-007</td>
+                                        <td class="col-prod-category"><span class="category-pill">Mobile Devices</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -294,6 +305,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-008</td>
+                                        <td class="col-prod-category"><span class="category-pill">Footwear</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -311,6 +323,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-009</td>
+                                        <td class="col-prod-category"><span class="category-pill">Apparel</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -328,6 +341,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-010</td>
+                                        <td class="col-prod-category"><span class="category-pill">Accessories</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -345,6 +359,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-011</td>
+                                        <td class="col-prod-category"><span class="category-pill">Wearable Tech</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -362,6 +377,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-012</td>
+                                        <td class="col-prod-category"><span class="category-pill">Audio Devices</span></td>
                                         <td><span class="status-badge-pill inactive">INACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -379,6 +395,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-013</td>
+                                        <td class="col-prod-category"><span class="category-pill">Mobile Devices</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -396,6 +413,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-014</td>
+                                        <td class="col-prod-category"><span class="category-pill">Footwear</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
@@ -413,6 +431,7 @@
                                             </div>
                                         </td>
                                         <td class="col-prod-id">#PRD-015</td>
+                                        <td class="col-prod-category"><span class="category-pill">Apparel</span></td>
                                         <td><span class="status-badge-pill active">ACTIVE</span></td>
                                         <td>
                                             <div class="action-btn-group">
