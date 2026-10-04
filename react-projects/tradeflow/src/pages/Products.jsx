@@ -1,11 +1,55 @@
-import iphoneImg from "../assets/all-images/product-images/iphone-13.png";
-import jordanImg from "../assets/all-images/product-images/nike-air-jordan.png";
-import tshirtImg from "../assets/all-images/product-images/tshirt.png";
-import bagImg from "../assets/all-images/product-images/cross-bag.png";
-import headphonesImg from "../assets/all-images/product-images/headphones.png";
-import smartwatchImg from "../assets/all-images/product-images/smartwatch.png";
+import React, { useState } from "react";
+import AdminSlideDrawer from "../components/AdminSlideDrawer";
+import { STORE_PRODUCTS } from "../data/storeData";
 
 export default function Products() {
+    const [productsList, setProductsList] = useState(STORE_PRODUCTS);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedProd, setSelectedProd] = useState(null);
+    const [drawerTitle, setDrawerTitle] = useState("Edit Product");
+    const [categoryFilter, setCategoryFilter] = useState("");
+
+    const handleOpenEdit = (prod) => {
+        setSelectedProd({ ...prod });
+        setDrawerTitle(prod ? `Edit Product - ${prod.name}` : "Create New Product");
+        setDrawerOpen(true);
+    };
+
+    const handleOpenAdd = () => {
+        setSelectedProd({
+            id: `prd-new-${Date.now()}`,
+            name: "",
+            code: `#PRD-00${productsList.length + 1}`,
+            categoryName: "Mobile Devices & Phones",
+            status: "ACTIVE",
+            price: 50000,
+            notes: ""
+        });
+        setDrawerTitle("Add New Product");
+        setDrawerOpen(true);
+    };
+
+    const handleSaveProduct = (updatedProd) => {
+        setProductsList(prev => {
+            const exists = prev.some(p => p.id === updatedProd.id);
+            if (exists) {
+                return prev.map(p => p.id === updatedProd.id ? { ...p, ...updatedProd } : p);
+            } else {
+                return [
+                    {
+                        ...updatedProd,
+                        image: updatedProd.image || "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80"
+                    },
+                    ...prev
+                ];
+            }
+        });
+    };
+
+    const filteredProds = productsList.filter(p =>
+        !categoryFilter || p.categoryId === categoryFilter
+    );
+
     return (
         <>
             <div className="dashboard-body">
@@ -22,7 +66,7 @@ export default function Products() {
                 <div className="module-header-bar">
                     <div className="header-left">
                         <h2 className="module-main-title">All Products</h2>
-                        <span className="module-count-subtitle">15 items in stock</span>
+                        <span className="module-count-subtitle">{filteredProds.length} items in stock</span>
                     </div>
                     <div className="header-right">
                         <div className="filter-select-wrap">
@@ -30,10 +74,11 @@ export default function Products() {
                             <select
                                 className="filter-dropdown-select"
                                 title="Filter by Category"
-                                defaultValue=""
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
                             >
                                 <option value="">All Categories</option>
-                                <option value="mobile">Mobile Devices</option>
+                                <option value="mobile-devices">Mobile Devices</option>
                                 <option value="footwear">Footwear</option>
                                 <option value="apparel">Apparel</option>
                                 <option value="accessories">Accessories</option>
@@ -44,6 +89,7 @@ export default function Products() {
                         <button
                             type="button"
                             className="btn-add-entity"
+                            onClick={handleOpenAdd}
                             title="Add Product"
                         >
                             <i className="bi bi-plus-lg"></i> Add Product
@@ -57,199 +103,77 @@ export default function Products() {
                             <thead>
                                 <tr>
                                     <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td className="col-sn">1</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={iphoneImg} alt="Apple iPhone 13 Pro" className="product-real-thumb" />
-                                            <span className="product-title">Apple iPhone 13 Pro</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-001</td>
-                                    <td className="col-prod-category"><span className="category-pill">Mobile Devices</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">2</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={jordanImg} alt="Nike Air Jordan High" className="product-real-thumb" />
-                                            <span className="product-title">Nike Air Jordan High</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-002</td>
-                                    <td className="col-prod-category"><span className="category-pill">Footwear</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">3</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={tshirtImg} alt="Classic Cotton T-Shirt" className="product-real-thumb" />
-                                            <span className="product-title">Classic Cotton T-Shirt</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-003</td>
-                                    <td className="col-prod-category"><span className="category-pill">Apparel</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">4</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={bagImg} alt="Assorted Leather Cross Bag" className="product-real-thumb" />
-                                            <span className="product-title">Assorted Leather Cross Bag</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-004</td>
-                                    <td className="col-prod-category"><span className="category-pill">Accessories</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">5</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={smartwatchImg} alt="Smart Fitness Tracker Band" className="product-real-thumb" />
-                                            <span className="product-title">Smart Fitness Tracker Band</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-005</td>
-                                    <td className="col-prod-category"><span className="category-pill">Wearable Tech</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">6</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={headphonesImg} alt="Noise Canceling Headphones" className="product-real-thumb" />
-                                            <span className="product-title">Noise Canceling Headphones</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-006</td>
-                                    <td className="col-prod-category"><span className="category-pill">Audio Devices</span></td>
-                                    <td><span className="status-badge-pill inactive">INACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">7</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={iphoneImg} alt="Apple iPhone 13 Mini" className="product-real-thumb" />
-                                            <span className="product-title">Apple iPhone 13 Mini</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-007</td>
-                                    <td className="col-prod-category"><span className="category-pill">Mobile Devices</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">8</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={jordanImg} alt="Nike Air Jordan Retro" className="product-real-thumb" />
-                                            <span className="product-title">Nike Air Jordan Retro</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-008</td>
-                                    <td className="col-prod-category"><span className="category-pill">Footwear</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">9</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={tshirtImg} alt="Vintage Graphic T-Shirt" className="product-real-thumb" />
-                                            <span className="product-title">Vintage Graphic T-Shirt</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-009</td>
-                                    <td className="col-prod-category"><span className="category-pill">Apparel</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="col-sn">10</td>
-                                    <td>
-                                        <div className="product-name-cell">
-                                            <img src={bagImg} alt="Vintage Leather Crossbody" className="product-real-thumb" />
-                                            <span className="product-title">Vintage Leather Crossbody</span>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">#PRD-010</td>
-                                    <td className="col-prod-category"><span className="category-pill">Accessories</span></td>
-                                    <td><span className="status-badge-pill active">ACTIVE</span></td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                {filteredProds.map((prod, idx) => (
+                                    <tr key={prod.id}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td>
+                                            <div className="product-table-cell">
+                                                <img
+                                                    src={prod.image}
+                                                    alt={prod.name}
+                                                    className="prod-tbl-thumb"
+                                                    style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", maxWidth: "44px", maxHeight: "44px", objectFit: "contain", borderRadius: "6px" }}
+                                                />
+                                                <div className="prod-tbl-info">
+                                                    <span className="prod-tbl-title">{prod.name}</span>
+                                                    <span className="prod-tbl-sub">{prod.subtitle}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="col-prod-id">{prod.code}</td>
+                                        <td className="col-category">{prod.categoryName}</td>
+                                        <td className="col-price">₦ {prod.price.toLocaleString()}</td>
+                                        <td>
+                                            <span className={`status-badge-pill ${prod.status.toLowerCase()}`}>
+                                                {prod.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    onClick={() => handleOpenEdit(prod)}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(prod)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
+            {/* Slide-Over Edit Drawer */}
+            <AdminSlideDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title={drawerTitle}
+                subtitle="Please complete the form below to configure inventory and pricing details."
+                icon="bi bi-box-seam-fill"
+                entityType="Store Product"
+                initialData={selectedProd || {}}
+                onSave={handleSaveProduct}
+            />
         </>
     );
 }

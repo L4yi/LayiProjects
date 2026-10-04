@@ -20,9 +20,9 @@ export default function SignIn() {
                                     <div className="form-header">
                                         <h2>Sign In</h2>
                                         <p>
-                                            Don't have an account?{" "}
-                                            <Link to="/signup" className="link">
-                                                Create now
+                                            Customer or Shopper?{" "}
+                                            <Link to="/customer/signin" className="link">
+                                                Switch to Customer Portal &rarr;
                                             </Link>
                                         </p>
                                     </div>

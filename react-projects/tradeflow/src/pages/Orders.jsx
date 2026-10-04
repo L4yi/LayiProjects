@@ -1,6 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
+import AdminSlideDrawer from "../components/AdminSlideDrawer";
 
 export default function Orders() {
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [drawerTitle, setDrawerTitle] = useState("Edit Order");
+
+    const handleOpenEdit = (orderId, custName) => {
+        setSelectedOrder({
+            name: custName,
+            code: orderId,
+            role: "Customer Order",
+            status: "ACTIVE",
+            notes: `Fulfillment processing for ${orderId}`
+        });
+        setDrawerTitle(`Edit Order - ${orderId}`);
+        setDrawerOpen(true);
+    };
+
+    const handleOpenAdd = () => {
+        setSelectedOrder({
+            name: "",
+            code: "#ORD-9830",
+            role: "Customer Order",
+            status: "PENDING",
+            notes: ""
+        });
+        setDrawerTitle("Create New Order Request");
+        setDrawerOpen(true);
+    };
+
     return (
         <>
             <div className="dashboard-body">
@@ -31,7 +60,11 @@ export default function Orders() {
                                 <option value="done">Done</option>
                             </select>
                         </div>
-                        <button type="button" className="btn-add-entity">
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={handleOpenAdd}
+                        >
                             <i className="bi bi-plus-lg"></i> New Order
                         </button>
                     </div>
@@ -62,7 +95,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">2</td>
@@ -75,7 +108,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">3</td>
@@ -88,7 +121,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">4</td>
@@ -101,7 +134,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">5</td>
@@ -114,7 +147,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">6</td>
@@ -127,7 +160,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">7</td>
@@ -140,7 +173,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">8</td>
@@ -153,7 +186,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">9</td>
@@ -166,7 +199,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">10</td>
@@ -179,7 +212,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">11</td>
@@ -192,7 +225,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">12</td>
@@ -205,7 +238,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">13</td>
@@ -218,7 +251,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">14</td>
@@ -231,7 +264,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">15</td>
@@ -244,7 +277,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">16</td>
@@ -257,7 +290,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">17</td>
@@ -270,7 +303,7 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill active">Done</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                                 <tr>
                                     <td className="col-sn">18</td>
@@ -283,13 +316,24 @@ export default function Orders() {
                                         </div>
                                     </td>
                                     <td><span className="status-badge-pill progress">In Progress</span></td>
-                                    <td><button type="button" className="action-pill-btn">View</button></td>
+                                    <td><button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#ORD-Order", "Customer")}>View / Edit</button></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
+            {/* Slide-Over Edit Drawer */}
+            <AdminSlideDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title={drawerTitle}
+                subtitle="Please complete the form below to update order status and fulfillment details."
+                icon="bi bi-cart-check-fill"
+                entityType="Customer Order"
+                initialData={selectedOrder || {}}
+            />
         </>
     );
 }

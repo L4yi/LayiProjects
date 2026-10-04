@@ -1,6 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
+import AdminSlideDrawer from "../components/AdminSlideDrawer";
 
 export default function Transactions() {
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedTxn, setSelectedTxn] = useState(null);
+    const [drawerTitle, setDrawerTitle] = useState("Transaction Receipt");
+
+    const handleOpenEdit = (txnId, custName) => {
+        setSelectedTxn({
+            name: custName,
+            code: txnId,
+            role: "Payment Receipt",
+            status: "ACTIVE",
+            notes: `Verified payment log for ${txnId}`
+        });
+        setDrawerTitle(`Transaction Details - ${txnId}`);
+        setDrawerOpen(true);
+    };
+
+    const handleOpenExport = () => {
+        setSelectedTxn({
+            name: "Audit Export",
+            code: "#EXP-2026",
+            role: "Financial Report",
+            status: "ACTIVE",
+            notes: "Exporting all filtered transaction logs..."
+        });
+        setDrawerTitle("Export Transaction Logs");
+        setDrawerOpen(true);
+    };
+
     return (
         <>
             <div className="dashboard-body">
@@ -29,7 +58,11 @@ export default function Transactions() {
                                 <option value="failed">Failed</option>
                             </select>
                         </div>
-                        <button type="button" className="btn-add-entity">
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={handleOpenExport}
+                        >
                             <i className="bi bi-download"></i> Export Logs
                         </button>
                     </div>
@@ -68,8 +101,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -91,8 +124,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill pending">PENDING</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -114,8 +147,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -137,8 +170,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -160,8 +193,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill pending">PENDING</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -183,8 +216,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -206,8 +239,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -229,8 +262,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill pending">PENDING</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -252,8 +285,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -275,8 +308,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -298,8 +331,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -321,8 +354,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill pending">PENDING</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -344,8 +377,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -367,8 +400,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -390,8 +423,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -413,8 +446,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill pending">PENDING</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -436,8 +469,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -459,8 +492,8 @@ export default function Transactions() {
                                     <td><span className="status-badge-pill active">PAID</span></td>
                                     <td>
                                         <div className="action-btn-group">
-                                            <button type="button" className="btn-edit">Edit</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="btn-edit" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>Edit</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("#TXN-Receipt", "Customer")}>View</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -469,6 +502,17 @@ export default function Transactions() {
                     </div>
                 </div>
             </div>
+
+            {/* Slide-Over Edit Drawer */}
+            <AdminSlideDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title={drawerTitle}
+                subtitle="Please review financial details, payment gateway reference, and status."
+                icon="bi bi-credit-card-2-front-fill"
+                entityType="Transaction Log"
+                initialData={selectedTxn || {}}
+            />
         </>
     );
 }

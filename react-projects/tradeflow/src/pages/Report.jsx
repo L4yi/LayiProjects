@@ -1,6 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
+import AdminSlideDrawer from "../components/AdminSlideDrawer";
 
 export default function Report() {
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedReport, setSelectedReport] = useState(null);
+    const [drawerTitle, setDrawerTitle] = useState("Generate Report");
+
+    const handleOpenEdit = (reportName, repCode) => {
+        setSelectedReport({
+            name: reportName,
+            code: repCode,
+            role: "Financial Audit",
+            status: "ACTIVE",
+            notes: `Automated data export for ${reportName}`
+        });
+        setDrawerTitle(`Edit Report Configuration - ${repCode}`);
+        setDrawerOpen(true);
+    };
+
+    const handleOpenGenerate = () => {
+        setSelectedReport({
+            name: "Comprehensive Store Audit",
+            code: "#REP-2026-Q3",
+            role: "Operational Audit",
+            status: "ACTIVE",
+            notes: "Generate full store metrics, inventory turnaround, and profit margin analysis."
+        });
+        setDrawerTitle("Generate New Analytics Report");
+        setDrawerOpen(true);
+    };
+
     return (
         <>
             <div className="dashboard-body">
@@ -48,7 +77,11 @@ export default function Report() {
                                 <option value="operations">Operations</option>
                             </select>
                         </div>
-                        <button type="button" className="btn-add-entity">
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={handleOpenGenerate}
+                        >
                             <i className="bi bi-plus-lg"></i> Generate Report
                         </button>
                     </div>
@@ -103,7 +136,7 @@ export default function Report() {
                                     <td>
                                         <div className="action-btn-group">
                                             <button type="button" className="btn-download"><i className="bi bi-download"></i> 2.4 MB</button>
-                                            <button type="button" className="action-pill-btn">View</button>
+                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit("Report Summary", "#REP-DOC")}>View / Edit</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -372,6 +405,17 @@ export default function Report() {
                     </div>
                 </div>
             </div>
+
+            {/* Slide-Over Edit Drawer */}
+            <AdminSlideDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title={drawerTitle}
+                subtitle="Please configure parameters for analytics calculation and export format."
+                icon="bi bi-file-earmark-bar-graph-fill"
+                entityType="Analytics Report"
+                initialData={selectedReport || {}}
+            />
         </>
     );
 }

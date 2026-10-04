@@ -1,6 +1,18 @@
+import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
+import { getSessionUser } from "../utils/session";
 
 export default function Sidebar({ isOpen, onToggle }) {
+    const [user, setUser] = useState(getSessionUser());
+
+    useEffect(() => {
+        const handleSessionUpdate = () => {
+            setUser(getSessionUser());
+        };
+        window.addEventListener("tradeflow_session_update", handleSessionUpdate);
+        return () => window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+    }, []);
+
     const navItems = [
         { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
         { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs" },
@@ -53,14 +65,14 @@ export default function Sidebar({ isOpen, onToggle }) {
                 <div className="user-profile-widget">
                     <Link to="/profile" className="user-info-row" title="View Profile">
                         <div className="user-avatar-img" id="dashboardAvatarInitial">
-                            T
+                            {user.initials}
                         </div>
                         <div className="user-text">
                             <span className="user-name" id="dashboardUserName">
-                                TradeFlow User
+                                {user.name}
                             </span>
                             <span className="user-email" id="dashboardUserEmail">
-                                user@tradeflow.com
+                                {user.email}
                             </span>
                         </div>
                     </Link>
