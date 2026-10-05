@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
 
-export default function TopHeader({ title = "Dashboard" }) {
+export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
     const dropdownRef = useRef(null);
@@ -29,7 +29,20 @@ export default function TopHeader({ title = "Dashboard" }) {
 
     return (
         <header className="top-header">
-            <h2 className="page-title">{title}</h2>
+            <div className="top-header-left">
+                {onToggleSidebar && (
+                    <button
+                        type="button"
+                        className="mobile-hamburger-btn"
+                        onClick={onToggleSidebar}
+                        title="Toggle Navigation Menu"
+                        aria-label="Toggle Navigation Menu"
+                    >
+                        <i className="bi bi-list"></i>
+                    </button>
+                )}
+                <h2 className="page-title">{title}</h2>
+            </div>
 
             <div className="header-search">
                 <input

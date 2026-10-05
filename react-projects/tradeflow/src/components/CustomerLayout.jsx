@@ -6,8 +6,14 @@ import { getSessionUser } from "../utils/session";
 export default function CustomerLayout() {
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
     const profileRef = useRef(null);
+
+    // Auto-close mobile sidebar when navigating routes
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -28,32 +34,46 @@ export default function CustomerLayout() {
         };
     }, []);
 
+    const closeSidebar = () => setIsSidebarOpen(false);
+
     return (
         <section className="customer-portal-section">
             <div className="customer-portal-layout">
                 {/* Left Sidebar matching Admin theme & layout */}
-                <aside className="customer-sidebar">
+                <aside className={`customer-sidebar ${isSidebarOpen ? "open" : ""}`} id="customerSidebar">
                     <div className="customer-sidebar-top">
                         <div className="sidebar-header">
-                            <Link to="/customer/dashboard" className="solara-logo">
+                            <Link to="/customer/dashboard" className="solara-logo" onClick={closeSidebar}>
                                 <svg viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                                 </svg>
                                 <span>TradeFlow</span>
                             </Link>
-                            <button
-                                type="button"
-                                className="sidebar-toggle-btn"
-                                title="Toggle Sidebar"
-                            >
-                                <i className="bi bi-layout-sidebar-inset"></i>
-                            </button>
+                            <div className="sidebar-header-actions">
+                                <button
+                                    type="button"
+                                    className="sidebar-toggle-btn desktop-only"
+                                    onClick={() => setIsSidebarOpen(prev => !prev)}
+                                    title="Toggle Sidebar"
+                                >
+                                    <i className="bi bi-layout-sidebar-inset"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="sidebar-mobile-close-btn mobile-only"
+                                    onClick={closeSidebar}
+                                    title="Close Navigation"
+                                >
+                                    <i className="bi bi-x-lg"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <nav className="customer-sidebar-nav">
                             <div className="nav-group-title">CUSTOMER MENU</div>
                             <NavLink
                                 to="/customer/dashboard"
+                                onClick={closeSidebar}
                                 className={({ isActive }) =>
                                     `cust-nav-item ${isActive && (location.pathname === "/customer/dashboard" || location.pathname === "/customer") ? "active" : ""}`
                                 }
@@ -64,6 +84,7 @@ export default function CustomerLayout() {
 
                             <NavLink
                                 to="/customer/categories"
+                                onClick={closeSidebar}
                                 className={({ isActive }) =>
                                     `cust-nav-item ${isActive ? "active" : ""}`
                                 }
@@ -74,6 +95,7 @@ export default function CustomerLayout() {
 
                             <NavLink
                                 to="/customer/cart"
+                                onClick={closeSidebar}
                                 className={({ isActive }) =>
                                     `cust-nav-item ${isActive ? "active" : ""}`
                                 }
@@ -87,6 +109,7 @@ export default function CustomerLayout() {
 
                             <NavLink
                                 to="/customer/settings"
+                                onClick={closeSidebar}
                                 className={({ isActive }) =>
                                     `cust-nav-item ${isActive ? "active" : ""}`
                                 }
@@ -95,7 +118,7 @@ export default function CustomerLayout() {
                                 <span>Settings</span>
                             </NavLink>
 
-                            <Link to="/customer/signin" className="cust-nav-item logout-item">
+                            <Link to="/customer/signin" className="cust-nav-item logout-item" onClick={closeSidebar}>
                                 <i className="bi bi-box-arrow-right"></i>
                                 <span>Log-Out</span>
                             </Link>
@@ -103,18 +126,36 @@ export default function CustomerLayout() {
                     </div>
 
                     <div className="customer-sidebar-footer">
-                        <Link to="/signin" className="admin-switch-btn" title="Switch to Admin Dashboard">
+                        <Link to="/signin" className="admin-switch-btn" title="Switch to Admin Dashboard" onClick={closeSidebar}>
                             <i className="bi bi-shield-lock"></i>
                             <span>Admin Portal</span>
                         </Link>
                     </div>
                 </aside>
 
+                {/* Mobile Backdrop Overlay */}
+                {isSidebarOpen && (
+                    <div
+                        className="customer-sidebar-backdrop"
+                        onClick={closeSidebar}
+                        title="Close Sidebar Overlay"
+                    />
+                )}
+
                 {/* Main Content Area */}
                 <main className="customer-main-area">
                     {/* Top Header matching Admin Portal style & icons */}
                     <header className="customer-top-header">
                         <div className="header-left-title">
+                            <button
+                                type="button"
+                                className="mobile-hamburger-btn"
+                                onClick={() => setIsSidebarOpen(prev => !prev)}
+                                title="Toggle Navigation Menu"
+                                aria-label="Toggle Navigation Menu"
+                            >
+                                <i className="bi bi-list"></i>
+                            </button>
                             <span className="user-portal-tag">USER PORTAL</span>
                             <div className="header-nav-pills">
                                 <NavLink

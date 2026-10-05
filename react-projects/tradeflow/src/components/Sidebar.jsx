@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
 
-export default function Sidebar({ isOpen, onToggle }) {
+export default function Sidebar({ isOpen, onToggle, onClose }) {
     const [user, setUser] = useState(getSessionUser());
 
     useEffect(() => {
@@ -28,20 +28,30 @@ export default function Sidebar({ isOpen, onToggle }) {
         <aside className={`sidebar ${isOpen ? "open" : ""}`} id="sidebar">
             <div className="sidebar-top">
                 <div className="sidebar-header">
-                    <Link to="/dashboard" className="solara-logo">
+                    <Link to="/dashboard" className="solara-logo" onClick={onClose}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                         </svg>
                         <span>TradeFlow</span>
                     </Link>
-                    <button
-                        type="button"
-                        className="sidebar-toggle-btn"
-                        onClick={onToggle}
-                        title="Toggle Sidebar"
-                    >
-                        <i className="bi bi-layout-sidebar-inset"></i>
-                    </button>
+                    <div className="sidebar-header-actions">
+                        <button
+                            type="button"
+                            className="sidebar-toggle-btn desktop-only"
+                            onClick={onToggle}
+                            title="Toggle Sidebar"
+                        >
+                            <i className="bi bi-layout-sidebar-inset"></i>
+                        </button>
+                        <button
+                            type="button"
+                            className="sidebar-mobile-close-btn mobile-only"
+                            onClick={onClose || onToggle}
+                            title="Close Navigation"
+                        >
+                            <i className="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <nav className="sidebar-nav">
@@ -50,6 +60,7 @@ export default function Sidebar({ isOpen, onToggle }) {
                         <NavLink
                             key={item.to}
                             to={item.to}
+                            onClick={onClose}
                             className={({ isActive }) =>
                                 `nav-item ${isActive ? "active" : ""}`
                             }
@@ -63,7 +74,7 @@ export default function Sidebar({ isOpen, onToggle }) {
 
             <div className="sidebar-footer">
                 <div className="user-profile-widget">
-                    <Link to="/profile" className="user-info-row" title="View Profile">
+                    <Link to="/profile" className="user-info-row" title="View Profile" onClick={onClose}>
                         <div className="user-avatar-img" id="dashboardAvatarInitial">
                             {user.initials}
                         </div>
@@ -76,12 +87,12 @@ export default function Sidebar({ isOpen, onToggle }) {
                             </span>
                         </div>
                     </Link>
-                    <Link to="/signin" className="logout-icon-btn" title="Sign Out">
+                    <Link to="/signin" className="logout-icon-btn" title="Sign Out" onClick={onClose}>
                         <i className="bi bi-box-arrow-right"></i>
                     </Link>
                 </div>
 
-                <Link to="/profile" className="shop-btn">
+                <Link to="/profile" className="shop-btn" onClick={onClose}>
                     <div className="shop-left">
                         <i className="bi bi-person-circle"></i>
                         <span>My Profile</span>
