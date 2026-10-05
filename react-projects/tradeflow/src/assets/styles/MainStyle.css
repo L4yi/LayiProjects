@@ -775,47 +775,100 @@ html, body {
     gap: 20px;
 }
 
+.sidebar-header,
+.customer-sidebar-header,
 .dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 8px;
-    margin-bottom: 6px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 4px 10px 4px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
 }
 
+.solara-logo,
+.customer-brand-logo,
 .dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-header .solara-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: title-font;
-    font-size: 22px;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 700;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-family: title-font, sans-serif !important;
+    font-size: 20px !important;
+    color: var(--primary-color, #143526) !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
 }
 
-.dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-header .solara-logo svg {
-    width: 26px;
-    height: 26px;
-    fill: var(--primary-color);
+.brand-logo-icon {
+    width: 34px !important;
+    height: 34px !important;
+    background-color: var(--primary-color, #143526) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
 }
 
+.brand-logo-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    fill: #ffffff !important;
+    display: block !important;
+}
+
+.solara-logo > svg {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    fill: var(--primary-color, #143526) !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+}
+
+.brand-title,
+.solara-logo .brand-title,
+.solara-logo span {
+    font-family: title-font, sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: var(--primary-color, #143526) !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+}
+
+.sidebar-header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.sidebar-toggle-btn,
+.cust-toggle-btn,
 .dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-header .sidebar-toggle-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted, #64748b) !important;
+    font-size: 18px !important;
+    cursor: pointer !important;
+    padding: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
 }
 
+.sidebar-toggle-btn:hover,
+.cust-toggle-btn:hover,
 .dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-header .sidebar-toggle-btn:hover {
-    background-color: #f1f5f9;
-    color: var(--black-color);
+    background-color: #f1f5f9 !important;
+    color: var(--black-color, #143526) !important;
 }
 
 .dashboard-section .dashboard-layout .sidebar .sidebar-top .sidebar-nav {

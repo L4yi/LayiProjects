@@ -29,10 +29,12 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
             <div className="sidebar-top">
                 <div className="sidebar-header">
                     <Link to="/dashboard" className="solara-logo" onClick={onClose}>
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                        <span>TradeFlow</span>
+                        <div className="brand-logo-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <span className="brand-title">TradeFlow</span>
                     </Link>
                     <div className="sidebar-header-actions">
                         <button
