@@ -20,6 +20,7 @@ import CustomerSignIn from "./customer/CustomerSignIn";
 import CustomerSignUp from "./customer/CustomerSignUp";
 import CustomerLayout from "../components/CustomerLayout";
 import CustomerDashboard from "./customer/CustomerDashboard";
+import CustomerCategories from "./customer/CustomerCategories";
 import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
 import CustomerProductDetails from "./customer/CustomerProductDetails";
 import CustomerCart from "./customer/CustomerCart";
@@ -74,7 +75,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/customer/categories",
-        element: <CustomerDashboard />
+        element: <CustomerCategories />
       },
       {
         path: "/customer/category/:categoryId",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { STORE_PRODUCTS } from "../../data/storeData";
+import { addToCart } from "../../utils/cart";
 
 export default function CustomerProductDetails() {
     const { productId } = useParams();
@@ -19,10 +20,11 @@ export default function CustomerProductDetails() {
     ];
 
     const handleAddToCart = () => {
+        addToCart(product, quantity);
         setAddedNotice(true);
         setTimeout(() => {
             navigate("/customer/cart");
-        }, 600);
+        }, 500);
     };
 
     return (
@@ -121,9 +123,14 @@ export default function CustomerProductDetails() {
                     {/* Price Block */}
                     <div className="product-price-block">
                         <div className="main-price-row">
-                            <span className="naira-price">₦ {product.price.toLocaleString()}</span>
-                            <span className="naira-old-price">₦ {product.oldPrice.toLocaleString()}</span>
+                            <span className="naira-price">₦ {(product.price * quantity).toLocaleString()}</span>
+                            {product.oldPrice && (
+                                <span className="naira-old-price">₦ {(product.oldPrice * quantity).toLocaleString()}</span>
+                            )}
                             <span className="discount-pill">-{product.discountPercent}%</span>
+                            {quantity > 1 && (
+                                <span className="unit-price-pill">(₦ {product.price.toLocaleString()} each)</span>
+                            )}
                         </div>
                         <div className="stock-progress-wrap">
                             <span className="stock-text">{product.inStock} items left</span>

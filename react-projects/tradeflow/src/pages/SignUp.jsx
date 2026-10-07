@@ -1,7 +1,29 @@
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { setSessionUser } from "../utils/session";
 import featureImg from "../assets/all-images/body-images/solara-card-feature.png";
 
 export default function SignUp() {
+  const navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSignUp = (e) => {
+    e.preventDefault();
+    setSessionUser({
+      name: fullName || "Store Administrator",
+      email: email || "admin@example.com",
+      phone: phone || "+234 800 000 0000",
+      role: "SUPER ADMIN",
+      department: "Computer Science / Store Management",
+      lastLogin: "Just now"
+    });
+    navigate("/dashboard");
+  };
+
   return (
     <>
       <section className="auth-section">
@@ -11,10 +33,12 @@ export default function SignUp() {
               <div className="form-content">
                 <div className="inner-form">
                   <Link to="/" className="solara-logo">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                    TradeFlow
+                    <div className="brand-logo-icon">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <span className="brand-title">TradeFlow</span>
                   </Link>
 
                   <div className="form-header">
@@ -27,7 +51,7 @@ export default function SignUp() {
                     </p>
                   </div>
 
-                  <div className="input-container">
+                  <form onSubmit={handleSignUp} className="input-container">
                     <div className="input-wrapper">
                       <label htmlFor="fullName">
                         Full Name <span>*</span>
@@ -37,6 +61,8 @@ export default function SignUp() {
                         className="text-field"
                         id="fullName"
                         placeholder="Enter Your Full Name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
                         autoComplete="name"
                         required
                       />
@@ -51,6 +77,8 @@ export default function SignUp() {
                         className="text-field"
                         id="emailAddress"
                         placeholder="example@gmail.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         autoComplete="email"
                         required
                       />
@@ -65,6 +93,8 @@ export default function SignUp() {
                         className="text-field"
                         id="phoneNumber"
                         placeholder="Enter Your Phone Number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         autoComplete="tel"
                         required
                       />
@@ -76,34 +106,35 @@ export default function SignUp() {
                       </label>
                       <div className="password-input-group">
                         <input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           className="text-field"
                           id="password"
                           placeholder="Create a strong password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
                           autoComplete="new-password"
                           required
                         />
                         <button
                           type="button"
                           className="password-toggle-btn"
+                          onClick={() => setShowPassword(!showPassword)}
                           title="Toggle Password Visibility"
                         >
-                          <i className="bi bi-eye" id="signUpEyeIcon"></i>
+                          <i className={`bi bi-eye${showPassword ? "-slash" : ""}`} id="signUpEyeIcon"></i>
                         </button>
                       </div>
                     </div>
 
-                    <Link to="/dashboard">
-                      <button
-                        className="btn-primary"
-                        type="button"
-                        id="submitBtnId"
-                        title="Sign Up"
-                      >
-                        Sign Up
-                      </button>
-                    </Link>
-                  </div>
+                    <button
+                      className="btn-primary"
+                      type="submit"
+                      id="submitBtnId"
+                      title="Sign Up"
+                    >
+                      Sign Up
+                    </button>
+                  </form>
 
                   <div className="divider">
                     <span>OR</span>

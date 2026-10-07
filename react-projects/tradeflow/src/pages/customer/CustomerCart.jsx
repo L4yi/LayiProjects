@@ -1,49 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { INITIAL_CART_ITEMS, WISHLIST_ITEMS, STORE_PRODUCTS } from "../../data/storeData";
+import { WISHLIST_ITEMS, STORE_PRODUCTS } from "../../data/storeData";
+import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
 
 export default function CustomerCart() {
-    const [cartItems, setCartItems] = useState(INITIAL_CART_ITEMS);
+    const [cartItems, setCartItems] = useState(getCartItems());
     const [checkoutComplete, setCheckoutComplete] = useState(false);
 
+    useEffect(() => {
+        const handleCartUpdate = (e) => {
+            setCartItems(e.detail || getCartItems());
+        };
+        window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+        return () => window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+    }, []);
+
     const updateQuantity = (id, delta) => {
-        setCartItems(prev => prev.map(item => {
-            if (item.id === id) {
-                const newQty = Math.max(1, item.quantity + delta);
-                return { ...item, quantity: newQty };
-            }
-            return item;
-        }));
+        updateCartQuantity(id, delta);
     };
 
     const removeItem = (id) => {
-        setCartItems(prev => prev.filter(item => item.id !== id));
+        removeCartItem(id);
     };
 
     const addWishlistItemToCart = (wItem) => {
-        const existing = cartItems.find(item => item.id === wItem.id);
-        if (existing) {
-            updateQuantity(wItem.id, 1);
-        } else {
-            setCartItems(prev => [
-                ...prev,
-                {
-                    id: wItem.id,
-                    name: wItem.name,
-                    variation: "Standard Retail Edition",
-                    price: wItem.price,
-                    oldPrice: wItem.oldPrice,
-                    discountPercent: wItem.discountPercent,
-                    quantity: 1,
-                    inStock: true,
-                    express: true,
-                    image: wItem.image
-                }
-            ]);
-        }
+        addToCart({
+            id: wItem.id,
+            name: wItem.name,
+            categoryId: "accessories",
+            categoryName: "Accessories",
+            variation: "Standard Retail Edition",
+            price: wItem.price,
+            oldPrice: wItem.oldPrice,
+            discountPercent: wItem.discountPercent,
+            image: wItem.image,
+            express: true
+        }, 1);
     };
 
-    const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const subtotal = getCartSubtotal();
+    const totalCount = cartItems.reduce((acc, i) => acc + (i.quantity || 1), 0);
+
+    // Group items by category to identify categories on checkout
+    const categoriesInCart = Array.from(new Set(cartItems.map(i => i.categoryName || "General Store")));
 
     return (
         <div className="customer-cart-page-container">
@@ -60,7 +59,7 @@ export default function CustomerCart() {
                         <i className="bi bi-check-circle-fill"></i>
                     </div>
                     <h2>Order Placed Successfully!</h2>
-                    <p>Thank you for shopping with TradeFlow. Your order is being processed for delivery to Abeokuta.</p>
+                    <p>Thank you for shopping with TradeFlow. Your order for <strong>{totalCount} item{totalCount > 1 ? "s" : ""}</strong> is being processed for delivery to Abeokuta.</p>
                     <Link to="/customer/dashboard" className="btn-cart-continue">
                         Continue Shopping
                     </Link>
@@ -71,9 +70,21 @@ export default function CustomerCart() {
                     <div className="cart-main-column">
                         {/* Cart Header & Items */}
                         <div className="cart-items-card-box">
-                            <h2 className="cart-section-title">
-                                Cart ({cartItems.reduce((acc, i) => acc + i.quantity, 0)})
-                            </h2>
+                            <div className="cart-box-header">
+                                <h2 className="cart-section-title">
+                                    Cart ({totalCount})
+                                </h2>
+                                {categoriesInCart.length > 0 && (
+                                    <div className="cart-header-categories-pills">
+                                        <span className="cat-pill-label">Categories:</span>
+                                        {categoriesInCart.map((cat, idx) => (
+                                            <span key={idx} className="cart-prod-category-tag">
+                                                <i className="bi bi-tag-fill"></i> {cat}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
                             {cartItems.length === 0 ? (
                                 <div className="cart-empty-state">
@@ -101,6 +112,13 @@ export default function CustomerCart() {
                                             <div className="cart-item-info">
                                                 <div className="cart-item-top-details">
                                                     <div className="cart-prod-title-col">
+                                                        {/* Category identifier tag with clean spacing */}
+                                                        <div className="cart-category-space-row">
+                                                            <span className="cart-prod-category-tag">
+                                                                <i className="bi bi-folder2-open"></i> {item.categoryName || "Product"}
+                                                            </span>
+                                                        </div>
+
                                                         <h4 className="cart-prod-title">
                                                             <Link to={`/customer/product/${item.id}`}>{item.name}</Link>
                                                         </h4>
@@ -128,6 +146,11 @@ export default function CustomerCart() {
                                                                     -{item.discountPercent}%
                                                                 </span>
                                                             </div>
+                                                        )}
+                                                        {item.quantity > 1 && (
+                                                            <span className="cart-unit-sub-note">
+                                                                ₦ {item.price.toLocaleString()} × {item.quantity}
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -222,8 +245,22 @@ export default function CustomerCart() {
                         <div className="cart-summary-sticky-card">
                             <h3 className="summary-title">CART SUMMARY</h3>
 
+                            {/* Category Breakdown list on checkout */}
+                            {categoriesInCart.length > 0 && (
+                                <div className="checkout-categories-summary-block">
+                                    <span className="chk-cat-header-label">Categories in Order:</span>
+                                    <div className="chk-cat-tags-list">
+                                        {categoriesInCart.map((cat, idx) => (
+                                            <span key={idx} className="chk-category-pill">
+                                                <i className="bi bi-check-circle-fill"></i> {cat}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="summary-row subtotal-row">
-                                <span className="summary-label">Subtotal</span>
+                                <span className="summary-label">Subtotal ({totalCount} item{totalCount > 1 ? "s" : ""})</span>
                                 <span className="summary-amount">₦ {subtotal.toLocaleString()}</span>
                             </div>
 

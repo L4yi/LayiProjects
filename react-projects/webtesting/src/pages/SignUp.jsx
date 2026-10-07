@@ -1,17 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import niitLogo from "../assets/niit-logo.png";
-import niitAuthBg from "../assets/niit-auth-bg.jpg";
+import InputField from "../components/InputFieldComponent";
+import ButtonComponent from "../components/ButtonComponent";
+import AlertModal from "../components/AlertModal";
 
 export default function SignUp() {
+  const navigate = useNavigate();
+  const [modal, setModal] = useState(false);
+
   return (
     <>
-      <section className="auth-section">
+      <section className="auth-section"> 
         <div className="auth-background">
           <div className="overlay-bg">
             <div className="form-container">
-
               <div className="form-content">
-
                 <div className="inner-form">
                   <div className="top-container">
                     <h2>Sign Up</h2>
@@ -28,57 +32,69 @@ export default function SignUp() {
                       </div>
                     </div>
                   </div>
+
                   <div className="input-container">
-                    <div className="input-wrapper">
-                      <label>Full Name <span>*</span> </label>
-                      <input type="text" className="text-field" id="fullName"
-                        placeholder="Enter Your Full Name" />
-                    </div>
-                    <div className="input-wrapper">
-                      <label>Email Address <span>*</span> </label>
-                      <input type="text" className="text-field" id="emailAddress"
-                        placeholder="Enter Your Email Address" />
-                    </div>
-                    <div className="input-wrapper">
-                      <label>Phone Number <span>*</span> </label>
-                      <input type="text" className="text-field" id="phoneNumber"
-                        placeholder="Enter Your Phone Number" />
-                    </div>
-                    <div className="input-wrapper">
-                      <label>Password <span>*</span> </label>
-                      <input type="password" className="text-field" id="password"
-                        placeholder="Enter Your Password" />
-                    </div>
+                    <InputField
+                      title="Fullname"
+                      inputType="text"
+                      placeHolder="Enter your fullname"
+                    />
 
-                    <button className="btn " type="button" id="submitBtnId" title="Sign Up"
-                      onclick="signUpHandle();">Sign
-                      Up</button>
+                    <InputField
+                      title="Email Address"
+                      inputType="email"
+                      placeHolder="Enter your email Address"
+                    />
 
+                    <InputField
+                      title="Phone Number"
+                      inputType="text"
+                      placeHolder="Enter your phone number"
+                    />
 
+                    <InputField
+                      title="Password"
+                      inputType="password"
+                      placeHolder="Enter your password"
+                    />
 
+                    <ButtonComponent
+                      buttonType="button"
+                      buttonText="Sign Up"
+                      buttonTitle="Sign Up"
+                      action={(e) => setModal(true)}
+                    />
                   </div>
 
+                  <p className="signin-footer">
+                    Already have an account? <Link to="/sign-in" className="signup-link">Sign In</Link>
+                  </p>
                 </div>
               </div>
+
               <div className="form-content text-content">
                 <div className="text-wrapper">
                   <div className="logo-container">
-                    <img src={niitLogo} alt="Niit Logo" />
+                    <img src={niitLogo} alt="NIIT logo" />
                   </div>
                   <div className="title">
-                    <h1>Welcome to Student Sign Up</h1>
-                    <p>Already have an account? </p>
+                    <h1>Welcome to Student Portal</h1>
+                    <p>Already have an account?</p>
                   </div>
-                  <Link to="/signin">
-                    <button className="btn">Sign In</button>
+
+                  <Link to="/sign-in">
+                    <button className="btn" title="Sign In">Sign In</button>
                   </Link>
                 </div>
-
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {modal && <AlertModal redirectLink="/sign-in" message="Account Created Successfully" />}
+
+
 
     </>
   );

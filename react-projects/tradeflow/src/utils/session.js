@@ -11,7 +11,7 @@ export function getInitials(name = "") {
 
 export function getSessionUser() {
     try {
-        const stored = sessionStorage.getItem(SESSION_USER_KEY);
+        const stored = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(SESSION_USER_KEY);
         if (stored) {
             const parsed = JSON.parse(stored);
             return {
@@ -28,10 +28,11 @@ export function getSessionUser() {
         ...CURRENT_USER,
         initials: CURRENT_USER.initials || getInitials(CURRENT_USER.name)
     };
-    
+
     // Initialize session if empty
     try {
         sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(defaultUser));
+        localStorage.setItem(SESSION_USER_KEY, JSON.stringify(defaultUser));
     } catch (e) {}
 
     return defaultUser;
@@ -46,7 +47,8 @@ export function setSessionUser(userData) {
             initials: getInitials(userData.name || current.name)
         };
         sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(updated));
-        // Dispatch storage event for live tab/component reactivity
+        localStorage.setItem(SESSION_USER_KEY, JSON.stringify(updated));
+        // Dispatch custom event for live component reactivity
         window.dispatchEvent(new Event("tradeflow_session_update"));
         return updated;
     } catch (e) {
@@ -54,3 +56,4 @@ export function setSessionUser(userData) {
         return userData;
     }
 }
+

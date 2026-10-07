@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink, Link, Outlet, useLocation } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
+import { getCartCount } from "../utils/cart";
 
 export default function CustomerLayout() {
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
+    const [cartCount, setCartCount] = useState(getCartCount());
     const profileRef = useRef(null);
 
     // Auto-close mobile sidebar when navigating routes
@@ -24,13 +26,18 @@ export default function CustomerLayout() {
         const handleSessionUpdate = () => {
             setUser(getSessionUser());
         };
+        const handleCartUpdate = () => {
+            setCartCount(getCartCount());
+        };
 
         document.addEventListener("click", handleClickOutside);
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
+        window.addEventListener("tradeflow_cart_update", handleCartUpdate);
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+            window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
         };
     }, []);
 
@@ -106,7 +113,7 @@ export default function CustomerLayout() {
                                     <i className="bi bi-cart3"></i>
                                     <span>My Cart</span>
                                 </div>
-                                <span className="cart-badge-count">1</span>
+                                <span className="cart-badge-count">{cartCount}</span>
                             </NavLink>
 
                             <NavLink
@@ -128,7 +135,34 @@ export default function CustomerLayout() {
                     </div>
 
                     <div className="customer-sidebar-footer">
-                        <Link to="/signin" className="admin-switch-btn" title="Switch to Admin Dashboard" onClick={closeSidebar}>
+                        <div className="user-profile-widget">
+                            <Link to="/customer/settings" className="user-info-row" title="View Profile" onClick={closeSidebar}>
+                                <div className="user-avatar-img" id="customerAvatarInitial">
+                                    {user.initials}
+                                </div>
+                                <div className="user-text">
+                                    <span className="user-name" id="customerUserName">
+                                        {user.name}
+                                    </span>
+                                    <span className="user-email" id="customerUserEmail">
+                                        {user.email}
+                                    </span>
+                                </div>
+                            </Link>
+                            <Link to="/customer/signin" className="logout-icon-btn" title="Sign Out" onClick={closeSidebar}>
+                                <i className="bi bi-box-arrow-right"></i>
+                            </Link>
+                        </div>
+
+                        <Link to="/customer/settings" className="shop-btn" onClick={closeSidebar}>
+                            <div className="shop-left">
+                                <i className="bi bi-person-circle"></i>
+                                <span>My Profile</span>
+                            </div>
+                            <i className="bi bi-arrow-right-short" style={{ fontSize: "18px" }}></i>
+                        </Link>
+
+                        <Link to="/signin" className="admin-switch-btn mt-8" title="Switch to Admin Dashboard" onClick={closeSidebar}>
                             <i className="bi bi-shield-lock"></i>
                             <span>Admin Portal</span>
                         </Link>
@@ -193,7 +227,7 @@ export default function CustomerLayout() {
                             {/* Cart Icon */}
                             <Link to="/customer/cart" className="customer-cart-btn" title="View Cart">
                                 <i className="bi bi-cart3"></i>
-                                <span className="cart-header-badge">1</span>
+                                <span className="cart-header-badge">{cartCount}</span>
                             </Link>
 
                             {/* Bell Notification */}

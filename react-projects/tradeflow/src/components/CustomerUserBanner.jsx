@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
 
-export default function CustomerUserBanner({
-    buttonText = "Make New Suggestion",
-    buttonLink = "/customer/categories"
-}) {
+export default function CustomerUserBanner() {
     const [user, setUser] = useState(getSessionUser());
 
     useEffect(() => {
@@ -33,13 +29,6 @@ export default function CustomerUserBanner({
                         <i className="bi bi-clock-history"></i> Last Login Date - {user.lastLogin || "2026-10-04 08:30 AM"}
                     </p>
                 </div>
-            </div>
-
-            <div className="banner-right-action">
-                <Link to={buttonLink} className="btn-banner-action green-banner-btn">
-                    <i className="bi bi-lightbulb-fill"></i>
-                    <span>{buttonText}</span>
-                </Link>
             </div>
         </div>
     );
