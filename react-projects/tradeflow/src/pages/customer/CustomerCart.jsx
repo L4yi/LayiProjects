@@ -101,7 +101,7 @@ export default function CustomerCart() {
                                 <div className="cart-items-list">
                                     {cartItems.map((item) => (
                                         <div key={item.id} className="cart-item-row">
-                                            {/* Product Image */}
+                                    
                                             <div className="cart-item-img-wrap">
                                                 <Link to={`/customer/product/${item.id}`}>
                                                     <img src={item.image} alt={item.name} className="cart-prod-img" />
