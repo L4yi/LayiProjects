@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
+import authService from "../services/authService";
 
 export default function ProfileDropdown({ isOpen, onClose, isCustomer = false }) {
     const [user, setUser] = useState(getSessionUser());
@@ -68,7 +69,10 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
                 <Link
                     to={isCustomer ? "/customer/signin" : "/signin"}
                     className="profile-logout-pill-btn"
-                    onClick={onClose}
+                    onClick={() => {
+                        authService.logout();
+                        onClose();
+                    }}
                 >
                     <i className="bi bi-box-arrow-right"></i>
                     <span>Log-Out</span>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getSessionUser, setSessionUser } from "../utils/session";
+import authService from "../services/authService";
 import featureImg from "../assets/all-images/body-images/solara-card-feature.png";
 
 export default function SignIn() {
@@ -8,16 +8,27 @@ export default function SignIn() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-    const handleSignIn = (e) => {
+    const handleSignIn = async (e) => {
         e.preventDefault();
-        const existing = getSessionUser();
-        setSessionUser({
-            email: email || existing.email,
-            role: "SUPER ADMIN",
-            lastLogin: "Just now"
-        });
-        navigate("/dashboard");
+        if (loading) return;
+        setError("");
+        setSuccess("");
+        setLoading(true);
+
+        const result = await authService.signIn(email, password);
+        if (result.success) {
+            setSuccess(result.message || "LOGIN SUCCESSFUL");
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 600);
+        } else {
+            setError(result.message || "Invalid credentials. Please check your email and password.");
+            setLoading(false);
+        }
     };
 
     return (
@@ -47,6 +58,49 @@ export default function SignIn() {
                                         </p>
                                     </div>
 
+                                    {error && (
+                                        <div
+                                            className="auth-alert-error"
+                                            style={{
+                                                marginBottom: "1rem",
+                                                color: "#991b1b",
+                                                background: "#fee2e2",
+                                                border: "1px solid #f87171",
+                                                borderRadius: "8px",
+                                                padding: "10px 14px",
+                                                fontSize: "0.88rem",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px"
+                                            }}
+                                            role="alert"
+                                        >
+                                            <i className="bi bi-exclamation-triangle-fill"></i>
+                                            <span>{error}</span>
+                                        </div>
+                                    )}
+
+                                    {success && (
+                                        <div
+                                            className="auth-alert-success"
+                                            style={{
+                                                marginBottom: "1rem",
+                                                color: "#065f46",
+                                                background: "#d1fae5",
+                                                border: "1px solid #34d399",
+                                                borderRadius: "8px",
+                                                padding: "10px 14px",
+                                                fontSize: "0.88rem",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px"
+                                            }}
+                                        >
+                                            <i className="bi bi-check-circle-fill"></i>
+                                            <span>{success}</span>
+                                        </div>
+                                    )}
+
                                     <form onSubmit={handleSignIn} className="input-container">
                                         <div className="input-wrapper">
                                             <label htmlFor="emailAddress">E-mail</label>
@@ -56,7 +110,10 @@ export default function SignIn() {
                                                 id="emailAddress"
                                                 placeholder="example@gmail.com"
                                                 value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
+                                                onChange={(e) => {
+                                                    setEmail(e.target.value);
+                                                    setError("");
+                                                }}
                                                 autoComplete="email"
                                                 required
                                             />
@@ -71,7 +128,10 @@ export default function SignIn() {
                                                     id="password"
                                                     placeholder="@#*%"
                                                     value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setPassword(e.target.value);
+                                                        setError("");
+                                                    }}
                                                     autoComplete="current-password"
                                                     required
                                                 />
@@ -101,8 +161,17 @@ export default function SignIn() {
                                             type="submit"
                                             title="Sign In"
                                             id="submitBtnId"
+                                            disabled={loading}
+                                            style={{ opacity: loading ? 0.75 : 1, cursor: loading ? "not-allowed" : "pointer" }}
                                         >
-                                            Sign in
+                                            {loading ? (
+                                                <span>
+                                                    <i className="bi bi-arrow-repeat spin" style={{ marginRight: "8px" }}></i>
+                                                    Signing in...
+                                                </span>
+                                            ) : (
+                                                "Sign in"
+                                            )}
                                         </button>
                                     </form>
 

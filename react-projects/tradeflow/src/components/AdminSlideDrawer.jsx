@@ -64,7 +64,7 @@ export default function AdminSlideDrawer({
                         </div>
                         <div className="card-form-grid">
                             <div className="form-group-item full-width">
-                                <label className="drawer-label">Title / Salutation</label>
+                                <label className="drawer-label">Title</label>
                                 <select
                                     className="drawer-input"
                                     value={formData.title || ""}
@@ -80,7 +80,7 @@ export default function AdminSlideDrawer({
                             </div>
 
                             <div className="form-group-item">
-                                <label className="drawer-label">First Name / Name *</label>
+                                <label className="drawer-label">First Name *</label>
                                 <input
                                     type="text"
                                     className="drawer-input"
@@ -92,11 +92,11 @@ export default function AdminSlideDrawer({
                             </div>
 
                             <div className="form-group-item">
-                                <label className="drawer-label">Last Name / Code *</label>
+                                <label className="drawer-label">Last Name *</label>
                                 <input
                                     type="text"
                                     className="drawer-input"
-                                    placeholder="Enter last name or ID code"
+                                    placeholder="Enter last name"
                                     value={formData.lastName || formData.code || ""}
                                     onChange={(e) => handleChange("lastName", e.target.value)}
                                 />
@@ -114,7 +114,7 @@ export default function AdminSlideDrawer({
                             </div>
 
                             <div className="form-group-item">
-                                <label className="drawer-label">Phone Number *</label>
+                                <label className="drawer-label">Contact Number *</label>
                                 <input
                                     type="text"
                                     className="drawer-input"
@@ -125,18 +125,18 @@ export default function AdminSlideDrawer({
                             </div>
 
                             <div className="form-group-item full-width">
-                                <label className="drawer-label">Home Address / Location</label>
+                                <label className="drawer-label">Address</label>
                                 <input
                                     type="text"
                                     className="drawer-input"
-                                    placeholder="Abeokuta, Ogun State, Nigeria"
+                                    placeholder="Enter address"
                                     value={formData.address || ""}
                                     onChange={(e) => handleChange("address", e.target.value)}
                                 />
                             </div>
                         </div>
                     </div>
- 
+
                     <div className="drawer-form-card">
                         <div className="card-header-bar">
                             <i className="bi bi-shield-check text-primary-icon"></i>
@@ -144,7 +144,7 @@ export default function AdminSlideDrawer({
                         </div>
                         <div className="card-form-grid">
                             <div className="form-group-item">
-                                <label className="drawer-label">Assigned Role / Category</label>
+                                <label className="drawer-label">Role</label>
                                 <select
                                     className="drawer-input"
                                     value={formData.role || formData.categoryName || ""}
@@ -182,7 +182,7 @@ export default function AdminSlideDrawer({
                             </div>
 
                             <div className="form-group-item">
-                                <label className="drawer-label">Account / Record Status</label>
+                                <label className="drawer-label">Account Status</label>
                                 <select
                                     className="drawer-input"
                                     value={formData.status || "ACTIVE"}
@@ -192,17 +192,6 @@ export default function AdminSlideDrawer({
                                     <option value="INACTIVE">INACTIVE</option>
                                     <option value="PENDING">PENDING</option>
                                 </select>
-                            </div>
-
-                            <div className="form-group-item full-width">
-                                <label className="drawer-label">Notes / Remarks</label>
-                                <textarea
-                                    className="drawer-textarea"
-                                    rows="3"
-                                    placeholder="Add any additional remarks or administrative notes..."
-                                    value={formData.notes || ""}
-                                    onChange={(e) => handleChange("notes", e.target.value)}
-                                ></textarea>
                             </div>
                         </div>
                     </div>

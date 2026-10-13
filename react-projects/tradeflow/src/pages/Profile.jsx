@@ -143,7 +143,7 @@ export default function Profile({ isCustomer = false }) {
                                 </div>
 
                                 <div className="form-group-box">
-                                    <label className="field-label">Department / Unit</label>
+                                    <label className="field-label">Department</label>
                                     <input
                                         type="text"
                                         className="form-control-field"
@@ -153,7 +153,7 @@ export default function Profile({ isCustomer = false }) {
                                 </div>
 
                                 <div className="form-group-box full-width">
-                                    <label className="field-label">Delivery / Residential Address</label>
+                                    <label className="field-label">Address</label>
                                     <input
                                         type="text"
                                         className="form-control-field"

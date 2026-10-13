@@ -57,3 +57,13 @@ export function setSessionUser(userData) {
     }
 }
 
+export function clearSessionUser() {
+    try {
+        sessionStorage.removeItem(SESSION_USER_KEY);
+        localStorage.removeItem(SESSION_USER_KEY);
+        window.dispatchEvent(new Event("tradeflow_session_update"));
+    } catch (e) {
+        console.warn("Could not clear session user:", e);
+    }
+}
+
