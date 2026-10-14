@@ -8,6 +8,8 @@ export default function AdminSlideDrawer({
     icon = "bi bi-pencil-square",
     entityType = "Item",
     initialData = {},
+    isSaving = false,
+    errorMessage = "",
     onSave
 }) {
     const [formData, setFormData] = useState({});
@@ -27,7 +29,6 @@ export default function AdminSlideDrawer({
     const handleSubmit = (e) => {
         e.preventDefault();
         if (onSave) onSave(formData);
-        onClose();
     };
 
     return (
@@ -56,6 +57,26 @@ export default function AdminSlideDrawer({
                     </p>
                 </div>
 
+                {errorMessage && (
+                    <div
+                        style={{
+                            margin: "12px 20px 0",
+                            background: "#fee2e2",
+                            border: "1px solid #f87171",
+                            color: "#991b1b",
+                            padding: "10px 14px",
+                            borderRadius: "8px",
+                            fontSize: "0.88rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                        }}
+                    >
+                        <i className="bi bi-exclamation-triangle-fill"></i>
+                        <span>{errorMessage}</span>
+                    </div>
+                )}
+
                 <form className="drawer-body-scroll" onSubmit={handleSubmit}>
                     <div className="drawer-form-card">
                         <div className="card-header-bar">
@@ -67,15 +88,14 @@ export default function AdminSlideDrawer({
                                 <label className="drawer-label">Title</label>
                                 <select
                                     className="drawer-input"
-                                    value={formData.title || ""}
+                                    value={formData.title || "Mr"}
                                     onChange={(e) => handleChange("title", e.target.value)}
                                 >
-                                    <option value="">Select here</option>
                                     <option value="Mr">Mr</option>
                                     <option value="Mrs">Mrs</option>
+                                    <option value="Miss">Miss</option>
                                     <option value="Dr">Dr</option>
                                     <option value="Prof">Prof</option>
-                                    <option value="Engr">Engr</option>
                                 </select>
                             </div>
 
@@ -86,7 +106,10 @@ export default function AdminSlideDrawer({
                                     className="drawer-input"
                                     placeholder="Enter first name"
                                     value={formData.firstName || formData.name || ""}
-                                    onChange={(e) => handleChange("name", e.target.value)}
+                                    onChange={(e) => {
+                                        handleChange("firstName", e.target.value);
+                                        handleChange("name", e.target.value);
+                                    }}
                                     required
                                 />
                             </div>
@@ -108,8 +131,11 @@ export default function AdminSlideDrawer({
                                     type="email"
                                     className="drawer-input"
                                     placeholder="email@tradeflow.com"
-                                    value={formData.email || ""}
-                                    onChange={(e) => handleChange("email", e.target.value)}
+                                    value={formData.email || formData.emailAddress || ""}
+                                    onChange={(e) => {
+                                        handleChange("email", e.target.value);
+                                        handleChange("emailAddress", e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -119,8 +145,11 @@ export default function AdminSlideDrawer({
                                     type="text"
                                     className="drawer-input"
                                     placeholder="080 1234 5678"
-                                    value={formData.phone || ""}
-                                    onChange={(e) => handleChange("phone", e.target.value)}
+                                    value={formData.phone || formData.phoneNumber || ""}
+                                    onChange={(e) => {
+                                        handleChange("phone", e.target.value);
+                                        handleChange("phoneNumber", e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -134,6 +163,19 @@ export default function AdminSlideDrawer({
                                     onChange={(e) => handleChange("address", e.target.value)}
                                 />
                             </div>
+
+                            {entityType === "Staff Member" && !formData.staffId && (
+                                <div className="form-group-item full-width">
+                                    <label className="drawer-label">Initial Password</label>
+                                    <input
+                                        type="password"
+                                        className="drawer-input"
+                                        placeholder="Default: 123456"
+                                        value={formData.password || ""}
+                                        onChange={(e) => handleChange("password", e.target.value)}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -208,8 +250,19 @@ export default function AdminSlideDrawer({
                         <button
                             type="submit"
                             className="btn-drawer-save"
+                            disabled={isSaving}
+                            style={{ opacity: isSaving ? 0.75 : 1, cursor: isSaving ? "not-allowed" : "pointer" }}
                         >
-                            <i className="bi bi-check2-circle"></i> Save Changes
+                            {isSaving ? (
+                                <span>
+                                    <i className="bi bi-arrow-repeat spin" style={{ marginRight: "6px" }}></i>
+                                    Saving...
+                                </span>
+                            ) : (
+                                <span>
+                                    <i className="bi bi-check2-circle"></i> Save Changes
+                                </span>
+                            )}
                         </button>
                     </div>
                 </form>

@@ -1,6 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { STAFFS_DATA } from "../data/storeData";
+import staffService from "../services/staffService";
+
+const mapServerStaff = (s) => ({
+    id: s.staff_id || s.staffId || s.id,
+    staffId: s.staff_id || s.staffId,
+    name: `${s.first_name || ""} ${s.last_name || ""}`.trim() || s.email_address,
+    firstName: s.first_name || s.firstName,
+    lastName: s.last_name || s.lastName,
+    email: s.email_address || s.emailAddress,
+    emailAddress: s.email_address || s.emailAddress,
+    phone: s.phone_number || s.phoneNumber,
+    phoneNumber: s.phone_number || s.phoneNumber,
+    address: s.address || "Abeokuta, Ogun State",
+    role: s.role_name || s.roleName || "Store Manager",
+    roleId: s.role_id || s.roleId || "3",
+    roleCategory: "STAFF",
+    status: (s.status_name || s.statusName || "ACTIVE").toUpperCase(),
+    statusId: s.status_id || s.statusId || "1",
+    title: s.title_name || (s.title_id === "2" ? "Mrs" : s.title_id === "3" ? "Miss" : s.title_id === "4" ? "Dr" : s.title_id === "5" ? "Prof" : "Mr"),
+    titleId: s.title_id || s.titleId || "1",
+    initials: (((s.first_name?.[0] || "") + (s.last_name?.[0] || "")).toUpperCase() || "ST"),
+    avatarBg: "#143526",
+    accentColor: "#38a169",
+    lastLogin: s.last_login_date || "Just now"
+});
 
 export default function Staffs() {
     const [staffsList, setStaffsList] = useState(STAFFS_DATA);
@@ -10,47 +35,89 @@ export default function Staffs() {
     const [drawerTitle, setDrawerTitle] = useState("Edit Staff Details");
     const [filterRole, setFilterRole] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [drawerError, setDrawerError] = useState("");
+    const [toastMsg, setToastMsg] = useState("");
+
+    const loadStaffs = async () => {
+        const result = await staffService.fetchAllStaff();
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+            setStaffsList(result.data.map(mapServerStaff));
+        }
+    };
+
+    useEffect(() => {
+        loadStaffs();
+    }, []);
 
     const handleOpenEdit = (staff) => {
         setSelectedStaff({ ...staff });
         setDrawerTitle(staff ? `Edit Staff - ${staff.name}` : "Create New Staff");
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
     const handleOpenAdd = () => {
         setSelectedStaff({
-            id: `STF-${String(staffsList.length + 1).padStart(2, "0")}`,
+            title: "Mr",
+            titleId: "1",
             name: "",
+            firstName: "",
+            lastName: "",
             role: "Store Manager",
+            roleId: "3",
             roleCategory: "STAFF",
             status: "ACTIVE",
+            statusId: "1",
             phone: "",
+            phoneNumber: "",
             email: "",
+            emailAddress: "",
+            address: "Abeokuta, Ogun State",
+            password: "Password123!",
             avatarBg: "#143526",
             accentColor: "#38a169",
             lastLogin: "Just now"
         });
+        setDrawerError("");
         setDrawerTitle("Create New Staff");
         setDrawerOpen(true);
     };
 
-    const handleSaveStaff = (updatedStaff) => {
-        setStaffsList(prev => {
-            const exists = prev.some(s => s.id === updatedStaff.id);
-            if (exists) {
-                return prev.map(s => s.id === updatedStaff.id ? { ...s, ...updatedStaff } : s);
-            } else {
-                return [
-                    {
-                        ...updatedStaff,
-                        initials: (updatedStaff.name || "ST").substring(0, 2).toUpperCase(),
-                        avatarBg: "#143526",
-                        accentColor: "#38a169"
-                    },
-                    ...prev
-                ];
-            }
-        });
+    const handleSaveStaff = async (formData) => {
+        setIsSaving(true);
+        setDrawerError("");
+
+        let result;
+        if (formData.staffId) {
+            result = await staffService.updateStaff(formData);
+        } else {
+            result = await staffService.createStaff(formData);
+        }
+        setIsSaving(false);
+
+        if (result.success) {
+            setToastMsg(result.message || "Staff member saved successfully!");
+            setTimeout(() => setToastMsg(""), 3500);
+            setDrawerOpen(false);
+            loadStaffs();
+        } else {
+            setDrawerError(result.message || "Unable to save staff member. Please check required fields.");
+        }
+    };
+
+    const handleDeleteStaff = async (staffId) => {
+        if (!staffId) return;
+        if (!window.confirm("Are you sure you want to delete this staff member?")) return;
+
+        const result = await staffService.deleteStaff(staffId);
+        if (result.success) {
+            setToastMsg(result.message || "Staff member deleted successfully!");
+            setTimeout(() => setToastMsg(""), 3500);
+            loadStaffs();
+        } else {
+            alert(result.message || "Failed to delete staff member.");
+        }
     };
 
     const filteredStaffs = staffsList.filter((staff) => {
@@ -146,6 +213,26 @@ export default function Staffs() {
                     </div>
                 </div>
 
+                {toastMsg && (
+                    <div
+                        style={{
+                            marginBottom: "1rem",
+                            background: "#d1fae5",
+                            border: "1px solid #34d399",
+                            color: "#065f46",
+                            padding: "10px 16px",
+                            borderRadius: "8px",
+                            fontSize: "0.9rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                        }}
+                    >
+                        <i className="bi bi-check-circle-fill"></i>
+                        <span>{toastMsg}</span>
+                    </div>
+                )}
+
                 {/* Conditional Rendering: Grid View vs Table List View */}
                 {viewMode === "grid" ? (
                     /* Image 3 Style Staff Card Grid */
@@ -180,6 +267,19 @@ export default function Staffs() {
                                     <span className={`status-badge-pill ${staff.status.toLowerCase()}`}>
                                         {staff.status}
                                     </span>
+                                    {staff.staffId && (
+                                        <button
+                                            type="button"
+                                            style={{ border: "none", background: "transparent", color: "#e53e3e", cursor: "pointer", marginLeft: "auto", fontSize: "0.95rem" }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteStaff(staff.staffId);
+                                            }}
+                                            title="Delete Staff"
+                                        >
+                                            <i className="bi bi-trash"></i>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -242,6 +342,17 @@ export default function Staffs() {
                                                     >
                                                         View
                                                     </button>
+                                                    {staff.staffId && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn-edit"
+                                                            style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                            onClick={() => handleDeleteStaff(staff.staffId)}
+                                                            title="Delete Staff"
+                                                        >
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -262,6 +373,8 @@ export default function Staffs() {
                 icon="bi bi-person-plus-fill"
                 entityType="Staff Member"
                 initialData={selectedStaff || {}}
+                isSaving={isSaving}
+                errorMessage={drawerError}
                 onSave={handleSaveStaff}
             />
         </>

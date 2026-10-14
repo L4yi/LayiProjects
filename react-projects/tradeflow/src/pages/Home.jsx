@@ -24,9 +24,9 @@ export default function Home() {
                                 </button>
                             </Link>
 
-                            <Link to="/signup">
-                                <button className="btn sign-up-btn" title="Sign Up">
-                                    Sign Up
+                            <Link to="/customer/signin">
+                                <button className="btn sign-up-btn" title="Customer Portal">
+                                    Customer Portal
                                 </button>
                             </Link>
                         </div>
