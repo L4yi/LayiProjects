@@ -1,34 +1,53 @@
 import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { STAFFS_DATA } from "../data/storeData";
 import staffService from "../services/staffService";
 
-const mapServerStaff = (s) => ({
-    id: s.staff_id || s.staffId || s.id,
-    staffId: s.staff_id || s.staffId,
-    name: `${s.first_name || ""} ${s.last_name || ""}`.trim() || s.email_address,
-    firstName: s.first_name || s.firstName,
-    lastName: s.last_name || s.lastName,
-    email: s.email_address || s.emailAddress,
-    emailAddress: s.email_address || s.emailAddress,
-    phone: s.phone_number || s.phoneNumber,
-    phoneNumber: s.phone_number || s.phoneNumber,
-    address: s.address || "Abeokuta, Ogun State",
-    role: s.role_name || s.roleName || "Store Manager",
-    roleId: s.role_id || s.roleId || "3",
-    roleCategory: "STAFF",
-    status: (s.status_name || s.statusName || "ACTIVE").toUpperCase(),
-    statusId: s.status_id || s.statusId || "1",
-    title: s.title_name || (s.title_id === "2" ? "Mrs" : s.title_id === "3" ? "Miss" : s.title_id === "4" ? "Dr" : s.title_id === "5" ? "Prof" : "Mr"),
-    titleId: s.title_id || s.titleId || "1",
-    initials: (((s.first_name?.[0] || "") + (s.last_name?.[0] || "")).toUpperCase() || "ST"),
-    avatarBg: "#143526",
-    accentColor: "#38a169",
-    lastLogin: s.last_login_date || "Just now"
-});
+export const mapServerStaff = (s) => {
+    const staffId = s.staff_id || s.staffId || s.id || "";
+    const firstName = s.first_name || s.firstName || "";
+    const lastName = s.last_name || s.lastName || "";
+    const fullName = `${firstName} ${lastName}`.trim() || s.email_address || s.emailAddress || "Staff Member";
+    const email = s.email_address || s.emailAddress || "";
+    const phone = s.phone_number || s.phoneNumber || "";
+    const address = s.address || "Abeokuta, Ogun State";
+    const role = s.role_name || s.roleName || (String(s.role_id) === "3" || String(s.roleId) === "3" ? "Super Admin" : "Store Manager");
+    const roleId = String(s.role_id || s.roleId || "3");
+    const status = String(s.status_name || s.statusName || (String(s.status_id) === "2" || String(s.statusId) === "2" ? "INACTIVE" : "ACTIVE")).toUpperCase();
+    const statusId = String(s.status_id || s.statusId || "1");
+    const titleName = s.title_name || s.titleName || (String(s.title_id) === "2" ? "Mrs" : String(s.title_id) === "3" ? "Miss" : String(s.title_id) === "4" ? "Dr" : String(s.title_id) === "5" ? "Prof" : "Mr");
+    const titleId = String(s.title_id || s.titleId || "1");
+
+    const initials = (((firstName?.[0] || "") + (lastName?.[0] || "")).toUpperCase() || "ST");
+
+    return {
+        id: staffId,
+        staffId,
+        name: fullName,
+        firstName,
+        lastName,
+        email,
+        emailAddress: email,
+        phone,
+        phoneNumber: phone,
+        address,
+        role,
+        roleId,
+        roleCategory: "STAFF",
+        status,
+        statusId,
+        title: titleName,
+        titleId,
+        initials,
+        avatarBg: "#143526",
+        accentColor: "#38a169",
+        lastLogin: s.last_login_date || s.lastLoginDate || "Just now"
+    };
+};
 
 export default function Staffs() {
-    const [staffsList, setStaffsList] = useState(STAFFS_DATA);
+    const [staffsList, setStaffsList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState("grid"); // Default to grid view
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
@@ -40,9 +59,13 @@ export default function Staffs() {
     const [toastMsg, setToastMsg] = useState("");
 
     const loadStaffs = async () => {
+        setIsLoading(true);
         const result = await staffService.fetchAllStaff();
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        setIsLoading(false);
+        if (result.success && Array.isArray(result.data)) {
             setStaffsList(result.data.map(mapServerStaff));
+        } else {
+            setStaffsList([]);
         }
     };
 
@@ -50,11 +73,41 @@ export default function Staffs() {
         loadStaffs();
     }, []);
 
-    const handleOpenEdit = (staff) => {
+    // Live search integration with debounce (admin/staff/search-staff.php)
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            loadStaffs();
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsLoading(true);
+            const result = await staffService.searchStaff(searchQuery.trim());
+            setIsLoading(false);
+            if (result.success && Array.isArray(result.data)) {
+                setStaffsList(result.data.map(mapServerStaff));
+            } else {
+                setStaffsList([]);
+            }
+        }, 350);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Open Edit / View Drawer - Fetch fresh record from backend (admin/staff/fetch-each-staff.php)
+    const handleOpenEdit = async (staff) => {
+        if (!staff) return;
         setSelectedStaff({ ...staff });
         setDrawerTitle(staff ? `Edit Staff - ${staff.name}` : "Create New Staff");
         setDrawerError("");
         setDrawerOpen(true);
+
+        if (staff.staffId) {
+            const fresh = await staffService.fetchEachStaff(staff.staffId);
+            if (fresh?.success && fresh?.data) {
+                setSelectedStaff(mapServerStaff(fresh.data));
+            }
+        }
     };
 
     const handleOpenAdd = () => {
@@ -144,10 +197,44 @@ export default function Staffs() {
                 <div className="module-header-bar">
                     <div className="header-left">
                         <h2 className="module-main-title">All Staffs</h2>
-                        <span className="module-count-subtitle">{filteredStaffs.length} members registered</span>
+                        <span className="module-count-subtitle">
+                            {isLoading ? "Fetching..." : `${filteredStaffs.length} members registered`}
+                        </span>
                     </div>
 
                     <div className="header-right">
+                        {/* Live Search Input (admin/staff/search-staff.php) */}
+                        <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
+                            <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
+                            <input
+                                type="text"
+                                className="filter-dropdown-select"
+                                style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
+                                placeholder="Search staff..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery("")}
+                                    style={{
+                                        position: "absolute",
+                                        right: "10px",
+                                        background: "transparent",
+                                        border: "none",
+                                        color: "#a0aec0",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        fontSize: "0.95rem"
+                                    }}
+                                    title="Clear search"
+                                >
+                                    <i className="bi bi-x-circle-fill"></i>
+                                </button>
+                            )}
+                        </div>
+
                         {/* View Switcher Toggle */}
                         <div className="view-toggle-pill-group">
                             <button
@@ -178,6 +265,7 @@ export default function Staffs() {
                                 onChange={(e) => setFilterRole(e.target.value)}
                             >
                                 <option value="">All Roles</option>
+                                <option value="super admin">Super Admin</option>
                                 <option value="manager">Store Manager</option>
                                 <option value="operations">Operations Lead</option>
                                 <option value="sales">Sales & Retail</option>
@@ -233,22 +321,43 @@ export default function Staffs() {
                     </div>
                 )}
 
-                {/* Conditional Rendering: Grid View vs Table List View vs Empty State */}
-                {filteredStaffs.length === 0 ? (
+                {/* Conditional Rendering: Loading vs Empty State vs Grid vs Table */}
+                {isLoading ? (
+                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
+                        <i className="bi bi-arrow-repeat spin" style={{ fontSize: "2.2rem", color: "#143526", display: "inline-block", marginBottom: "12px" }}></i>
+                        <h3 style={{ color: "#2d3748", marginBottom: "6px", fontSize: "1.1rem" }}>Connecting to Staff Database</h3>
+                        <p style={{ color: "#718096", fontSize: "0.9rem" }}>Loading live staff members from TradeFlow API...</p>
+                    </div>
+                ) : filteredStaffs.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
                         <i className="bi bi-people" style={{ fontSize: "2.8rem", color: "#a0aec0", display: "block", marginBottom: "12px" }}></i>
-                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>No Staff Members Found</h3>
+                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>
+                            {searchQuery ? `No results matching "${searchQuery}"` : "No Staff Members Found"}
+                        </h3>
                         <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
-                            No staff records found in the database. Click below to register your store's first staff member.
+                            {searchQuery
+                                ? "No staff records match your current search terms. Try searching with a different name or email."
+                                : "No staff records found in the database. Click below to register your store's first staff member."}
                         </p>
-                        <button
-                            type="button"
-                            className="btn-add-entity"
-                            onClick={handleOpenAdd}
-                            style={{ display: "inline-flex" }}
-                        >
-                            <i className="bi bi-plus-lg"></i> Create New Staff
-                        </button>
+                        {searchQuery ? (
+                            <button
+                                type="button"
+                                className="btn-add-entity"
+                                onClick={() => setSearchQuery("")}
+                                style={{ display: "inline-flex" }}
+                            >
+                                <i className="bi bi-arrow-counterclockwise"></i> Reset Search
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn-add-entity"
+                                onClick={handleOpenAdd}
+                                style={{ display: "inline-flex" }}
+                            >
+                                <i className="bi bi-plus-lg"></i> Create New Staff
+                            </button>
+                        )}
                     </div>
                 ) : viewMode === "grid" ? (
                     /* Image 3 Style Staff Card Grid */
