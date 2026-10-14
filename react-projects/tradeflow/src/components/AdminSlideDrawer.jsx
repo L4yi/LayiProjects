@@ -13,11 +13,13 @@ export default function AdminSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (initialData) {
             setFormData(initialData);
         }
+        setShowPassword(false);
     }, [initialData, isOpen]);
 
     if (!isOpen) return null;
@@ -167,13 +169,35 @@ export default function AdminSlideDrawer({
                             {entityType === "Staff Member" && !formData.staffId && (
                                 <div className="form-group-item full-width">
                                     <label className="drawer-label">Initial Password</label>
-                                    <input
-                                        type="password"
-                                        className="drawer-input"
-                                        placeholder="Default: 123456"
-                                        value={formData.password || ""}
-                                        onChange={(e) => handleChange("password", e.target.value)}
-                                    />
+                                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            className="drawer-input"
+                                            placeholder="Default: 123456"
+                                            value={formData.password || ""}
+                                            onChange={(e) => handleChange("password", e.target.value)}
+                                            style={{ paddingRight: "42px", width: "100%" }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: "absolute",
+                                                right: "12px",
+                                                background: "transparent",
+                                                border: "none",
+                                                color: "#718096",
+                                                cursor: "pointer",
+                                                padding: 0,
+                                                fontSize: "1.1rem",
+                                                display: "flex",
+                                                alignItems: "center"
+                                            }}
+                                            title={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
