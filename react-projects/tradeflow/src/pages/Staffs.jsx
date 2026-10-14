@@ -167,13 +167,13 @@ export default function Staffs() {
         }
         setIsSaving(false);
 
-        if (result.success) {
+        if (result?.success) {
             setToastMsg(result.message || "Staff member saved successfully!");
             setTimeout(() => setToastMsg(""), 3500);
             setDrawerOpen(false);
             loadStaffs();
         } else {
-            setDrawerError(result.message || "Unable to save staff member. Please check required fields.");
+            setDrawerError(result?.message || "Unable to save staff member. Please check required fields.");
         }
     };
 
@@ -182,12 +182,12 @@ export default function Staffs() {
         if (!window.confirm("Are you sure you want to delete this staff member?")) return;
 
         const result = await staffService.deleteStaff(staffId);
-        if (result.success) {
+        if (result?.success) {
             setToastMsg(result.message || "Staff member deleted successfully!");
             setTimeout(() => setToastMsg(""), 3500);
             loadStaffs();
         } else {
-            alert(result.message || "Failed to delete staff member.");
+            alert(result?.message || "Failed to delete staff member.");
         }
     };
 

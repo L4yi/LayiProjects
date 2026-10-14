@@ -1,22 +1,44 @@
 import api from "../api/axios";
 
-const LOCAL_STAFFS_KEY = "tradeflow_created_staffs";
-
-function getLocalStaffs() {
-    try {
-        const raw = localStorage.getItem(LOCAL_STAFFS_KEY);
-        return raw ? JSON.parse(raw) : [];
-    } catch {
-        return [];
-    }
+// Clean up any previously stored local/session staff entries
+try {
+    localStorage.removeItem("tradeflow_created_staffs");
+} catch {
+    // Ignore storage errors
 }
 
-function saveLocalStaffs(staffs) {
-    try {
-        localStorage.setItem(LOCAL_STAFFS_KEY, JSON.stringify(staffs));
-    } catch {
-        // Ignore storage errors
+// Helper to extract exact message from backend response or error
+export function getErrorMessage(error, defaultMsg = "An unexpected error occurred") {
+    if (error.response?.data?.message) {
+        return error.response.data.message;
     }
+    if (error.response?.data?.error) {
+        return error.response.data.error;
+    }
+    if (typeof error.response?.data === "string" && error.response.data.trim()) {
+        const text = error.response.data.trim();
+        if (text.startsWith("<")) {
+            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+            if (titleMatch && titleMatch[1]) {
+                return titleMatch[1].trim();
+            }
+            const stripped = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+            if (stripped && stripped.length < 200) {
+                return stripped;
+            }
+        } else {
+            return text;
+        }
+    }
+    if (error.response?.status) {
+        const status = error.response.status;
+        const statusText = error.response.statusText || "";
+        return `Server Error (${status})${statusText ? ": " + statusText : ""}`;
+    }
+    if (error.message) {
+        return error.message;
+    }
+    return defaultMsg;
 }
 
 // Helper to map title text to titleId
@@ -46,67 +68,70 @@ export function getRoleId(role = "") {
     return "3"; // Default role
 }
 
+function normalizeResponse(resData, defaultSuccessMsg = "Success") {
+    if (typeof resData === "object" && resData !== null) {
+        const isSuccess = resData.success === true || resData.success === "true";
+        return {
+            ...resData,
+            success: isSuccess,
+            message: resData.message || (isSuccess ? defaultSuccessMsg : "Request could not be completed.")
+        };
+    }
+    return {
+        success: false,
+        message: String(resData || "Empty response from server.")
+    };
+}
+
 export const staffService = {
     /**
      * 1. Fetch all staff members (admin/staff/fetch-all-staff.php)
-     * Merged with any newly created staff records
+     * Strictly calls the backend and returns the backend response
      */
     async fetchAllStaff() {
-        let serverStaffs = [];
         try {
             const response = await api.post("admin/staff/fetch-all-staff.php", new FormData());
             const resData = response.data;
-            if (resData?.success === true && Array.isArray(resData?.data) && resData.data.length > 0) {
-                serverStaffs = resData.data;
-            } else {
-                // Fallback to search-staff with "STAFF" query if fetch-all returned no records
-                const searchFallback = await this.searchStaff("STAFF", false);
-                if (searchFallback.success && Array.isArray(searchFallback.data)) {
-                    serverStaffs = searchFallback.data;
-                }
+            if (resData?.success === true && Array.isArray(resData?.data)) {
+                return resData;
             }
-        } catch {
+            // If fetch-all returned no records, attempt search-staff fallback with "STAFF"
+            const searchFallback = await this.searchStaff("STAFF");
+            if (searchFallback?.success && Array.isArray(searchFallback?.data) && searchFallback.data.length > 0) {
+                return searchFallback;
+            }
+            return normalizeResponse(resData, "Staff fetched successfully");
+        } catch (error) {
             try {
-                const searchFallback = await this.searchStaff("STAFF", false);
-                if (searchFallback.success && Array.isArray(searchFallback.data)) {
-                    serverStaffs = searchFallback.data;
+                const searchFallback = await this.searchStaff("STAFF");
+                if (searchFallback?.success && Array.isArray(searchFallback?.data) && searchFallback.data.length > 0) {
+                    return searchFallback;
                 }
             } catch {
-                // Server unavailable
+                // Ignore search fallback error
             }
+            return {
+                success: false,
+                message: getErrorMessage(error, "Failed to fetch staff members"),
+                data: []
+            };
         }
-
-        // Merge with locally created staff members
-        const localStaffs = getLocalStaffs();
-        const serverIds = new Set(serverStaffs.map(s => String(s.staff_id || s.staffId)));
-        const combined = [...localStaffs.filter(s => !serverIds.has(String(s.staff_id || s.staffId))), ...serverStaffs];
-
-        return {
-            success: true,
-            data: combined
-        };
     },
 
     /**
      * 2. Fetch single staff member details by staffId (admin/staff/fetch-each-staff.php)
      */
     async fetchEachStaff(staffId) {
-        // Check local records first
-        const local = getLocalStaffs().find(s => String(s.staff_id || s.staffId) === String(staffId));
-        if (local) {
-            return { success: true, data: local };
-        }
-
         try {
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
 
             const response = await api.post("admin/staff/fetch-each-staff.php", formData);
-            return response.data;
+            return normalizeResponse(response.data, "Staff fetched successfully");
         } catch (error) {
             return {
                 success: false,
-                message: error.response?.data?.message || error.message || "Failed to fetch staff details"
+                message: getErrorMessage(error, "Failed to fetch staff details")
             };
         }
     },
@@ -114,73 +139,33 @@ export const staffService = {
     /**
      * 3. Search staff members by search query (admin/staff/search-staff.php)
      */
-    async searchStaff(searchContent, includeLocal = true) {
-        let serverResults = [];
+    async searchStaff(searchContent) {
         try {
             const formData = new FormData();
             formData.append("searchContent", (searchContent || "").trim());
 
             const response = await api.post("admin/staff/search-staff.php", formData);
-            const resData = response.data;
-            if (resData?.success === true && Array.isArray(resData?.data)) {
-                serverResults = resData.data;
-            }
-        } catch {
-            serverResults = [];
+            return normalizeResponse(response.data, "Staff search completed");
+        } catch (error) {
+            return {
+                success: false,
+                message: getErrorMessage(error, "Failed to search staff"),
+                data: []
+            };
         }
-
-        if (!includeLocal) {
-            return { success: true, data: serverResults };
-        }
-
-        // Filter local staff by search query
-        const query = (searchContent || "").toLowerCase().trim();
-        const localMatches = getLocalStaffs().filter(s => {
-            const name = `${s.first_name || ""} ${s.last_name || ""}`.toLowerCase();
-            const email = (s.email_address || "").toLowerCase();
-            const phone = (s.phone_number || "").toLowerCase();
-            return name.includes(query) || email.includes(query) || phone.includes(query);
-        });
-
-        const serverIds = new Set(serverResults.map(s => String(s.staff_id || s.staffId)));
-        const combined = [...localMatches.filter(s => !serverIds.has(String(s.staff_id || s.staffId))), ...serverResults];
-
-        return { success: true, data: combined };
     },
 
     /**
      * 4. Update existing staff member (admin/staff/update-staff.php)
      */
     async updateStaff(staffData) {
-        const staffId = staffData.staffId || staffData.id;
-        const localStaffs = getLocalStaffs();
-        const localIdx = localStaffs.findIndex(s => String(s.staff_id || s.staffId) === String(staffId));
-
-        if (localIdx !== -1) {
-            localStaffs[localIdx] = {
-                ...localStaffs[localIdx],
-                first_name: staffData.firstName || staffData.name?.split(" ")[0] || localStaffs[localIdx].first_name,
-                last_name: staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || localStaffs[localIdx].last_name,
-                email_address: staffData.emailAddress || staffData.email || localStaffs[localIdx].email_address,
-                phone_number: staffData.phoneNumber || staffData.phone || localStaffs[localIdx].phone_number,
-                address: staffData.address || localStaffs[localIdx].address,
-                role_name: staffData.role || localStaffs[localIdx].role_name,
-                role_id: staffData.roleId || localStaffs[localIdx].role_id,
-                status_name: staffData.status || localStaffs[localIdx].status_name,
-                status_id: staffData.statusId || localStaffs[localIdx].status_id,
-                title_name: staffData.title || localStaffs[localIdx].title_name,
-                title_id: staffData.titleId || localStaffs[localIdx].title_id,
-                updated_at: new Date().toISOString().slice(0, 19).replace("T", " ")
-            };
-            saveLocalStaffs(localStaffs);
-        }
-
         try {
-            const formData = new FormData();
+            const staffId = staffData.staffId || staffData.id;
             const titleId = staffData.titleId || getTitleId(staffData.title);
             const statusId = staffData.statusId || getStatusId(staffData.status);
             const roleId = staffData.roleId || getRoleId(staffData.role);
 
+            const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
             formData.append("titleId", titleId);
             formData.append("firstName", (staffData.firstName || staffData.name?.split(" ")[0] || "").trim());
@@ -192,14 +177,11 @@ export const staffService = {
             formData.append("statusId", statusId);
 
             const response = await api.post("admin/staff/update-staff.php", formData);
-            return response.data;
+            return normalizeResponse(response.data, "Staff member updated successfully!");
         } catch (error) {
-            if (localIdx !== -1) {
-                return { success: true, message: "Staff member updated successfully!" };
-            }
             return {
                 success: false,
-                message: error.response?.data?.message || error.message || "Failed to update staff member"
+                message: getErrorMessage(error, "Failed to update staff member")
             };
         }
     },
@@ -208,53 +190,34 @@ export const staffService = {
      * 5. Delete staff member by staffId (admin/staff/delete-staff.php)
      */
     async deleteStaff(staffId) {
-        const localStaffs = getLocalStaffs().filter(s => String(s.staff_id || s.staffId) !== String(staffId));
-        saveLocalStaffs(localStaffs);
-
         try {
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
 
             const response = await api.post("admin/staff/delete-staff.php", formData);
-            return response.data;
+            return normalizeResponse(response.data, "Staff member deleted successfully!");
         } catch (error) {
             return {
-                success: true,
-                message: "Staff member deleted successfully!"
+                success: false,
+                message: getErrorMessage(error, "Failed to delete staff member")
             };
         }
     },
 
     /**
      * 6. Create a new staff member (admin/staff/create-staff.php)
-     * Submits to backend and seamlessly saves record so creation never fails with 500 error
+     * Strictly calls the backend endpoint and returns any message the backend sends
      */
     async createStaff(staffData) {
         const titleId = staffData.titleId || getTitleId(staffData.title);
         const statusId = staffData.statusId || getStatusId(staffData.status);
         const roleId = staffData.roleId || getRoleId(staffData.role);
         const firstName = (staffData.firstName || staffData.name?.split(" ")[0] || "").trim();
-        const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "Staff").trim();
+        const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "").trim();
         const email = (staffData.emailAddress || staffData.email || "").trim();
         const phone = (staffData.phoneNumber || staffData.phone || "").trim();
-        const address = (staffData.address || "Abeokuta, Ogun State").trim();
-
-        const newStaffRecord = {
-            staff_id: `STAFF${Date.now()}`,
-            first_name: firstName,
-            last_name: lastName,
-            email_address: email,
-            phone_number: phone,
-            address: address,
-            title_id: titleId,
-            title_name: titleId === "2" ? "Mrs" : titleId === "3" ? "Miss" : titleId === "4" ? "Dr" : titleId === "5" ? "Prof" : "Mr",
-            role_id: roleId,
-            role_name: staffData.role || "Store Manager",
-            status_id: statusId,
-            status_name: statusId === "2" ? "INACTIVE" : statusId === "3" ? "PENDING" : "ACTIVE",
-            created_at: new Date().toISOString().slice(0, 19).replace("T", " "),
-            updated_at: new Date().toISOString().slice(0, 19).replace("T", " ")
-        };
+        const address = (staffData.address || "").trim();
+        const password = staffData.password || "Password123!";
 
         try {
             const formData = new FormData();
@@ -264,28 +227,18 @@ export const staffService = {
             formData.append("emailAddress", email);
             formData.append("phoneNumber", phone);
             formData.append("address", address);
-            formData.append("password", staffData.password || "123456");
+            formData.append("password", password);
             formData.append("roleId", roleId);
             formData.append("statusId", statusId);
 
             const response = await api.post("admin/staff/create-staff.php", formData);
-            if (response.data?.success) {
-                return response.data;
-            }
-        } catch {
-            // Remote endpoint triggered 500 or error - seamless persistence below
+            return normalizeResponse(response.data, "Staff member created successfully!");
+        } catch (error) {
+            return {
+                success: false,
+                message: getErrorMessage(error, "Failed to create staff member")
+            };
         }
-
-        // Persist locally so creation is 100% successful and user can see & manage the new staff
-        const localStaffs = getLocalStaffs();
-        localStaffs.unshift(newStaffRecord);
-        saveLocalStaffs(localStaffs);
-
-        return {
-            success: true,
-            message: "Staff member created successfully!",
-            data: newStaffRecord
-        };
     }
 };
 
