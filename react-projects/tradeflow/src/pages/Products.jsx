@@ -19,11 +19,17 @@ export default function Products() {
         setSelectedProd({
             id: `prd-new-${Date.now()}`,
             name: "",
-            code: `#PRD-00${productsList.length + 1}`,
+            code: `#PRD-0${productsList.length + 1}`,
+            categoryId: "mobile-devices",
             categoryName: "Mobile Devices & Phones",
+            brand: "",
+            subtitle: "",
             status: "ACTIVE",
-            price: 50000,
-            notes: ""
+            price: 150000,
+            oldPrice: 175000,
+            inStock: 20,
+            image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80",
+            description: ""
         });
         setDrawerTitle("Add New Product");
         setDrawerOpen(true);
@@ -31,19 +37,23 @@ export default function Products() {
 
     const handleSaveProduct = (updatedProd) => {
         setProductsList(prev => {
-            const exists = prev.some(p => p.id === updatedProd.id);
+            const exists = prev.some(p => p.id === updatedProd.id || (updatedProd.code && p.code === updatedProd.code));
             if (exists) {
-                return prev.map(p => p.id === updatedProd.id ? { ...p, ...updatedProd } : p);
+                return prev.map(p => (p.id === updatedProd.id || (updatedProd.code && p.code === updatedProd.code)) ? { ...p, ...updatedProd } : p);
             } else {
                 return [
                     {
                         ...updatedProd,
+                        id: updatedProd.id || `prd-new-${Date.now()}`,
+                        price: Number(updatedProd.price) || 0,
+                        inStock: Number(updatedProd.inStock) || 0,
                         image: updatedProd.image || "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80"
                     },
                     ...prev
                 ];
             }
         });
+        setDrawerOpen(false);
     };
 
     const filteredProds = productsList.filter(p =>

@@ -3,13 +3,14 @@ import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { STORE_CATEGORIES } from "../data/storeData";
 
 export default function Categories() {
+    const [categoriesList, setCategoriesList] = useState(STORE_CATEGORIES);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCat, setSelectedCat] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Category");
     const [statusFilter, setStatusFilter] = useState("");
 
     const handleOpenEdit = (cat) => {
-        setSelectedCat(cat);
+        setSelectedCat({ ...cat });
         setDrawerTitle(cat ? `Edit Category - ${cat.name}` : "Create New Category");
         setDrawerOpen(true);
     };
@@ -17,16 +18,37 @@ export default function Categories() {
     const handleOpenAdd = () => {
         setSelectedCat({
             name: "",
-            code: "#CAT-107",
+            code: `#CAT-${100 + categoriesList.length + 1}`,
+            icon: "bi bi-tag",
             status: "ACTIVE",
-            role: "Category",
-            notes: ""
+            description: "",
+            itemCount: "0 Models"
         });
         setDrawerTitle("Create New Category");
         setDrawerOpen(true);
     };
 
-    const displayCats = STORE_CATEGORIES.filter(c =>
+    const handleSaveCategory = (categoryData) => {
+        setCategoriesList(prev => {
+            const exists = prev.some(c => (categoryData.id && c.id === categoryData.id) || (categoryData.code && c.code === categoryData.code));
+            if (exists) {
+                return prev.map(c => ((categoryData.id && c.id === categoryData.id) || (categoryData.code && c.code === categoryData.code)) ? { ...c, ...categoryData } : c);
+            } else {
+                const newCat = {
+                    ...categoryData,
+                    id: categoryData.id || `cat-${Date.now()}`,
+                    code: categoryData.code || `#CAT-${100 + prev.length + 1}`,
+                    icon: categoryData.icon || "bi bi-tag",
+                    status: categoryData.status || "ACTIVE",
+                    itemCount: categoryData.itemCount || "0 Models"
+                };
+                return [newCat, ...prev];
+            }
+        });
+        setDrawerOpen(false);
+    };
+
+    const displayCats = categoriesList.filter(c =>
         !statusFilter || c.status.toLowerCase() === statusFilter.toLowerCase()
     );
 
@@ -86,19 +108,19 @@ export default function Categories() {
                             </thead>
                             <tbody>
                                 {displayCats.map((cat, idx) => (
-                                    <tr key={cat.id}>
+                                    <tr key={cat.id || idx}>
                                         <td className="col-sn">{idx + 1}</td>
                                         <td>
                                             <div className="category-name-cell">
                                                 <div className="category-icon-box">
-                                                    <i className={cat.icon}></i>
+                                                    <i className={cat.icon || "bi bi-tag"}></i>
                                                 </div>
                                                 <span className="cat-title">{cat.name}</span>
                                             </div>
                                         </td>
                                         <td className="col-cat-id">{cat.code}</td>
                                         <td>
-                                            <span className={`status-badge-pill ${cat.status.toLowerCase()}`}>
+                                            <span className={`status-badge-pill ${(cat.status || "active").toLowerCase()}`}>
                                                 {cat.status}
                                             </span>
                                         </td>
@@ -137,6 +159,7 @@ export default function Categories() {
                 icon="bi bi-tags-fill"
                 entityType="Product Category"
                 initialData={selectedCat || {}}
+                onSave={handleSaveCategory}
             />
         </>
     );

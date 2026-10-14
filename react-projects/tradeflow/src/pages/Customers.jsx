@@ -46,6 +46,7 @@ export default function Customers() {
                 ];
             }
         });
+        setDrawerOpen(false);
     };
 
     const filteredCustomers = customersList.filter(cust => {

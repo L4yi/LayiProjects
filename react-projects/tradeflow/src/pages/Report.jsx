@@ -30,6 +30,10 @@ export default function Report() {
         setDrawerOpen(true);
     };
 
+    const handleSaveReport = (repData) => {
+        setDrawerOpen(false);
+    };
+
     return (
         <>
             <div className="dashboard-body">
@@ -415,6 +419,7 @@ export default function Report() {
                 icon="bi bi-file-earmark-bar-graph-fill"
                 entityType="Analytics Report"
                 initialData={selectedReport || {}}
+                onSave={handleSaveReport}
             />
         </>
     );

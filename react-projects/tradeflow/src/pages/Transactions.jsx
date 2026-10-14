@@ -8,14 +8,21 @@ export default function Transactions() {
 
     const handleOpenEdit = (txnId, custName) => {
         setSelectedTxn({
+            id: txnId,
             name: custName,
+            customerName: custName,
             code: txnId,
-            role: "Payment Receipt",
-            status: "ACTIVE",
+            amount: 60,
+            paymentMethod: "Bank Transfer",
+            status: "PAID",
             notes: `Verified payment log for ${txnId}`
         });
         setDrawerTitle(`Transaction Details - ${txnId}`);
         setDrawerOpen(true);
+    };
+
+    const handleSaveTransaction = (txnData) => {
+        setDrawerOpen(false);
     };
 
     const handleOpenExport = () => {
@@ -512,6 +519,7 @@ export default function Transactions() {
                 icon="bi bi-credit-card-2-front-fill"
                 entityType="Transaction Log"
                 initialData={selectedTxn || {}}
+                onSave={handleSaveTransaction}
             />
         </>
     );

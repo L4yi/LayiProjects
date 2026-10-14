@@ -20,14 +20,25 @@ export default function Orders() {
 
     const handleOpenAdd = () => {
         setSelectedOrder({
+            id: `ORD-${Date.now()}`,
+            code: "#ORD-9839",
             name: "",
-            code: "#ORD-9830",
-            role: "Customer Order",
-            status: "PENDING",
+            customerName: "",
+            email: "",
+            address: "",
+            productName: "",
+            price: 50000,
+            amount: 50000,
+            paymentMethod: "Bank Transfer",
+            status: "Pending",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
         setDrawerOpen(true);
+    };
+
+    const handleSaveOrder = (orderData) => {
+        setDrawerOpen(false);
     };
 
     return (
@@ -333,6 +344,7 @@ export default function Orders() {
                 icon="bi bi-cart-check-fill"
                 entityType="Customer Order"
                 initialData={selectedOrder || {}}
+                onSave={handleSaveOrder}
             />
         </>
     );
