@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import staffService from "../services/staffService";
 
@@ -57,15 +57,22 @@ export default function Staffs() {
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [toastMsg, setToastMsg] = useState("");
+    const isFirstMount = useRef(true);
 
     const loadStaffs = async () => {
-        setIsLoading(true);
-        const result = await staffService.fetchAllStaff();
-        setIsLoading(false);
-        if (result.success && Array.isArray(result.data)) {
-            setStaffsList(result.data.map(mapServerStaff));
-        } else {
+        try {
+            setIsLoading(true);
+            const result = await staffService.fetchAllStaff();
+            if (result.success && Array.isArray(result.data)) {
+                setStaffsList(result.data.map(mapServerStaff));
+            } else {
+                setStaffsList([]);
+            }
+        } catch (error) {
+            console.error("Failed to load staff:", error);
             setStaffsList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -75,19 +82,30 @@ export default function Staffs() {
 
     // Live search integration with debounce (admin/staff/search-staff.php)
     useEffect(() => {
-        if (!searchQuery.trim()) {
-            loadStaffs();
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
             return;
         }
 
         const timer = setTimeout(async () => {
-            setIsLoading(true);
-            const result = await staffService.searchStaff(searchQuery.trim());
-            setIsLoading(false);
-            if (result.success && Array.isArray(result.data)) {
-                setStaffsList(result.data.map(mapServerStaff));
-            } else {
+            if (!searchQuery.trim()) {
+                loadStaffs();
+                return;
+            }
+
+            try {
+                setIsLoading(true);
+                const result = await staffService.searchStaff(searchQuery.trim());
+                if (result.success && Array.isArray(result.data)) {
+                    setStaffsList(result.data.map(mapServerStaff));
+                } else {
+                    setStaffsList([]);
+                }
+            } catch (error) {
+                console.error("Search failed:", error);
                 setStaffsList([]);
+            } finally {
+                setIsLoading(false);
             }
         }, 350);
 
@@ -197,9 +215,7 @@ export default function Staffs() {
                 <div className="module-header-bar">
                     <div className="header-left">
                         <h2 className="module-main-title">All Staffs</h2>
-                        <span className="module-count-subtitle">
-                            {isLoading ? "Fetching..." : `${filteredStaffs.length} members registered`}
-                        </span>
+                        <span className="module-count-subtitle">{filteredStaffs.length} members registered</span>
                     </div>
 
                     <div className="header-right">
@@ -323,10 +339,17 @@ export default function Staffs() {
 
                 {/* Conditional Rendering: Loading vs Empty State vs Grid vs Table */}
                 {isLoading ? (
-                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
-                        <i className="bi bi-arrow-repeat spin" style={{ fontSize: "2.2rem", color: "#143526", display: "inline-block", marginBottom: "12px" }}></i>
-                        <h3 style={{ color: "#2d3748", marginBottom: "6px", fontSize: "1.1rem" }}>Connecting to Staff Database</h3>
-                        <p style={{ color: "#718096", fontSize: "0.9rem" }}>Loading live staff members from TradeFlow API...</p>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "260px" }}>
+                        <div
+                            style={{
+                                width: "40px",
+                                height: "40px",
+                                border: "3px solid #e2e8f0",
+                                borderTop: "3px solid #143526",
+                                borderRadius: "50%",
+                                animation: "spin 0.8s linear infinite"
+                            }}
+                        />
                     </div>
                 ) : filteredStaffs.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
