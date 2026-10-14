@@ -233,8 +233,24 @@ export default function Staffs() {
                     </div>
                 )}
 
-                {/* Conditional Rendering: Grid View vs Table List View */}
-                {viewMode === "grid" ? (
+                {/* Conditional Rendering: Grid View vs Table List View vs Empty State */}
+                {filteredStaffs.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
+                        <i className="bi bi-people" style={{ fontSize: "2.8rem", color: "#a0aec0", display: "block", marginBottom: "12px" }}></i>
+                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>No Staff Members Found</h3>
+                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                            No staff records found in the database. Click below to register your store's first staff member.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={handleOpenAdd}
+                            style={{ display: "inline-flex" }}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create New Staff
+                        </button>
+                    </div>
+                ) : viewMode === "grid" ? (
                     /* Image 3 Style Staff Card Grid */
                     <div className="staff-cards-grid-layout">
                         {filteredStaffs.map((staff) => (
