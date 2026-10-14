@@ -4091,32 +4091,104 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
+    margin-top: 6px;
 }
 
-.staff-role-category-tag {
+.staff-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
     font-size: 11px;
     font-weight: 700;
-    color: #64748b;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
 }
 
-.staff-card-footer .status-badge-pill {
-    font-size: 11px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.5px !important;
-    text-transform: uppercase !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
+.staff-status-badge .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.staff-card-footer .status-badge-pill.active {
-    color: #143526 !important;
+.staff-status-badge.active {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+.staff-status-badge.active .status-dot {
+    background-color: #10b981;
 }
 
-.staff-card-footer .status-badge-pill.inactive {
-    color: #dc2626 !important;
+.staff-status-badge.inactive {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+.staff-status-badge.inactive .status-dot {
+    background-color: #ef4444;
+}
+
+.staff-status-badge.pending {
+    background-color: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.staff-status-badge.pending .status-dot {
+    background-color: #f59e0b;
+}
+
+.staff-card-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.staff-card-btn-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.staff-card-btn-edit:hover {
+    background-color: #143526;
+    color: #ffffff;
+    border-color: #143526;
+}
+
+.staff-card-btn-delete {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid #fee2e2;
+    background-color: #fff5f5;
+    color: #ef4444;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    padding: 0;
+}
+
+.staff-card-btn-delete:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
 }
 
 /* =========================================================

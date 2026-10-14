@@ -411,23 +411,39 @@ export default function Staffs() {
                                 ></div>
 
                                 <div className="staff-card-footer">
-                                    <span className="staff-role-category-tag">{staff.roleCategory}</span>
-                                    <span className={`status-badge-pill ${staff.status.toLowerCase()}`}>
+                                    <span className={`staff-status-badge ${staff.status.toLowerCase()}`}>
+                                        <span className="status-dot"></span>
                                         {staff.status}
                                     </span>
-                                    {staff.staffId && (
+
+                                    <div className="staff-card-actions">
                                         <button
                                             type="button"
-                                            style={{ border: "none", background: "transparent", color: "#e53e3e", cursor: "pointer", marginLeft: "auto", fontSize: "0.95rem" }}
+                                            className="staff-card-btn-edit"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeleteStaff(staff.staffId);
+                                                handleOpenEdit(staff);
                                             }}
-                                            title="Delete Staff"
+                                            title="Edit Staff Details"
                                         >
-                                            <i className="bi bi-trash"></i>
+                                            <i className="bi bi-pencil"></i>
+                                            <span>Edit</span>
                                         </button>
-                                    )}
+
+                                        {staff.staffId && (
+                                            <button
+                                                type="button"
+                                                className="staff-card-btn-delete"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteStaff(staff.staffId);
+                                                }}
+                                                title="Delete Staff"
+                                            >
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
