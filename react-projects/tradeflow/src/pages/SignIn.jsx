@@ -71,12 +71,6 @@ export default function SignIn() {
 
                                     <div className="form-header">
                                         <h2>Sign In</h2>
-                                        <p>
-                                            Don't have an account?{" "}
-                                            <Link to="/signup" className="link">
-                                                Create account &rarr;
-                                            </Link>
-                                        </p>
                                     </div>
 
                                     {apiError && (

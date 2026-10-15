@@ -3,7 +3,6 @@ import '../assets/styles/MainStyle.css';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Home from "./Home";
 import SignIn from "./SignIn";
-import SignUp from "./SignUp";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import Profile from "./Profile";
@@ -32,7 +31,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    element: <SignUp />
+    element: <Navigate to="/signin" replace />
   },
   {
     path: "/forgot-password",
