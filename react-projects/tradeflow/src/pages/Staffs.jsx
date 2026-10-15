@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import staffService from "../services/staffService";
+import { StatusModal, TableCard } from "../components/common";
 
 export const mapServerStaff = (s) => {
     const staffId = s.staff_id || s.staffId || s.id || "";
@@ -45,6 +46,7 @@ export const mapServerStaff = (s) => {
 };
 
 export default function Staffs() {
+    const [allStaffs, setAllStaffs] = useState([]);
     const [staffsList, setStaffsList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +59,8 @@ export default function Staffs() {
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [toastMsg, setToastMsg] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [modalData, setModalData] = useState({ title: "", message: "" });
     const isFirstMount = useRef(true);
 
     const loadStaffs = async () => {
@@ -64,12 +68,16 @@ export default function Staffs() {
             setIsLoading(true);
             const result = await staffService.fetchAllStaff();
             if (result.success && Array.isArray(result.data)) {
-                setStaffsList(result.data.map(mapServerStaff));
+                const list = result.data.map(mapServerStaff);
+                setAllStaffs(list);
+                setStaffsList(list);
             } else {
+                setAllStaffs([]);
                 setStaffsList([]);
             }
         } catch (error) {
             console.error("Failed to load staff:", error);
+            setAllStaffs([]);
             setStaffsList([]);
         } finally {
             setIsLoading(false);
@@ -80,37 +88,45 @@ export default function Staffs() {
         loadStaffs();
     }, []);
 
-    // Live search integration with debounce (admin/staff/search-staff.php)
+    // Resilient Live search: uses client-side instant filtering + backend search fallback
     useEffect(() => {
         if (isFirstMount.current) {
             isFirstMount.current = false;
             return;
         }
 
-        const timer = setTimeout(async () => {
-            if (!searchQuery.trim()) {
-                loadStaffs();
-                return;
-            }
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) {
+            setStaffsList(allStaffs);
+            return;
+        }
 
+        // Instant client-side search filtering across all staff fields
+        const localMatches = allStaffs.filter((staff) => {
+            const matchName = staff.name?.toLowerCase().includes(query);
+            const matchEmail = staff.email?.toLowerCase().includes(query);
+            const matchPhone = staff.phone?.toLowerCase().includes(query);
+            const matchRole = staff.role?.toLowerCase().includes(query);
+            const matchId = staff.id?.toLowerCase().includes(query);
+            return matchName || matchEmail || matchPhone || matchRole || matchId;
+        });
+
+        setStaffsList(localMatches);
+
+        // Concurrently attempt server search; if server returns 404, we safely keep localMatches
+        const timer = setTimeout(async () => {
             try {
-                setIsLoading(true);
-                const result = await staffService.searchStaff(searchQuery.trim());
-                if (result.success && Array.isArray(result.data)) {
+                const result = await staffService.searchStaff(query);
+                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
                     setStaffsList(result.data.map(mapServerStaff));
-                } else {
-                    setStaffsList([]);
                 }
             } catch (error) {
-                console.error("Search failed:", error);
-                setStaffsList([]);
-            } finally {
-                setIsLoading(false);
+                // Keep localMatches when server 404s
             }
-        }, 350);
+        }, 300);
 
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+    }, [searchQuery, allStaffs]);
 
     // Open Edit / View Drawer - Fetch fresh record from backend (admin/staff/fetch-each-staff.php)
     const handleOpenEdit = async (staff) => {
@@ -159,6 +175,7 @@ export default function Staffs() {
         setIsSaving(true);
         setDrawerError("");
 
+        const isNewStaff = !formData.staffId;
         let result;
         if (formData.staffId) {
             result = await staffService.updateStaff(formData);
@@ -168,10 +185,23 @@ export default function Staffs() {
         setIsSaving(false);
 
         if (result?.success) {
-            setToastMsg(result.message || "Staff member saved successfully!");
-            setTimeout(() => setToastMsg(""), 3500);
             setDrawerOpen(false);
             loadStaffs();
+
+            if (isNewStaff) {
+                // Show Project Themed Popup Status Modal on creation (Matching Image 2)
+                setModalData({
+                    title: "STAFF CREATED SUCCESSFULLY!",
+                    message: `New staff member "${formData.firstName || formData.name}" has been registered successfully on TradeFlow.`
+                });
+                setShowSuccessModal(true);
+            } else {
+                setModalData({
+                    title: "STAFF UPDATED SUCCESSFULLY!",
+                    message: "Staff member details have been updated."
+                });
+                setShowSuccessModal(true);
+            }
         } else {
             setDrawerError(result?.message || "Unable to save staff member. Please check required fields.");
         }
@@ -187,7 +217,9 @@ export default function Staffs() {
             setTimeout(() => setToastMsg(""), 3500);
             loadStaffs();
         } else {
-            alert(result?.message || "Failed to delete staff member.");
+            // Note: delete-staff.php returns 404 on the backend server
+            setToastMsg(result?.message || "Remote delete endpoint is currently not deployed on the server.");
+            setTimeout(() => setToastMsg(""), 4000);
         }
     };
 
@@ -219,7 +251,7 @@ export default function Staffs() {
                     </div>
 
                     <div className="header-right">
-                        {/* Live Search Input (admin/staff/search-staff.php) */}
+                        {/* Live Search Input with Instant Client-side and Debounced API */}
                         <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
                             <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
                             <input
@@ -281,72 +313,69 @@ export default function Staffs() {
                                 onChange={(e) => setFilterRole(e.target.value)}
                             >
                                 <option value="">All Roles</option>
-                                <option value="super admin">Super Admin</option>
-                                <option value="manager">Store Manager</option>
-                                <option value="operations">Operations Lead</option>
-                                <option value="sales">Sales & Retail</option>
-                                <option value="inventory">Inventory Lead</option>
-                                <option value="systems">Systems Specialist</option>
-                                <option value="support">Customer Support</option>
+                                <option value="Store Manager">Store Manager</option>
+                                <option value="Super Admin">Super Admin</option>
                             </select>
                         </div>
 
                         {/* Status Filter */}
                         <div className="filter-select-wrap">
-                            <i className="bi bi-toggle2-on"></i>
+                            <i className="bi bi-toggle-on"></i>
                             <select
                                 className="filter-dropdown-select"
                                 title="Filter by Status"
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
                             >
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
+                                <option value="">All Statuses</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="INACTIVE">INACTIVE</option>
                             </select>
                         </div>
 
-                        {/* Create Button */}
+                        {/* Action: Add Staff Button */}
                         <button
                             type="button"
                             className="btn-add-entity"
                             onClick={handleOpenAdd}
                         >
-                            <i className="bi bi-plus-lg"></i> Create New Staff
+                            <i className="bi bi-plus-lg"></i>
+                            <span>Add Staff</span>
                         </button>
                     </div>
                 </div>
 
+                {/* Toast Message Notification */}
                 {toastMsg && (
                     <div
                         style={{
-                            marginBottom: "1rem",
-                            background: "#d1fae5",
-                            border: "1px solid #34d399",
-                            color: "#065f46",
-                            padding: "10px 16px",
-                            borderRadius: "8px",
-                            fontSize: "0.9rem",
+                            margin: "0 0 16px 0",
+                            background: "#e8fff1",
+                            border: "1px solid #b2f0c0",
+                            color: "#143526",
+                            padding: "10px 18px",
+                            borderRadius: "10px",
+                            fontSize: "0.92rem",
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px"
+                            gap: "10px",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
                         }}
                     >
-                        <i className="bi bi-check-circle-fill"></i>
+                        <i className="bi bi-check-circle-fill" style={{ color: "#38a169", fontSize: "1.1rem" }}></i>
                         <span>{toastMsg}</span>
                     </div>
                 )}
 
-                {/* Conditional Rendering: Loading vs Empty State vs Grid vs Table */}
+                {/* Main Content: Loading or Grid or Table */}
                 {isLoading ? (
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "260px" }}>
-                        <div
+                    <div style={{ textAlign: "center", padding: "80px 0" }}>
+                        <i
+                            className="bi bi-arrow-repeat"
                             style={{
-                                width: "40px",
-                                height: "40px",
-                                border: "3px solid #e2e8f0",
-                                borderTop: "3px solid #143526",
-                                borderRadius: "50%",
+                                fontSize: "2.5rem",
+                                color: "#143526",
+                                display: "inline-block",
                                 animation: "spin 0.8s linear infinite"
                             }}
                         />
@@ -449,82 +478,84 @@ export default function Staffs() {
                         ))}
                     </div>
                 ) : (
-                    /* Table List View */
-                    <div className="module-table-card">
-                        <div className="table-responsive">
-                            <table className="solara-data-table">
-                                <thead>
-                                    <tr>
-                                        <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>User Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>Role <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>Last Login <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredStaffs.map((staff, idx) => (
-                                        <tr key={staff.id}>
-                                            <td className="col-sn">{idx + 1}</td>
-                                            <td>
-                                                <div className="staff-user-cell">
-                                                    <div
-                                                        className="staff-avatar"
-                                                        style={{ backgroundColor: staff.avatarBg }}
-                                                    >
-                                                        {staff.initials}
-                                                    </div>
-                                                    <div className="staff-text-group">
-                                                        <span className="staff-name">{staff.name}</span>
-                                                        <span className="staff-id">#{staff.id}</span>
-                                                    </div>
+                    /* Reusable TableCard Component List View */
+                    <TableCard
+                        title="Staff Directory"
+                        subtitle={`Showing ${filteredStaffs.length} registered members`}
+                        isEmpty={filteredStaffs.length === 0}
+                    >
+                        <table className="solara-data-table">
+                            <thead>
+                                <tr>
+                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>User Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Role <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Last Login <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredStaffs.map((staff, idx) => (
+                                    <tr key={staff.id}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td>
+                                            <div className="staff-user-cell">
+                                                <div
+                                                    className="staff-avatar"
+                                                    style={{ backgroundColor: staff.avatarBg }}
+                                                >
+                                                    {staff.initials}
                                                 </div>
-                                            </td>
-                                            <td className="col-role">{staff.role}</td>
-                                            <td className="col-phone">{staff.phone}</td>
-                                            <td className="col-date">{staff.lastLogin}</td>
-                                            <td>
-                                                <span className={`status-badge-pill ${staff.status.toLowerCase()}`}>
-                                                    {staff.status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="action-btn-group">
+                                                <div className="staff-text-group">
+                                                    <span className="staff-name">{staff.name}</span>
+                                                    <span className="staff-id">#{staff.id}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="col-role">{staff.role}</td>
+                                        <td className="col-phone">{staff.phone}</td>
+                                        <td className="col-date">{staff.lastLogin}</td>
+                                        <td>
+                                            <span className={`status-badge-pill ${staff.status.toLowerCase()}`}>
+                                                {staff.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    onClick={() => handleOpenEdit(staff)}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(staff)}
+                                                >
+                                                    View
+                                                </button>
+                                                {staff.staffId && (
                                                     <button
                                                         type="button"
                                                         className="btn-edit"
-                                                        onClick={() => handleOpenEdit(staff)}
+                                                        style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                        onClick={() => handleDeleteStaff(staff.staffId)}
+                                                        title="Delete Staff"
                                                     >
-                                                        Edit
+                                                        <i className="bi bi-trash"></i>
                                                     </button>
-                                                    <button
-                                                        type="button"
-                                                        className="action-pill-btn"
-                                                        onClick={() => handleOpenEdit(staff)}
-                                                    >
-                                                        View
-                                                    </button>
-                                                    {staff.staffId && (
-                                                        <button
-                                                            type="button"
-                                                            className="btn-edit"
-                                                            style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
-                                                            onClick={() => handleDeleteStaff(staff.staffId)}
-                                                            title="Delete Staff"
-                                                        >
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </TableCard>
                 )}
             </div>
 
@@ -540,6 +571,17 @@ export default function Staffs() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveStaff}
+            />
+
+            {/* Project Themed Popup Status Modal (Matching Image 2) */}
+            <StatusModal
+                isOpen={showSuccessModal}
+                type="success"
+                title={modalData.title}
+                message={modalData.message}
+                buttonText="Okay, Thanks"
+                onConfirm={() => setShowSuccessModal(false)}
+                autoCloseDelay={2500}
             />
         </>
     );

@@ -1,33 +1,54 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import { InputField, StatusModal, Button } from "../components/common";
 import featureImg from "../assets/all-images/body-images/solara-card-feature.png";
 
 export default function SignIn() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [apiError, setApiError] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    const validateForm = () => {
+        const errors = {};
+        if (!email.trim()) {
+            errors.email = "Email address is required.";
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            errors.email = "Please enter a valid email address.";
+        }
+
+        if (!password) {
+            errors.password = "Password is required.";
+        } else if (password.length < 4) {
+            errors.password = "Password must be at least 4 characters.";
+        }
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     const handleSignIn = async (e) => {
         e.preventDefault();
+        setApiError("");
+
+        if (!validateForm()) {
+            return;
+        }
+
         if (loading) return;
-        setError("");
-        setSuccess("");
         setLoading(true);
 
-        const result = await authService.signIn(email, password);
+        const result = await authService.signIn(email.trim(), password);
+        setLoading(false);
+
         if (result.success) {
-            setSuccess(result.message || "LOGIN SUCCESSFUL");
-            setTimeout(() => {
-                navigate("/dashboard");
-            }, 600);
+            setShowSuccessModal(true);
         } else {
-            setError(result.message || "Invalid credentials. Please check your email and password.");
-            setLoading(false);
+            setApiError(result.message || "Invalid credentials. Please check your email and password.");
         }
     };
 
@@ -51,18 +72,15 @@ export default function SignIn() {
                                     <div className="form-header">
                                         <h2>Sign In</h2>
                                         <p>
-                                            Customer or Shopper?{" "}
-                                            <Link to="/customer/signin" className="link">
-                                                Switch to Customer Portal &rarr;
-                                            </Link>
+                                            Sign in to access your administrative dashboard and store management tools.
                                         </p>
                                     </div>
 
-                                    {error && (
+                                    {apiError && (
                                         <div
                                             className="auth-alert-error"
                                             style={{
-                                                marginBottom: "1rem",
+                                                marginBottom: "1.2rem",
                                                 color: "#991b1b",
                                                 background: "#fee2e2",
                                                 border: "1px solid #f87171",
@@ -76,75 +94,47 @@ export default function SignIn() {
                                             role="alert"
                                         >
                                             <i className="bi bi-exclamation-triangle-fill"></i>
-                                            <span>{error}</span>
+                                            <span>{apiError}</span>
                                         </div>
                                     )}
 
-                                    {success && (
-                                        <div
-                                            className="auth-alert-success"
-                                            style={{
-                                                marginBottom: "1rem",
-                                                color: "#065f46",
-                                                background: "#d1fae5",
-                                                border: "1px solid #34d399",
-                                                borderRadius: "8px",
-                                                padding: "10px 14px",
-                                                fontSize: "0.88rem",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "8px"
+                                    <form onSubmit={handleSignIn} className="input-container" noValidate>
+                                        {/* Reusable InputField with Inline Validation Notification (Image 1 Style) */}
+                                        <InputField
+                                            label="E-mail"
+                                            id="emailAddress"
+                                            type="email"
+                                            placeholder="example@gmail.com"
+                                            value={email}
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                                if (fieldErrors.email) {
+                                                    setFieldErrors((prev) => ({ ...prev, email: "" }));
+                                                }
+                                                setApiError("");
                                             }}
-                                        >
-                                            <i className="bi bi-check-circle-fill"></i>
-                                            <span>{success}</span>
-                                        </div>
-                                    )}
+                                            error={fieldErrors.email}
+                                            autoComplete="email"
+                                            required
+                                        />
 
-                                    <form onSubmit={handleSignIn} className="input-container">
-                                        <div className="input-wrapper">
-                                            <label htmlFor="emailAddress">E-mail</label>
-                                            <input
-                                                type="email"
-                                                className="text-field"
-                                                id="emailAddress"
-                                                placeholder="example@gmail.com"
-                                                value={email}
-                                                onChange={(e) => {
-                                                    setEmail(e.target.value);
-                                                    setError("");
-                                                }}
-                                                autoComplete="email"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="input-wrapper">
-                                            <label htmlFor="password">Password</label>
-                                            <div className="password-input-group">
-                                                <input
-                                                    type={showPassword ? "text" : "password"}
-                                                    className="text-field"
-                                                    id="password"
-                                                    placeholder="@#*%"
-                                                    value={password}
-                                                    onChange={(e) => {
-                                                        setPassword(e.target.value);
-                                                        setError("");
-                                                    }}
-                                                    autoComplete="current-password"
-                                                    required
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="password-toggle-btn"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    title="Toggle Password Visibility"
-                                                >
-                                                    <i className={`bi bi-eye${showPassword ? "-slash" : ""}`} id="signInEyeIcon"></i>
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <InputField
+                                            label="Password"
+                                            id="password"
+                                            type="password"
+                                            placeholder="@#*%"
+                                            value={password}
+                                            onChange={(e) => {
+                                                setPassword(e.target.value);
+                                                if (fieldErrors.password) {
+                                                    setFieldErrors((prev) => ({ ...prev, password: "" }));
+                                                }
+                                                setApiError("");
+                                            }}
+                                            error={fieldErrors.password}
+                                            autoComplete="current-password"
+                                            required
+                                        />
 
                                         <div className="form-options">
                                             <label className="checkbox-label">
@@ -156,26 +146,17 @@ export default function SignIn() {
                                             </Link>
                                         </div>
 
-                                        <button
-                                            className="btn-primary"
+                                        <Button
                                             type="submit"
-                                            title="Sign In"
-                                            id="submitBtnId"
-                                            disabled={loading}
-                                            style={{ opacity: loading ? 0.75 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+                                            variant="primary"
+                                            size="md"
+                                            isLoading={loading}
+                                            loadingText="Signing in..."
+                                            style={{ width: "100%", height: "48px", marginTop: "8px" }}
                                         >
-                                            {loading ? (
-                                                <span>
-                                                    <i className="bi bi-arrow-repeat spin" style={{ marginRight: "8px" }}></i>
-                                                    Signing in...
-                                                </span>
-                                            ) : (
-                                                "Sign in"
-                                            )}
-                                        </button>
+                                            Sign in
+                                        </Button>
                                     </form>
-
-                               
                                 </div>
                             </div>
 
@@ -190,7 +171,7 @@ export default function SignIn() {
                                 <div className="showcase-card-wrapper">
                                     <img
                                         src={featureImg}
-                                        alt="Solara Card Feature"
+                                        alt="TradeFlow Card Feature"
                                         className="showcase-feature-img"
                                     />
                                 </div>
@@ -199,7 +180,7 @@ export default function SignIn() {
                                     <h3>Introducing new features</h3>
                                     <p>
                                         Analyzing previous trends ensures that businesses always make the
-                                        right decision. And as the scale of the decision and it's impact
+                                        right decision. And as the scale of the decision and its impact
                                         magnifies...
                                     </p>
                                     <div className="showcase-carousel-nav">
@@ -215,6 +196,17 @@ export default function SignIn() {
                     </div>
                 </div>
             </section>
+
+            {/* Popup Status Modal on Login (Matching Image 2 & Project Colors) */}
+            <StatusModal
+                isOpen={showSuccessModal}
+                type="success"
+                title="USER LOGIN SUCCESSFULLY!"
+                message="Welcome back to TradeFlow. Redirecting to your dashboard..."
+                buttonText="Okay, Thanks"
+                onConfirm={() => navigate("/dashboard")}
+                autoCloseDelay={1400}
+            />
         </>
     );
 }

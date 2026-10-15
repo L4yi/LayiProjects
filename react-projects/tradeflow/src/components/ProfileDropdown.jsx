@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
 import authService from "../services/authService";
 
-export default function ProfileDropdown({ isOpen, onClose, isCustomer = false }) {
+export default function ProfileDropdown({ isOpen, onClose }) {
     const [user, setUser] = useState(getSessionUser());
 
     useEffect(() => {
@@ -16,36 +16,29 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
 
     if (!isOpen) return null;
 
-    const navLinks = isCustomer
-        ? [
-            { to: "/customer/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
-            { to: "/customer/categories", icon: "bi bi-tags", label: "Categories" },
-            { to: "/customer/cart", icon: "bi bi-cart3", label: "My Cart" },
-            { to: "/customer/settings", icon: "bi bi-person-circle", label: "My Profile" },
-            { to: "/customer/settings", icon: "bi bi-gear", label: "Settings" }
-        ]
-        : [
-            { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
-            { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs" },
-            { to: "/products", icon: "bi bi-box-seam", label: "Products" },
-            { to: "/customers", icon: "bi bi-people", label: "Customers" },
-            { to: "/orders", icon: "bi bi-cart-check", label: "Orders" },
-            { to: "/transactions", icon: "bi bi-credit-card-2-front", label: "Transactions" },
-            { to: "/report", icon: "bi bi-bar-chart-line", label: "Reports" },
-            { to: "/profile", icon: "bi bi-gear", label: "Settings" }
-        ];
+    const navLinks = [
+        { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
+        { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs" },
+        { to: "/categories", icon: "bi bi-tags", label: "Categories" },
+        { to: "/products", icon: "bi bi-box-seam", label: "Products" },
+        { to: "/customers", icon: "bi bi-people", label: "Customers" },
+        { to: "/orders", icon: "bi bi-cart-check", label: "Orders" },
+        { to: "/transactions", icon: "bi bi-credit-card-2-front", label: "Transactions" },
+        { to: "/report", icon: "bi bi-bar-chart-line", label: "Reports" },
+        { to: "/profile", icon: "bi bi-gear", label: "Settings" }
+    ];
 
     return (
         <div className="profile-dropdown-card" onClick={(e) => e.stopPropagation()}>
             {/* Header with Avatar & Details */}
             <div className="profile-card-header">
                 <div className="profile-initial-badge">
-                    {user.initials}
+                    {user?.initials || "SU"}
                 </div>
                 <div className="profile-user-info">
-                    <div className="profile-user-name">{user.name}</div>
-                    <div className="profile-user-email">{user.email}</div>
-                    <div className="profile-user-phone">{user.phone}</div>
+                    <div className="profile-user-name">{user?.name || "Staff Member"}</div>
+                    <div className="profile-user-email">{user?.email || "staff@tradeflow.com"}</div>
+                    {user?.phone && <div className="profile-user-phone">{user.phone}</div>}
                 </div>
             </div>
 
@@ -67,7 +60,7 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
             {/* Logout Button */}
             <div className="profile-card-footer">
                 <Link
-                    to={isCustomer ? "/customer/signin" : "/signin"}
+                    to="/signin"
                     className="profile-logout-pill-btn"
                     onClick={() => {
                         authService.logout();

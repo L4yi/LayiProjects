@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser, setSessionUser } from "../utils/session";
 
-export default function Profile({ isCustomer = false }) {
+export default function Profile() {
     const [user, setUser] = useState(getSessionUser());
     const [savedNotice, setSavedNotice] = useState(false);
 

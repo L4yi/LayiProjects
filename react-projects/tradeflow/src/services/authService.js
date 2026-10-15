@@ -26,17 +26,17 @@ export const authService = {
                     email: serverUser.emailAddress,
                     phone: serverUser.phoneNumber,
                     address: serverUser.address,
-                    role: serverUser.roleName || "SUPER ADMIN",
+                    role: serverUser.roleName,
                     roleId: serverUser.roleId,
-                    status: serverUser.statusName || "ACTIVE",
+                    status: serverUser.statusName,
                     statusId: serverUser.statusId,
-                    lastLogin: serverUser.lastLoginDate || "Just now",
+                    lastLogin: serverUser.lastLoginDate,
                     createdAt: serverUser.createdAt,
                 };
 
                 // Persist session and user details
                 setSessionUser(userData);
-                localStorage.setItem("user", JSON.stringify(userData));
+                // localStorage.setItem("user", JSON.stringify(userData));
                 if (resData.accessToken) {
                     localStorage.setItem("accessToken", resData.accessToken);
                 }
@@ -77,14 +77,14 @@ export const authService = {
 
             if (resData?.success === true) {
                 return {
-                    success: true,
+                    success: resData.success,
                     message: resData.message || "Reset OTP generated successfully.",
                     data: resData.data
                 };
             }
 
             return {
-                success: false,
+               success: resData.success,
                 message: resData?.message || "Could not generate reset OTP for this email."
             };
         } catch (error) {

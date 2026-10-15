@@ -1,41 +1,52 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
+import { InputField, StatusModal, Button } from "../components/common";
 import featureImg from "../assets/all-images/body-images/solara-card-feature.png";
 
 export default function ForgotPassword() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [fieldError, setFieldError] = useState("");
+    const [apiError, setApiError] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [staffId, setStaffId] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (loading) return;
-        setError("");
-        setSuccess("");
+        setApiError("");
+        setFieldError("");
 
         if (!email.trim()) {
-            setError("Please enter your registered email address.");
+            setFieldError("Email address is required.");
             return;
         }
 
+        if (!/\S+@\S+\.\S+/.test(email)) {
+            setFieldError("Please enter a valid email address.");
+            return;
+        }
+
+        if (loading) return;
         setLoading(true);
-        const result = await authService.forgotPassword(email);
+
+        const result = await authService.forgotPassword(email.trim());
         setLoading(false);
 
         if (result.success) {
-            setSuccess(result.message || "OTP generated successfully. Redirecting...");
-            const staffId = result.data?.staffId || "";
-            setTimeout(() => {
-                navigate("/reset-password", {
-                    state: { staffId, email: email.trim() }
-                });
-            }, 800);
+            setStaffId(result.data?.staffId || "");
+            setShowSuccessModal(true);
         } else {
-            setError(result.message || "Could not generate reset OTP for this email.");
+            setApiError(result.message || "Could not generate reset OTP for this email.");
         }
+    };
+
+    const handleModalConfirm = () => {
+        setShowSuccessModal(false);
+        navigate("/reset-password", {
+            state: { staffId, email: email.trim() }
+        });
     };
 
     return (
@@ -47,10 +58,12 @@ export default function ForgotPassword() {
                             <div className="form-content">
                                 <div className="inner-form">
                                     <Link to="/" className="solara-logo">
-                                        <svg viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                        </svg>
-                                        TradeFlow
+                                        <div className="brand-logo-icon">
+                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                                            </svg>
+                                        </div>
+                                        <span className="brand-title">TradeFlow</span>
                                     </Link>
 
                                     <div className="form-header">
@@ -58,16 +71,16 @@ export default function ForgotPassword() {
                                         <p>
                                             Remember your password?{" "}
                                             <Link to="/signin" className="link">
-                                                Sign In
+                                                Sign In &rarr;
                                             </Link>
                                         </p>
                                     </div>
 
-                                    {error && (
+                                    {apiError && (
                                         <div
                                             className="auth-alert-error"
                                             style={{
-                                                marginBottom: "1rem",
+                                                marginBottom: "1.2rem",
                                                 color: "#991b1b",
                                                 background: "#fee2e2",
                                                 border: "1px solid #f87171",
@@ -81,75 +94,44 @@ export default function ForgotPassword() {
                                             role="alert"
                                         >
                                             <i className="bi bi-exclamation-triangle-fill"></i>
-                                            <span>{error}</span>
+                                            <span>{apiError}</span>
                                         </div>
                                     )}
 
-                                    {success && (
-                                        <div
-                                            className="auth-alert-success"
-                                            style={{
-                                                marginBottom: "1rem",
-                                                color: "#065f46",
-                                                background: "#d1fae5",
-                                                border: "1px solid #34d399",
-                                                borderRadius: "8px",
-                                                padding: "10px 14px",
-                                                fontSize: "0.88rem",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "8px"
+                                    <form onSubmit={handleSubmit} className="input-container" noValidate>
+                                        <InputField
+                                            label="Email Address"
+                                            id="emailAddress"
+                                            type="email"
+                                            placeholder="example@gmail.com"
+                                            value={email}
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                                setFieldError("");
+                                                setApiError("");
                                             }}
-                                        >
-                                            <i className="bi bi-check-circle-fill"></i>
-                                            <span>{success}</span>
-                                        </div>
-                                    )}
+                                            error={fieldError}
+                                            autoComplete="email"
+                                            required
+                                        />
 
-                                    <form onSubmit={handleSubmit} className="input-container">
-                                        <div className="input-wrapper">
-                                            <label htmlFor="emailAddress">
-                                                Email Address <span>*</span>
-                                            </label>
-                                            <input
-                                                type="email"
-                                                className="text-field"
-                                                id="emailAddress"
-                                                placeholder="example@gmail.com"
-                                                value={email}
-                                                onChange={(e) => {
-                                                    setEmail(e.target.value);
-                                                    setError("");
-                                                }}
-                                                autoComplete="email"
-                                                required
-                                            />
-                                        </div>
-
-                                        <button
-                                            className="btn-primary"
+                                        <Button
                                             type="submit"
-                                            title="Reset Password"
-                                            id="submitBtnId"
-                                            disabled={loading}
-                                            style={{ opacity: loading ? 0.75 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+                                            variant="primary"
+                                            size="md"
+                                            isLoading={loading}
+                                            loadingText="Sending OTP..."
+                                            style={{ width: "100%", height: "48px", marginTop: "8px" }}
                                         >
-                                            {loading ? (
-                                                <span>
-                                                    <i className="bi bi-arrow-repeat spin" style={{ marginRight: "8px" }}></i>
-                                                    Sending OTP...
-                                                </span>
-                                            ) : (
-                                                "Reset Password"
-                                            )}
-                                        </button>
+                                            Reset Password
+                                        </Button>
                                     </form>
                                 </div>
                             </div>
 
                             <div className="form-content showcase-content">
                                 <div className="support-top-link">
-                                    <a href="mailto:support@solara.com" className="support-btn">
+                                    <a href="mailto:support@TradeFlow.com" className="support-btn">
                                         <i className="bi bi-headset"></i>
                                         Support
                                     </a>
@@ -158,7 +140,7 @@ export default function ForgotPassword() {
                                 <div className="showcase-card-wrapper">
                                     <img
                                         src={featureImg}
-                                        alt="Solara Card Feature"
+                                        alt="TradeFlow Card Feature"
                                         className="showcase-feature-img"
                                     />
                                 </div>
@@ -167,7 +149,7 @@ export default function ForgotPassword() {
                                     <h3>Introducing new features</h3>
                                     <p>
                                         Analyzing previous trends ensures that businesses always make the
-                                        right decision. And as the scale of the decision and it's impact
+                                        right decision. And as the scale of the decision and its impact
                                         magnifies...
                                     </p>
                                     <div className="showcase-carousel-nav">
@@ -183,6 +165,17 @@ export default function ForgotPassword() {
                     </div>
                 </div>
             </section>
+
+            {/* Popup Status Modal on OTP generation (Matching Image 2 & Project Colors) */}
+            <StatusModal
+                isOpen={showSuccessModal}
+                type="success"
+                title="RESET OTP SENT SUCCESSFULLY!"
+                message="A verification OTP code has been generated and dispatched to your email address."
+                buttonText="Okay, Thanks"
+                onConfirm={handleModalConfirm}
+                autoCloseDelay={2000}
+            />
         </>
     );
 }
