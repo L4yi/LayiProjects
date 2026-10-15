@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import staffService from "../services/staffService";
-import { StatusModal, TableCard } from "../components/common";
+import { StatusModal, TableCard, PageHeader } from "../components/common";
 
 export const mapServerStaff = (s) => {
     const staffId = s.staff_id || s.staffId || s.id || "";
@@ -232,118 +232,109 @@ export default function Staffs() {
     return (
         <>
             <div className="dashboard-body">
-                {/* Module Top Badge Pill */}
-                <div className="module-top-badge-wrap">
-                    <div className="module-badge-pill">
-                        <i className="bi bi-person-badge"></i>
-                        <span>Staffs</span>
-                    </div>
-                    <div className="module-breadcrumb">
-                        Admin &rarr; Manage staff accounts, roles, and access across the store.
-                    </div>
-                </div>
+                {/* Reusable Page Header */}
+                <PageHeader
+                    badgeIcon="bi bi-person-badge"
+                    badgeTitle="Staffs"
+                    breadcrumb="Admin → Manage staff accounts, roles, and access across the store."
+                    title="All Staffs"
+                    countSubtitle={`${filteredStaffs.length} members registered`}
+                    actions={
+                        <>
+                            {/* Live Search Input with Instant Client-side and Debounced API */}
+                            <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
+                                <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
+                                <input
+                                    type="text"
+                                    className="filter-dropdown-select"
+                                    style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
+                                    placeholder="Search staff..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        style={{
+                                            position: "absolute",
+                                            right: "10px",
+                                            background: "transparent",
+                                            border: "none",
+                                            color: "#a0aec0",
+                                            cursor: "pointer",
+                                            padding: 0,
+                                            fontSize: "0.95rem"
+                                        }}
+                                        title="Clear search"
+                                    >
+                                        <i className="bi bi-x-circle-fill"></i>
+                                    </button>
+                                )}
+                            </div>
 
-                {/* Module Header Bar */}
-                <div className="module-header-bar">
-                    <div className="header-left">
-                        <h2 className="module-main-title">All Staffs</h2>
-                        <span className="module-count-subtitle">{filteredStaffs.length} members registered</span>
-                    </div>
-
-                    <div className="header-right">
-                        {/* Live Search Input with Instant Client-side and Debounced API */}
-                        <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
-                            <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
-                            <input
-                                type="text"
-                                className="filter-dropdown-select"
-                                style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
-                                placeholder="Search staff..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
+                            {/* View Switcher Toggle */}
+                            <div className="view-toggle-pill-group">
                                 <button
                                     type="button"
-                                    onClick={() => setSearchQuery("")}
-                                    style={{
-                                        position: "absolute",
-                                        right: "10px",
-                                        background: "transparent",
-                                        border: "none",
-                                        color: "#a0aec0",
-                                        cursor: "pointer",
-                                        padding: 0,
-                                        fontSize: "0.95rem"
-                                    }}
-                                    title="Clear search"
+                                    className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+                                    onClick={() => setViewMode("grid")}
+                                    title="Grid View"
                                 >
-                                    <i className="bi bi-x-circle-fill"></i>
+                                    <i className="bi bi-grid-fill"></i>
                                 </button>
-                            )}
-                        </div>
+                                <button
+                                    type="button"
+                                    className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                                    onClick={() => setViewMode("list")}
+                                    title="List / Table View"
+                                >
+                                    <i className="bi bi-list-ul"></i>
+                                </button>
+                            </div>
 
-                        {/* View Switcher Toggle */}
-                        <div className="view-toggle-pill-group">
+                            {/* Role Filter */}
+                            <div className="filter-select-wrap">
+                                <i className="bi bi-funnel"></i>
+                                <select
+                                    className="filter-dropdown-select"
+                                    title="Filter by Role"
+                                    value={filterRole}
+                                    onChange={(e) => setFilterRole(e.target.value)}
+                                >
+                                    <option value="">All Roles</option>
+                                    <option value="Store Manager">Store Manager</option>
+                                    <option value="Super Admin">Super Admin</option>
+                                </select>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="filter-select-wrap">
+                                <i className="bi bi-toggle-on"></i>
+                                <select
+                                    className="filter-dropdown-select"
+                                    title="Filter by Status"
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option value="ACTIVE">ACTIVE</option>
+                                    <option value="INACTIVE">INACTIVE</option>
+                                </select>
+                            </div>
+
+                            {/* Action: Add Staff Button */}
                             <button
                                 type="button"
-                                className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-                                onClick={() => setViewMode("grid")}
-                                title="Grid View"
+                                className="btn-add-entity"
+                                onClick={handleOpenAdd}
                             >
-                                <i className="bi bi-grid-fill"></i>
+                                <i className="bi bi-plus-lg"></i>
+                                <span>Add Staff</span>
                             </button>
-                            <button
-                                type="button"
-                                className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                                onClick={() => setViewMode("list")}
-                                title="List / Table View"
-                            >
-                                <i className="bi bi-list-ul"></i>
-                            </button>
-                        </div>
-
-                        {/* Role Filter */}
-                        <div className="filter-select-wrap">
-                            <i className="bi bi-funnel"></i>
-                            <select
-                                className="filter-dropdown-select"
-                                title="Filter by Role"
-                                value={filterRole}
-                                onChange={(e) => setFilterRole(e.target.value)}
-                            >
-                                <option value="">All Roles</option>
-                                <option value="Store Manager">Store Manager</option>
-                                <option value="Super Admin">Super Admin</option>
-                            </select>
-                        </div>
-
-                        {/* Status Filter */}
-                        <div className="filter-select-wrap">
-                            <i className="bi bi-toggle-on"></i>
-                            <select
-                                className="filter-dropdown-select"
-                                title="Filter by Status"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="INACTIVE">INACTIVE</option>
-                            </select>
-                        </div>
-
-                        {/* Action: Add Staff Button */}
-                        <button
-                            type="button"
-                            className="btn-add-entity"
-                            onClick={handleOpenAdd}
-                        >
-                            <i className="bi bi-plus-lg"></i>
-                            <span>Add Staff</span>
-                        </button>
-                    </div>
-                </div>
+                        </>
+                    }
+                />
 
                 {/* Toast Message Notification */}
                 {toastMsg && (
