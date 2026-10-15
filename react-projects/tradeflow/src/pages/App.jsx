@@ -3,6 +3,7 @@ import '../assets/styles/MainStyle.css';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Home from "./Home";
 import SignIn from "./SignIn";
+import SignUp from "./SignUp";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import Profile from "./Profile";
@@ -15,7 +16,6 @@ import Customers from "./Customers";
 import Orders from "./Orders";
 import Transactions from "./Transactions";
 import Report from "./Report";
- 
 
 export const router = createBrowserRouter([
   {
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    element: <Navigate to="/signin" replace />
+    element: <SignUp />
   },
   {
     path: "/forgot-password",
@@ -82,9 +82,9 @@ export const router = createBrowserRouter([
         element: <Report />
       }
     ]
+  },
+  {
+    path: "*",
+    element: <Navigate to="/dashboard" replace />
   }
 ]);
-
-export default function App() {
-  return null;
-}

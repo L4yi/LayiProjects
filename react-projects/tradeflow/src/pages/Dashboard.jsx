@@ -31,7 +31,6 @@ export default function Dashboard() {
 
     return (
         <div className="dashboard-body">
-            {/* Reusable Metric Cards Grid */}
             <div className="metric-cards-grid">
                 <MetricCard
                     title="Total Sales"
@@ -69,9 +68,7 @@ export default function Dashboard() {
                 />
             </div>
 
-            {/* Main Content Grid: Transactions & Top Products */}
             <div className="dashboard-main-grid">
-                {/* Transaction Card */}
                 <div className="dashboard-card transaction-card">
                     <div className="dash-card-header">
                         <h3 className="dash-card-title">Transaction</h3>
@@ -118,7 +115,6 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Top Products Card */}
                 <div className="dashboard-card top-products-card">
                     <div className="dash-card-header">
                         <h3 className="dash-card-title">Top Products</h3>

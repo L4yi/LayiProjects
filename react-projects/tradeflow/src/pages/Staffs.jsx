@@ -50,7 +50,7 @@ export default function Staffs() {
     const [staffsList, setStaffsList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [viewMode, setViewMode] = useState("grid"); // Default to grid view
+    const [viewMode, setViewMode] = useState("grid");
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Staff Details");
@@ -88,7 +88,6 @@ export default function Staffs() {
         loadStaffs();
     }, []);
 
-    // Resilient Live search: uses client-side instant filtering + backend search fallback
     useEffect(() => {
         if (isFirstMount.current) {
             isFirstMount.current = false;
@@ -101,7 +100,6 @@ export default function Staffs() {
             return;
         }
 
-        // Instant client-side search filtering across all staff fields
         const localMatches = allStaffs.filter((staff) => {
             const matchName = staff.name?.toLowerCase().includes(query);
             const matchEmail = staff.email?.toLowerCase().includes(query);
@@ -113,22 +111,19 @@ export default function Staffs() {
 
         setStaffsList(localMatches);
 
-        // Concurrently attempt server search; if server returns 404, we safely keep localMatches
         const timer = setTimeout(async () => {
             try {
                 const result = await staffService.searchStaff(query);
                 if (result.success && Array.isArray(result.data) && result.data.length > 0) {
                     setStaffsList(result.data.map(mapServerStaff));
                 }
-            } catch (error) {
-                // Keep localMatches when server 404s
+            } catch {
             }
         }, 300);
 
         return () => clearTimeout(timer);
     }, [searchQuery, allStaffs]);
 
-    // Open Edit / View Drawer - Fetch fresh record from backend (admin/staff/fetch-each-staff.php)
     const handleOpenEdit = async (staff) => {
         if (!staff) return;
         setSelectedStaff({ ...staff });
@@ -189,7 +184,6 @@ export default function Staffs() {
             loadStaffs();
 
             if (isNewStaff) {
-                // Show Project Themed Popup Status Modal on creation (Matching Image 2)
                 setModalData({
                     title: "STAFF CREATED SUCCESSFULLY!",
                     message: `New staff member "${formData.firstName || formData.name}" has been registered successfully on TradeFlow.`
@@ -213,13 +207,18 @@ export default function Staffs() {
 
         const result = await staffService.deleteStaff(staffId);
         if (result?.success) {
-            setToastMsg(result.message || "Staff member deleted successfully!");
-            setTimeout(() => setToastMsg(""), 3500);
+            setModalData({
+                title: "STAFF DELETED SUCCESSFULLY!",
+                message: result.message || "Staff member deleted successfully."
+            });
+            setShowSuccessModal(true);
             loadStaffs();
         } else {
-            // Note: delete-staff.php returns 404 on the backend server
-            setToastMsg(result?.message || "Remote delete endpoint is currently not deployed on the server.");
-            setTimeout(() => setToastMsg(""), 4000);
+            setModalData({
+                title: "DELETE FAILED",
+                message: result?.message || "Unable to delete staff member from database."
+            });
+            setShowSuccessModal(true);
         }
     };
 
@@ -232,7 +231,6 @@ export default function Staffs() {
     return (
         <>
             <div className="dashboard-body">
-                {/* Reusable Page Header */}
                 <PageHeader
                     badgeIcon="bi bi-person-badge"
                     badgeTitle="Staffs"
@@ -241,7 +239,6 @@ export default function Staffs() {
                     countSubtitle={`${filteredStaffs.length} members registered`}
                     actions={
                         <>
-                            {/* Live Search Input with Instant Client-side and Debounced API */}
                             <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
                                 <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
                                 <input
@@ -273,7 +270,6 @@ export default function Staffs() {
                                 )}
                             </div>
 
-                            {/* View Switcher Toggle */}
                             <div className="view-toggle-pill-group">
                                 <button
                                     type="button"
@@ -293,7 +289,6 @@ export default function Staffs() {
                                 </button>
                             </div>
 
-                            {/* Role Filter */}
                             <div className="filter-select-wrap">
                                 <i className="bi bi-funnel"></i>
                                 <select
@@ -308,7 +303,6 @@ export default function Staffs() {
                                 </select>
                             </div>
 
-                            {/* Status Filter */}
                             <div className="filter-select-wrap">
                                 <i className="bi bi-toggle-on"></i>
                                 <select
@@ -323,7 +317,6 @@ export default function Staffs() {
                                 </select>
                             </div>
 
-                            {/* Action: Add Staff Button */}
                             <button
                                 type="button"
                                 className="btn-add-entity"
@@ -336,7 +329,6 @@ export default function Staffs() {
                     }
                 />
 
-                {/* Toast Message Notification */}
                 {toastMsg && (
                     <div
                         style={{
@@ -358,7 +350,6 @@ export default function Staffs() {
                     </div>
                 )}
 
-                {/* Main Content: Loading or Grid or Table */}
                 {isLoading ? (
                     <div style={{ textAlign: "center", padding: "80px 0" }}>
                         <i
@@ -403,7 +394,6 @@ export default function Staffs() {
                         )}
                     </div>
                 ) : viewMode === "grid" ? (
-                    /* Image 3 Style Staff Card Grid */
                     <div className="staff-cards-grid-layout">
                         {filteredStaffs.map((staff) => (
                             <div
@@ -469,7 +459,6 @@ export default function Staffs() {
                         ))}
                     </div>
                 ) : (
-                    /* Reusable TableCard Component List View */
                     <TableCard
                         title="Staff Directory"
                         subtitle={`Showing ${filteredStaffs.length} registered members`}
@@ -550,7 +539,6 @@ export default function Staffs() {
                 )}
             </div>
 
-            {/* Slide-Over Edit Drawer */}
             <AdminSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
@@ -564,7 +552,6 @@ export default function Staffs() {
                 onSave={handleSaveStaff}
             />
 
-            {/* Project Themed Popup Status Modal (Matching Image 2) */}
             <StatusModal
                 isOpen={showSuccessModal}
                 type="success"

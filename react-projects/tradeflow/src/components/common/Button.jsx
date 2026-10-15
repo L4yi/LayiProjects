@@ -1,14 +1,5 @@
 import React from "react";
 
-/**
- * Reusable Button Component
- * Supports:
- * - Variants: 'primary', 'secondary', 'outline', 'danger', 'ghost'
- * - Sizes: 'sm', 'md', 'lg'
- * - Loading state with spinner
- * - Leading/trailing icons
- * - Project theme styling
- */
 export default function Button({
     children,
     type = "button",

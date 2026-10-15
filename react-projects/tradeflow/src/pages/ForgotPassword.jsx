@@ -166,7 +166,6 @@ export default function ForgotPassword() {
                 </div>
             </section>
 
-            {/* Popup Status Modal on OTP generation (Matching Image 2 & Project Colors) */}
             <StatusModal
                 isOpen={showSuccessModal}
                 type="success"

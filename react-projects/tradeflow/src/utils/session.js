@@ -7,10 +7,6 @@ export function getInitials(name = "") {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/**
- * Reads the active authenticated user from browser storage
- * (Strictly reads what the API returned upon login; zero hardcoded mock user fallback)
- */
 export function getSessionUser() {
     try {
         const stored = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(SESSION_USER_KEY);
@@ -27,7 +23,6 @@ export function getSessionUser() {
         console.warn("Could not read session user:", e);
     }
 
-    // Default safe guest structure (prevents undefined.initials runtime crashes)
     return {
         name: "Staff User",
         email: "",
@@ -36,9 +31,6 @@ export function getSessionUser() {
     };
 }
 
-/**
- * Saves authenticated user data returned from the backend API into storage
- */
 export function setSessionUser(userData) {
     if (!userData) return getSessionUser();
     try {
@@ -51,7 +43,6 @@ export function setSessionUser(userData) {
         sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(updated));
         localStorage.setItem(SESSION_USER_KEY, JSON.stringify(updated));
 
-        // Dispatch custom event for live component reactivity across Header, Sidebar, Profile
         window.dispatchEvent(new Event("tradeflow_session_update"));
         return updated;
     } catch (e) {
@@ -60,9 +51,6 @@ export function setSessionUser(userData) {
     }
 }
 
-/**
- * Clears session and local storage on logout
- */
 export function clearSessionUser() {
     try {
         sessionStorage.removeItem(SESSION_USER_KEY);

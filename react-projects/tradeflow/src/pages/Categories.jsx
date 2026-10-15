@@ -56,7 +56,6 @@ export default function Categories() {
     return (
         <>
             <div className="dashboard-body">
-                {/* Reusable Page Header */}
                 <PageHeader
                     badgeIcon="bi bi-tags"
                     badgeTitle="Categories"
@@ -89,7 +88,6 @@ export default function Categories() {
                     }
                 />
 
-                {/* Reusable TableCard Component */}
                 <TableCard
                     title="Category Catalog"
                     subtitle="Active and archived categories in the catalog"
@@ -149,7 +147,6 @@ export default function Categories() {
                 </TableCard>
             </div>
 
-            {/* Slide-Over Edit Drawer */}
             <AdminSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}

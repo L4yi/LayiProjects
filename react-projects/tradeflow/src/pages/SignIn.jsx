@@ -72,7 +72,10 @@ export default function SignIn() {
                                     <div className="form-header">
                                         <h2>Sign In</h2>
                                         <p>
-                                            Sign in to access your administrative dashboard and store management tools.
+                                            Don't have an account?{" "}
+                                            <Link to="/signup" className="link">
+                                                Create account &rarr;
+                                            </Link>
                                         </p>
                                     </div>
 
@@ -99,7 +102,6 @@ export default function SignIn() {
                                     )}
 
                                     <form onSubmit={handleSignIn} className="input-container" noValidate>
-                                        {/* Reusable InputField with Inline Validation Notification (Image 1 Style) */}
                                         <InputField
                                             label="E-mail"
                                             id="emailAddress"
@@ -197,7 +199,6 @@ export default function SignIn() {
                 </div>
             </section>
 
-            {/* Popup Status Modal on Login (Matching Image 2 & Project Colors) */}
             <StatusModal
                 isOpen={showSuccessModal}
                 type="success"

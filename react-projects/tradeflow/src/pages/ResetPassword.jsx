@@ -261,7 +261,6 @@ export default function ResetPassword() {
                 </div>
             </section>
 
-            {/* Popup Status Modal on Password Reset (Matching Image 2 & Project Colors) */}
             <StatusModal
                 isOpen={showSuccessModal}
                 type="success"

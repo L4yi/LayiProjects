@@ -1,14 +1,5 @@
 import React, { useState } from "react";
 
-/**
- * Reusable InputField Component
- * Features:
- * - Label with optional required asterisk
- * - Password visibility toggle for type="password"
- * - Left icon support
- * - Inline validation error notification displayed directly underneath in red (Matching Image 1)
- * - Supports text, email, password, number, tel, select, and textarea
- */
 export default function InputField({
     label,
     id,
@@ -104,7 +95,6 @@ export default function InputField({
                 )}
             </div>
 
-            {/* Inline validation error notification underneath (Image 1 design) */}
             {error && (
                 <div className="common-field-inline-error">
                     {error}

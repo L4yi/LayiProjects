@@ -1,13 +1,5 @@
 import React from "react";
 
-/**
- * Reusable TableCard Component
- * Wraps table views with:
- * - Card header with title, subtitle, and action buttons/filters
- * - Responsive table container with horizontal scroll
- * - Optional empty state message
- * - Footer / pagination slot
- */
 export default function TableCard({
     title,
     subtitle,
