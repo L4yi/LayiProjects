@@ -153,7 +153,7 @@ export default function Categories() {
                 title={drawerTitle}
                 subtitle="Please complete the form below to configure category taxonomy."
                 icon="bi bi-tags-fill"
-                entityType="Product Category"
+                entityType="Category"
                 initialData={selectedCat || {}}
                 onSave={handleSaveCategory}
             />

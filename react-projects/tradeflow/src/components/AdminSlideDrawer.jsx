@@ -33,10 +33,9 @@ export default function AdminSlideDrawer({
         if (onSave) onSave(formData);
     };
 
-    // Determine normalized mode from entityType
     const norm = String(entityType || "").toLowerCase();
     const isCategory = norm.includes("categor");
-    const isProduct = norm.includes("product");
+    const isProduct = norm.includes("product") && !isCategory;
     const isCustomer = norm.includes("customer");
     const isOrder = norm.includes("order");
     const isTransaction = norm.includes("transaction");
@@ -46,7 +45,6 @@ export default function AdminSlideDrawer({
     return (
         <div className="drawer-overlay" onClick={onClose}>
             <div className="admin-slide-drawer" onClick={(e) => e.stopPropagation()}>
-                {/* Header */}
                 <div className="drawer-header-gradient">
                     <div className="drawer-header-left">
                         <div className="drawer-header-icon">
@@ -64,14 +62,12 @@ export default function AdminSlideDrawer({
                     </button>
                 </div>
 
-                {/* Subtitle Bar */}
                 <div className="drawer-subtitle-bar">
                     <p>
                         You are about to modify <strong>{entityType}</strong>. {subtitle}
                     </p>
                 </div>
 
-                {/* Error Banner */}
                 {errorMessage && (
                     <div
                         style={{
@@ -93,7 +89,6 @@ export default function AdminSlideDrawer({
                 )}
 
                 <form className="drawer-body-scroll" onSubmit={handleSubmit}>
-                    {/* 1. CATEGORY FORM */}
                     {isCategory && (
                         <>
                             <div className="drawer-form-card">
@@ -214,7 +209,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 2. PRODUCT FORM */}
                     {isProduct && (
                         <>
                             <div className="drawer-form-card">
@@ -398,7 +392,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 3. CUSTOMER FORM */}
                     {isCustomer && (
                         <>
                             <div className="drawer-form-card">
@@ -504,7 +497,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 4. ORDER FORM */}
                     {isOrder && (
                         <>
                             <div className="drawer-form-card">
@@ -625,7 +617,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 5. TRANSACTION FORM */}
                     {isTransaction && (
                         <>
                             <div className="drawer-form-card">
@@ -719,7 +710,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 6. REPORT FORM */}
                     {isReport && (
                         <>
                             <div className="drawer-form-card">
@@ -806,7 +796,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* 7. STAFF FORM (Default) */}
                     {isStaff && (
                         <>
                             <div className="drawer-form-card">
@@ -977,7 +966,6 @@ export default function AdminSlideDrawer({
                         </>
                     )}
 
-                    {/* Footer Actions */}
                     <div className="drawer-footer-actions">
                         <button
                             type="button"
