@@ -103,21 +103,24 @@ export default function AdminSlideDrawer({
                                             type="text"
                                             className="drawer-input"
                                             placeholder="e.g. Mobile Devices & Phones"
-                                            value={formData.name || ""}
-                                            onChange={(e) => handleChange("name", e.target.value)}
+                                            value={formData.name || formData.categoryName || ""}
+                                            onChange={(e) => {
+                                                handleChange("name", e.target.value);
+                                                handleChange("categoryName", e.target.value);
+                                            }}
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group-item">
-                                        <label className="drawer-label">Category Code / ID *</label>
+                                        <label className="drawer-label">Category Code / ID</label>
                                         <input
                                             type="text"
                                             className="drawer-input"
-                                            placeholder="e.g. #CAT-107"
-                                            value={formData.code || ""}
+                                            placeholder="Auto-generated on save"
+                                            value={formData.code || formData.categoryId || formData.categories_id || ""}
                                             onChange={(e) => handleChange("code", e.target.value)}
-                                            required
+                                            readOnly={Boolean(formData.categoryId || formData.categories_id)}
                                         />
                                     </div>
 
@@ -182,7 +185,7 @@ export default function AdminSlideDrawer({
                                 </div>
                                 <div className="card-form-grid">
                                     <div className="form-group-item full-width">
-                                        <label className="drawer-label">Description / Notes</label>
+                                        <label className="drawer-label">Description *</label>
                                         <textarea
                                             className="drawer-textarea"
                                             rows="3"
@@ -192,6 +195,7 @@ export default function AdminSlideDrawer({
                                                 handleChange("description", e.target.value);
                                                 handleChange("notes", e.target.value);
                                             }}
+                                            required
                                         ></textarea>
                                     </div>
                                     <div className="form-group-item full-width">
