@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { STORE_CATEGORIES } from "../data/storeData";
 import { PageHeader, TableCard, StatusModal } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
 
 export default function Categories() {
-    const [categoriesList, setCategoriesList] = useState(STORE_CATEGORIES);
+    const [categoriesList, setCategoriesList] = useState([]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCat, setSelectedCat] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Category");
@@ -18,7 +17,7 @@ export default function Categories() {
 
     const loadCategories = async () => {
         const result = await categoryService.fetchAllCategories();
-        if (result?.success && Array.isArray(result?.data) && result.data.length > 0) {
+        if (result?.success && Array.isArray(result?.data)) {
             const mapped = result.data.map((cat, idx) => ({
                 id: cat.categories_id || cat.categoryId || `cat-${idx}`,
                 code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
@@ -31,6 +30,8 @@ export default function Categories() {
                 updatedAt: cat.updated_at
             }));
             setCategoriesList(mapped);
+        } else {
+            setCategoriesList([]);
         }
     };
 

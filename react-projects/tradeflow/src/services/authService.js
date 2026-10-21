@@ -2,9 +2,6 @@ import api from "../api/axios";
 import { setSessionUser, clearSessionUser } from "../utils/session";
 
 export const authService = {
-    /**
-     * Authenticate staff / admin user with email and password
-     */
     async signIn(emailAddress, password) {
         try {
             const formData = new FormData();
@@ -34,9 +31,7 @@ export const authService = {
                     createdAt: serverUser.createdAt,
                 };
 
-                // Persist session and user details
                 setSessionUser(userData);
-                // localStorage.setItem("user", JSON.stringify(userData));
                 if (resData.accessToken) {
                     localStorage.setItem("accessToken", resData.accessToken);
                 }
@@ -64,9 +59,6 @@ export const authService = {
         }
     },
 
-    /**
-     * Request OTP to reset forgotten password
-     */
     async forgotPassword(emailAddress) {
         try {
             const formData = new FormData();
@@ -84,7 +76,7 @@ export const authService = {
             }
 
             return {
-               success: resData.success,
+                success: resData.success,
                 message: resData?.message || "Could not generate reset OTP for this email."
             };
         } catch (error) {
@@ -95,9 +87,6 @@ export const authService = {
         }
     },
 
-    /**
-     * Verify OTP and reset password
-     */
     async resetPassword({ staffId, resetOtp, password, confirmPassword }) {
         try {
             const formData = new FormData();
@@ -128,9 +117,6 @@ export const authService = {
         }
     },
 
-    /**
-     * Logout and clear saved sessions
-     */
     logout() {
         clearSessionUser();
         localStorage.removeItem("accessToken");

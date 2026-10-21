@@ -1,13 +1,10 @@
 import api from "../api/axios";
 
-// Clean up any previously stored local/session staff entries
 try {
     localStorage.removeItem("tradeflow_created_staffs");
 } catch {
-    // Ignore storage errors
 }
 
-// Helper to extract exact message from backend response or error
 export function getErrorMessage(error, defaultMsg = "An unexpected error occurred") {
     if (error.response?.data?.message) {
         return error.response.data.message;
@@ -41,7 +38,6 @@ export function getErrorMessage(error, defaultMsg = "An unexpected error occurre
     return defaultMsg;
 }
 
-// Helper to map title text to titleId
 export function getTitleId(title = "") {
     const t = String(title).toLowerCase().trim();
     if (t === "mr") return "1";
@@ -49,23 +45,21 @@ export function getTitleId(title = "") {
     if (t === "miss") return "3";
     if (t === "dr") return "4";
     if (t === "prof") return "5";
-    return "1"; // Default to 1
+    return "1";
 }
 
-// Helper to map status to statusId
 export function getStatusId(status = "") {
     const s = String(status).toUpperCase().trim();
     if (s === "INACTIVE") return "2";
     if (s === "PENDING") return "3";
-    return "1"; // Default ACTIVE
+    return "1";
 }
 
-// Helper to map role to roleId
 export function getRoleId(role = "") {
     const r = String(role).toUpperCase().trim();
     if (r.includes("SUPER ADMIN") || r.includes("ADMIN")) return "3";
     if (r.includes("MANAGER")) return "3";
-    return "3"; // Default role
+    return "3";
 }
 
 function normalizeResponse(resData, defaultSuccessMsg = "Success") {
@@ -84,10 +78,6 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const staffService = {
-    /**
-     * 1. Fetch all staff members (admin/staff/fetch-all-staff.php)
-     * Strictly calls the backend and returns the backend response
-     */
     async fetchAllStaff() {
         try {
             const response = await api.post("admin/staff/fetch-all-staff.php", new FormData());
@@ -95,7 +85,6 @@ export const staffService = {
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return resData;
             }
-            // If fetch-all returned no records, attempt search-staff fallback with "STAFF"
             const searchFallback = await this.searchStaff("STAFF");
             if (searchFallback?.success && Array.isArray(searchFallback?.data) && searchFallback.data.length > 0) {
                 return searchFallback;
@@ -108,7 +97,6 @@ export const staffService = {
                     return searchFallback;
                 }
             } catch {
-                // Ignore search fallback error
             }
             return {
                 success: false,
@@ -118,9 +106,6 @@ export const staffService = {
         }
     },
 
-    /**
-     * 2. Fetch single staff member details by staffId (admin/staff/fetch-each-staff.php)
-     */
     async fetchEachStaff(staffId) {
         try {
             const formData = new FormData();
@@ -136,9 +121,6 @@ export const staffService = {
         }
     },
 
-    /**
-     * 3. Search staff members by search query (admin/staff/search-staff.php)
-     */
     async searchStaff(searchContent) {
         try {
             const formData = new FormData();
@@ -155,9 +137,6 @@ export const staffService = {
         }
     },
 
-    /**
-     * 4. Update existing staff member (admin/staff/update-staff.php)
-     */
     async updateStaff(staffData) {
         try {
             const staffId = staffData.staffId || staffData.id;
@@ -186,9 +165,6 @@ export const staffService = {
         }
     },
 
-    /**
-     * 5. Delete staff member by staffId (admin/staff/delete-staff.php)
-     */
     async deleteStaff(staffId) {
         try {
             const formData = new FormData();
@@ -204,10 +180,6 @@ export const staffService = {
         }
     },
 
-    /**
-     * 6. Create a new staff member (admin/staff/create-staff.php)
-     * Strictly calls the backend endpoint and returns any message the backend sends
-     */
     async createStaff(staffData) {
         const titleId = staffData.titleId || getTitleId(staffData.title);
         const statusId = staffData.statusId || getStatusId(staffData.status);

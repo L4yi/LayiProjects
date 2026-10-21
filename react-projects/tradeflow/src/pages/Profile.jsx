@@ -32,9 +32,8 @@ export default function Profile() {
     return (
         <section className="profile-page-section">
             <div className="profile-page-container">
-                {/* Profile Header Breadcrumb */}
                 <div className="profile-breadcrumb-bar">
-                    <Link to={isCustomer ? "/customer/dashboard" : "/dashboard"}>Home</Link>
+                    <Link to="/dashboard">Home</Link>
                     <span>&gt;</span>
                     <span className="current-crumb">Account Profile &amp; Settings</span>
                 </div>
@@ -47,14 +46,13 @@ export default function Profile() {
                 )}
 
                 <div className="profile-layout-grid">
-                    {/* Left Column: Image 4 Style Profile Identity Card */}
                     <div className="profile-identity-card">
                         <div className="profile-id-header">
                             <div className="profile-avatar-large">
                                 {user.initials}
                             </div>
                             <h3 className="profile-full-name">{user.name}</h3>
-                            <span className="profile-role-badge">{user.role || (isCustomer ? "Customer Member" : "SUPER ADMIN")}</span>
+                            <span className="profile-role-badge">{user.role || "SUPER ADMIN"}</span>
                         </div>
 
                         <div className="profile-contact-list">
@@ -72,13 +70,13 @@ export default function Profile() {
                             </div>
                             <div className="profile-contact-item">
                                 <i className="bi bi-clock-history"></i>
-                                <span>Last Active: {user.lastLogin || "2026-10-04 08:30 AM"}</span>
+                                <span>Last Active: {user.lastLogin || "Just now"}</span>
                             </div>
                         </div>
 
                         <div className="profile-card-action-links">
                             <Link
-                                to={isCustomer ? "/customer/dashboard" : "/dashboard"}
+                                to="/dashboard"
                                 className="btn-profile-dash-link"
                             >
                                 <i className="bi bi-grid-1x2-fill"></i>
@@ -86,7 +84,7 @@ export default function Profile() {
                             </Link>
 
                             <Link
-                                to={isCustomer ? "/customer/signin" : "/signin"}
+                                to="/signin"
                                 className="btn-profile-logout"
                             >
                                 <i className="bi bi-box-arrow-right"></i>
@@ -95,7 +93,6 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    {/* Right Column: Editable Account Details Form */}
                     <div className="profile-form-container-card">
                         <div className="profile-form-header">
                             <div className="form-header-icon-box">

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { CUSTOMERS_DATA } from "../data/storeData";
+import { PageHeader, TableCard } from "../components/common";
 
 export default function Customers() {
-    const [customersList, setCustomersList] = useState(CUSTOMERS_DATA);
+    const [customersList, setCustomersList] = useState([]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Customer");
@@ -57,105 +57,100 @@ export default function Customers() {
     return (
         <>
             <div className="dashboard-body">
-                <div className="module-top-badge-wrap">
-                    <div className="module-badge-pill">
-                        <i className="bi bi-people"></i>
-                        <span>Customers</span>
-                    </div>
-                    <div className="module-breadcrumb">
-                        Users &rarr; View customer accounts, activity logs, and status.
-                    </div>
-                </div>
-
-                <div className="module-header-bar">
-                    <div className="header-left">
-                        <h2 className="module-main-title">All Customers</h2>
-                        <span className="module-count-subtitle">{filteredCustomers.length} registered customers</span>
-                    </div>
-                    <div className="header-right">
-                        <div className="filter-select-wrap">
-                            <i className="bi bi-funnel"></i>
-                            <select
-                                className="filter-dropdown-select"
-                                title="Filter by Status"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
+                <PageHeader
+                    badgeIcon="bi bi-people"
+                    badgeTitle="Customers"
+                    breadcrumb="Users → View customer accounts, activity logs, and status."
+                    title="All Customers"
+                    countSubtitle={`${filteredCustomers.length} registered customers`}
+                    actions={
+                        <>
+                            <div className="filter-select-wrap">
+                                <i className="bi bi-funnel"></i>
+                                <select
+                                    className="filter-dropdown-select"
+                                    title="Filter by Status"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-add-entity"
+                                onClick={handleOpenAdd}
                             >
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                        <button
-                            type="button"
-                            className="btn-add-entity"
-                            onClick={handleOpenAdd}
-                        >
-                            <i className="bi bi-plus-lg"></i> Add Customer
-                        </button>
-                    </div>
-                </div>
+                                <i className="bi bi-plus-lg"></i> Add Customer
+                            </button>
+                        </>
+                    }
+                />
 
-                <div className="module-table-card">
-                    <div className="table-responsive">
-                        <table className="solara-data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Role / Type <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Email Address <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Last Login <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredCustomers.map((cust) => (
-                                    <tr key={cust.id}>
-                                        <td>
-                                            <div className="customer-name-box">
-                                                <div
-                                                    className="cust-avatar"
-                                                    style={{ backgroundColor: cust.avatarBg || "#143526" }}
-                                                >
-                                                    {cust.initials || cust.name.substring(0, 2).toUpperCase()}
-                                                </div>
-                                                <div className="cust-text-wrap">
-                                                    <span className="cust-text">{cust.name}</span>
-                                                    <span className="cust-id-sub">#{cust.id}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className="customer-role-tag">{cust.role || "Customer"}</span>
-                                        </td>
-                                        <td>{cust.email}</td>
-                                        <td>{cust.phone || "—"}</td>
-                                        <td>{cust.lastLogin || "—"}</td>
-                                        <td>
-                                            <span className={`status-badge-pill ${cust.status.toLowerCase()}`}>
-                                                {cust.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="action-pill-btn"
-                                                onClick={() => handleOpenEdit(cust)}
+                <TableCard
+                    title="Customer Accounts"
+                    subtitle="Registered platform user profiles"
+                    isEmpty={filteredCustomers.length === 0}
+                    emptyMessage="No customer accounts registered in database."
+                >
+                    <table className="solara-data-table">
+                        <thead>
+                            <tr>
+                                <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Role / Type <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Email Address <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Last Login <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredCustomers.map((cust) => (
+                                <tr key={cust.id}>
+                                    <td>
+                                        <div className="customer-name-box">
+                                            <div
+                                                className="cust-avatar"
+                                                style={{ backgroundColor: cust.avatarBg || "#143526" }}
                                             >
-                                                View / Edit
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                                {cust.initials || cust.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="cust-text-wrap">
+                                                <span className="cust-text">{cust.name}</span>
+                                                <span className="cust-id-sub">#{cust.id}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="customer-role-tag">{cust.role || "Customer"}</span>
+                                    </td>
+                                    <td>{cust.email}</td>
+                                    <td>{cust.phone || "—"}</td>
+                                    <td>{cust.lastLogin || "—"}</td>
+                                    <td>
+                                        <span className={`status-badge-pill ${cust.status.toLowerCase()}`}>
+                                            {cust.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            className="action-pill-btn"
+                                            onClick={() => handleOpenEdit(cust)}
+                                        >
+                                            View / Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </TableCard>
             </div>
 
-            {/* Slide-Over Edit Drawer */}
             <AdminSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}

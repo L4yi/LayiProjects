@@ -1,13 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { STORE_PRODUCTS } from "../data/storeData";
+import { PageHeader, TableCard } from "../components/common";
+import categoryService from "../services/categoryService";
 
 export default function Products() {
-    const [productsList, setProductsList] = useState(STORE_PRODUCTS);
+    const [productsList, setProductsList] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedProd, setSelectedProd] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Product");
     const [categoryFilter, setCategoryFilter] = useState("");
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            const res = await categoryService.fetchAllCategories();
+            if (res?.success && Array.isArray(res?.data)) {
+                setCategories(res.data);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handleOpenEdit = (prod) => {
         setSelectedProd({ ...prod });
@@ -20,15 +32,15 @@ export default function Products() {
             id: `prd-new-${Date.now()}`,
             name: "",
             code: `#PRD-0${productsList.length + 1}`,
-            categoryId: "mobile-devices",
-            categoryName: "Mobile Devices & Phones",
+            categoryId: categories[0]?.categories_id || "general",
+            categoryName: categories[0]?.categories_name || "General Category",
             brand: "",
             subtitle: "",
             status: "ACTIVE",
-            price: 150000,
-            oldPrice: 175000,
-            inStock: 20,
-            image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80",
+            price: 0,
+            oldPrice: 0,
+            inStock: 0,
+            image: "",
             description: ""
         });
         setDrawerTitle("Add New Product");
@@ -46,8 +58,7 @@ export default function Products() {
                         ...updatedProd,
                         id: updatedProd.id || `prd-new-${Date.now()}`,
                         price: Number(updatedProd.price) || 0,
-                        inStock: Number(updatedProd.inStock) || 0,
-                        image: updatedProd.image || "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80"
+                        inStock: Number(updatedProd.inStock) || 0
                     },
                     ...prev
                 ];
@@ -57,123 +68,124 @@ export default function Products() {
     };
 
     const filteredProds = productsList.filter(p =>
-        !categoryFilter || p.categoryId === categoryFilter
+        !categoryFilter || p.categoryId === categoryFilter || p.categoryName === categoryFilter
     );
 
     return (
         <>
             <div className="dashboard-body">
-                <div className="module-top-badge-wrap">
-                    <div className="module-badge-pill">
-                        <i className="bi bi-box-seam"></i>
-                        <span>Products</span>
-                    </div>
-                    <div className="module-breadcrumb">
-                        Inventory &rarr; Manage store catalogue, pricing, and stock levels.
-                    </div>
-                </div>
-
-                <div className="module-header-bar">
-                    <div className="header-left">
-                        <h2 className="module-main-title">All Products</h2>
-                        <span className="module-count-subtitle">{filteredProds.length} items in stock</span>
-                    </div>
-                    <div className="header-right">
-                        <div className="filter-select-wrap">
-                            <i className="bi bi-funnel"></i>
-                            <select
-                                className="filter-dropdown-select"
-                                title="Filter by Category"
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
+                <PageHeader
+                    badgeIcon="bi bi-box-seam"
+                    badgeTitle="Products"
+                    breadcrumb="Inventory → Manage store catalogue, pricing, and stock levels."
+                    title="All Products"
+                    countSubtitle={`${filteredProds.length} items cataloged`}
+                    actions={
+                        <>
+                            <div className="filter-select-wrap">
+                                <i className="bi bi-funnel"></i>
+                                <select
+                                    className="filter-dropdown-select"
+                                    title="Filter by Category"
+                                    value={categoryFilter}
+                                    onChange={(e) => setCategoryFilter(e.target.value)}
+                                >
+                                    <option value="">All Categories</option>
+                                    {categories.map((cat) => (
+                                        <option key={cat.categories_id || cat.categoryId} value={cat.categories_id || cat.categoryId}>
+                                            {cat.categories_name || cat.categoryName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-add-entity"
+                                onClick={handleOpenAdd}
+                                title="Add Product"
                             >
-                                <option value="">All Categories</option>
-                                <option value="mobile-devices">Mobile Devices</option>
-                                <option value="footwear">Footwear</option>
-                                <option value="apparel">Apparel</option>
-                                <option value="accessories">Accessories</option>
-                                <option value="wearable">Wearable Tech</option>
-                                <option value="audio">Audio Devices</option>
-                            </select>
-                        </div>
-                        <button
-                            type="button"
-                            className="btn-add-entity"
-                            onClick={handleOpenAdd}
-                            title="Add Product"
-                        >
-                            <i className="bi bi-plus-lg"></i> Add Product
-                        </button>
-                    </div>
-                </div>
+                                <i className="bi bi-plus-lg"></i> Add Product
+                            </button>
+                        </>
+                    }
+                />
 
-                <div className="module-table-card">
-                    <div className="table-responsive">
-                        <table className="solara-data-table">
-                            <thead>
-                                <tr>
-                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredProds.map((prod, idx) => (
-                                    <tr key={prod.id}>
-                                        <td className="col-sn">{idx + 1}</td>
-                                        <td>
-                                            <div className="product-table-cell">
+                <TableCard
+                    title="Product Catalog"
+                    subtitle="Live inventory records and stock statuses"
+                    isEmpty={filteredProds.length === 0}
+                    emptyMessage="No products cataloged yet in database."
+                >
+                    <table className="solara-data-table">
+                        <thead>
+                            <tr>
+                                <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredProds.map((prod, idx) => (
+                                <tr key={prod.id || idx}>
+                                    <td className="col-sn">{idx + 1}</td>
+                                    <td>
+                                        <div className="product-table-cell">
+                                            {prod.image ? (
                                                 <img
                                                     src={prod.image}
                                                     alt={prod.name}
                                                     className="prod-tbl-thumb"
                                                     style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", maxWidth: "44px", maxHeight: "44px", objectFit: "contain", borderRadius: "6px" }}
+                                                    onError={(e) => { e.target.style.display = "none"; }}
                                                 />
-                                                <div className="prod-tbl-info">
-                                                    <span className="prod-tbl-title">{prod.name}</span>
-                                                    <span className="prod-tbl-sub">{prod.subtitle}</span>
+                                            ) : (
+                                                <div style={{ width: "44px", height: "44px", minWidth: "44px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                                                    <i className="bi bi-box"></i>
                                                 </div>
+                                            )}
+                                            <div className="prod-tbl-info">
+                                                <span className="prod-tbl-title">{prod.name}</span>
+                                                <span className="prod-tbl-sub">{prod.subtitle}</span>
                                             </div>
-                                        </td>
-                                        <td className="col-prod-id">{prod.code}</td>
-                                        <td className="col-category">{prod.categoryName}</td>
-                                        <td className="col-price">₦ {prod.price.toLocaleString()}</td>
-                                        <td>
-                                            <span className={`status-badge-pill ${prod.status.toLowerCase()}`}>
-                                                {prod.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="action-btn-group">
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit"
-                                                    onClick={() => handleOpenEdit(prod)}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="action-pill-btn"
-                                                    onClick={() => handleOpenEdit(prod)}
-                                                >
-                                                    View
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                        </div>
+                                    </td>
+                                    <td className="col-prod-id">{prod.code}</td>
+                                    <td className="col-category">{prod.categoryName}</td>
+                                    <td className="col-price">₦ {Number(prod.price || 0).toLocaleString()}</td>
+                                    <td>
+                                        <span className={`status-badge-pill ${(prod.status || "active").toLowerCase()}`}>
+                                            {prod.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="action-btn-group">
+                                            <button
+                                                type="button"
+                                                className="btn-edit"
+                                                onClick={() => handleOpenEdit(prod)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="action-pill-btn"
+                                                onClick={() => handleOpenEdit(prod)}
+                                            >
+                                                View
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </TableCard>
             </div>
 
-            {/* Slide-Over Edit Drawer */}
             <AdminSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
