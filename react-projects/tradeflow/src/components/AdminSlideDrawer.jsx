@@ -10,6 +10,7 @@ export default function AdminSlideDrawer({
     initialData = {},
     isSaving = false,
     errorMessage = "",
+    categoriesList = [],
     onSave
 }) {
     const [formData, setFormData] = useState({});
@@ -227,21 +228,24 @@ export default function AdminSlideDrawer({
                                             type="text"
                                             className="drawer-input"
                                             placeholder="e.g. Apple iPhone 15 Pro Max"
-                                            value={formData.name || ""}
-                                            onChange={(e) => handleChange("name", e.target.value)}
+                                            value={formData.productName || formData.name || ""}
+                                            onChange={(e) => {
+                                                handleChange("productName", e.target.value);
+                                                handleChange("name", e.target.value);
+                                            }}
                                             required
                                         />
                                     </div>
 
                                     <div className="form-group-item">
-                                        <label className="drawer-label">Product SKU / ID *</label>
+                                        <label className="drawer-label">Product SKU / ID</label>
                                         <input
                                             type="text"
                                             className="drawer-input"
-                                            placeholder="e.g. #PRD-025"
-                                            value={formData.code || ""}
+                                            placeholder="Auto-generated on save"
+                                            value={formData.productId || formData.product_id || formData.code || ""}
                                             onChange={(e) => handleChange("code", e.target.value)}
-                                            required
+                                            readOnly={Boolean(formData.productId || formData.product_id)}
                                         />
                                     </div>
 
@@ -249,27 +253,24 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Category *</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.categoryId || "mobile-devices"}
+                                            value={formData.categoryId || formData.categories_id || ""}
                                             onChange={(e) => {
                                                 const catId = e.target.value;
-                                                const catNames = {
-                                                    "mobile-devices": "Mobile Devices & Phones",
-                                                    "footwear": "Footwear & Shoes",
-                                                    "apparel": "Apparel & Clothing",
-                                                    "accessories": "Bags & Accessories",
-                                                    "audio": "Audio Devices & Sound",
-                                                    "wearable": "Wearable Technology"
-                                                };
+                                                const selectedCat = (categoriesList || []).find(c => (c.categories_id || c.categoryId || c.id) === catId);
                                                 handleChange("categoryId", catId);
-                                                handleChange("categoryName", catNames[catId] || catId);
+                                                handleChange("categories_id", catId);
+                                                if (selectedCat) {
+                                                    handleChange("categoryName", selectedCat.categories_name || selectedCat.categoryName || selectedCat.name);
+                                                }
                                             }}
+                                            required
                                         >
-                                            <option value="mobile-devices">Mobile Devices & Phones</option>
-                                            <option value="footwear">Footwear & Shoes</option>
-                                            <option value="apparel">Apparel & Clothing</option>
-                                            <option value="accessories">Bags & Accessories</option>
-                                            <option value="audio">Audio Devices & Sound</option>
-                                            <option value="wearable">Wearable Technology</option>
+                                            <option value="">Select Category</option>
+                                            {(categoriesList || []).map((cat) => (
+                                                <option key={cat.categories_id || cat.categoryId || cat.id} value={cat.categories_id || cat.categoryId || cat.id}>
+                                                    {cat.categories_name || cat.categoryName || cat.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -309,8 +310,12 @@ export default function AdminSlideDrawer({
                                             type="number"
                                             className="drawer-input"
                                             placeholder="e.g. 850000"
-                                            value={formData.price ?? ""}
-                                            onChange={(e) => handleChange("price", Number(e.target.value) || 0)}
+                                            value={formData.productPrice ?? formData.price ?? ""}
+                                            onChange={(e) => {
+                                                const p = Number(e.target.value) || 0;
+                                                handleChange("price", p);
+                                                handleChange("productPrice", p);
+                                            }}
                                             required
                                         />
                                     </div>
@@ -327,13 +332,17 @@ export default function AdminSlideDrawer({
                                     </div>
 
                                     <div className="form-group-item">
-                                        <label className="drawer-label">Stock Units *</label>
+                                        <label className="drawer-label">Stock Quantity *</label>
                                         <input
                                             type="number"
                                             className="drawer-input"
                                             placeholder="e.g. 24"
-                                            value={formData.inStock ?? ""}
-                                            onChange={(e) => handleChange("inStock", Number(e.target.value) || 0)}
+                                            value={formData.quantity ?? formData.inStock ?? ""}
+                                            onChange={(e) => {
+                                                const q = Number(e.target.value) || 0;
+                                                handleChange("quantity", q);
+                                                handleChange("inStock", q);
+                                            }}
                                             required
                                         />
                                     </div>
@@ -382,13 +391,14 @@ export default function AdminSlideDrawer({
                                     </div>
 
                                     <div className="form-group-item full-width">
-                                        <label className="drawer-label">Product Description</label>
+                                        <label className="drawer-label">Product Description *</label>
                                         <textarea
                                             className="drawer-textarea"
                                             rows="3"
                                             placeholder="Enter comprehensive product overview..."
                                             value={formData.description || ""}
                                             onChange={(e) => handleChange("description", e.target.value)}
+                                            required
                                         ></textarea>
                                     </div>
                                 </div>

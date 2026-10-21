@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { MetricCard } from "../components/common";
 import staffService from "../services/staffService";
 import categoryService from "../services/categoryService";
+import productService from "../services/productService";
 
 export default function Dashboard() {
     const [staffCount, setStaffCount] = useState(0);
     const [categoryCount, setCategoryCount] = useState(0);
+    const [productCount, setProductCount] = useState(0);
     const [recentTransactions, setRecentTransactions] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [searchProd, setSearchProd] = useState("");
@@ -23,6 +25,19 @@ export default function Dashboard() {
                 if (catRes?.success && Array.isArray(catRes?.data)) {
                     setCategoryCount(catRes.data.length);
                 }
+
+                const prodRes = await productService.fetchAllProducts();
+                if (prodRes?.success && Array.isArray(prodRes?.data)) {
+                    setProductCount(prodRes.data.length);
+                    const mapped = prodRes.data.map(p => ({
+                        id: p.product_id || p.productId,
+                        name: p.product_name || p.productName,
+                        code: p.product_id || p.productId,
+                        price: p.product_price || p.productPrice,
+                        img: p.image || null
+                    }));
+                    setTopProducts(mapped);
+                }
             } catch (e) {
                 console.error("Dashboard metrics load error:", e);
             }
@@ -32,8 +47,8 @@ export default function Dashboard() {
     }, []);
 
     const filteredProducts = topProducts.filter((prod) =>
-        prod.name.toLowerCase().includes(searchProd.toLowerCase()) ||
-        prod.code.toLowerCase().includes(searchProd.toLowerCase())
+        (prod.name || "").toLowerCase().includes(searchProd.toLowerCase()) ||
+        (prod.code || "").toLowerCase().includes(searchProd.toLowerCase())
     );
 
     return (
@@ -64,14 +79,14 @@ export default function Dashboard() {
                 />
 
                 <MetricCard
-                    title="Orders & Sales"
-                    timeSubtitle="Current billing cycle"
+                    title="Catalog & Inventory"
+                    timeSubtitle="Live products recorded"
                     isSplit={true}
                     splitData={{
-                        left: { label: "Orders", value: "0", sub: "Recorded" },
-                        right: { label: "Revenue", value: "₦0.00", isNegative: false }
+                        left: { label: "Products", value: String(productCount), sub: "In Catalog" },
+                        right: { label: "Orders", value: "0", isNegative: false }
                     }}
-                    detailsLink="/orders"
+                    detailsLink="/products"
                 />
             </div>
 

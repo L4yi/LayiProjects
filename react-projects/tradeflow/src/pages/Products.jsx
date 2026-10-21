@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { PageHeader, TableCard } from "../components/common";
+import { PageHeader, TableCard, StatusModal } from "../components/common";
+import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 
 export default function Products() {
@@ -9,67 +10,167 @@ export default function Products() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedProd, setSelectedProd] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Product");
+    const [drawerError, setDrawerError] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    const mapProducts = (items = []) => {
+        return items.map((prod, idx) => ({
+            id: prod.product_id || prod.productId || `prod-${idx}`,
+            code: prod.product_id || prod.productId || `#PRD-0${idx + 1}`,
+            name: prod.product_name || prod.productName || "Untitled Product",
+            price: Number(prod.product_price || prod.productPrice || prod.price || 0),
+            inStock: Number(prod.quantity ?? prod.inStock ?? 0),
+            categoryId: prod.categories_id || prod.categoryId || "",
+            categoryName: prod.categories_name || prod.categoryName || "General Category",
+            status: prod.status_name || (String(prod.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+            description: prod.description || "",
+            image: prod.image || "",
+            createdAt: prod.created_at,
+            updatedAt: prod.updated_at
+        }));
+    };
+
+    const loadProducts = async () => {
+        const res = await productService.fetchAllProducts();
+        if (res?.success && Array.isArray(res?.data)) {
+            setProductsList(mapProducts(res.data));
+        } else {
+            setProductsList([]);
+        }
+    };
+
+    const loadCategories = async () => {
+        const res = await categoryService.fetchAllCategories();
+        if (res?.success && Array.isArray(res?.data)) {
+            setCategories(res.data);
+        }
+    };
 
     useEffect(() => {
-        const loadCategories = async () => {
-            const res = await categoryService.fetchAllCategories();
-            if (res?.success && Array.isArray(res?.data)) {
-                setCategories(res.data);
-            }
-        };
+        loadProducts();
         loadCategories();
     }, []);
 
+    const handleSearchChange = async (val) => {
+        setSearchQuery(val);
+        const query = val.trim();
+        if (!query) {
+            loadProducts();
+            return;
+        }
+
+        const res = await productService.searchProduct(query);
+        if (res?.success && Array.isArray(res?.data)) {
+            setProductsList(mapProducts(res.data));
+        }
+    };
+
     const handleOpenEdit = (prod) => {
-        setSelectedProd({ ...prod });
+        setSelectedProd({
+            ...prod,
+            productId: prod.id || prod.code,
+            productName: prod.name,
+            productPrice: prod.price,
+            quantity: prod.inStock,
+            categoryId: prod.categoryId
+        });
         setDrawerTitle(prod ? `Edit Product - ${prod.name}` : "Create New Product");
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
     const handleOpenAdd = () => {
+        const defaultCat = categories[0];
         setSelectedProd({
-            id: `prd-new-${Date.now()}`,
+            productId: "",
             name: "",
-            code: `#PRD-0${productsList.length + 1}`,
-            categoryId: categories[0]?.categories_id || "general",
-            categoryName: categories[0]?.categories_name || "General Category",
+            productName: "",
+            code: "",
+            categoryId: defaultCat?.categories_id || defaultCat?.categoryId || "",
+            categoryName: defaultCat?.categories_name || defaultCat?.categoryName || "",
             brand: "",
             subtitle: "",
             status: "ACTIVE",
-            price: 0,
-            oldPrice: 0,
-            inStock: 0,
+            price: "",
+            productPrice: "",
+            inStock: "",
+            quantity: "",
             image: "",
             description: ""
         });
         setDrawerTitle("Add New Product");
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
-    const handleSaveProduct = (updatedProd) => {
-        setProductsList(prev => {
-            const exists = prev.some(p => p.id === updatedProd.id || (updatedProd.code && p.code === updatedProd.code));
-            if (exists) {
-                return prev.map(p => (p.id === updatedProd.id || (updatedProd.code && p.code === updatedProd.code)) ? { ...p, ...updatedProd } : p);
-            } else {
-                return [
-                    {
-                        ...updatedProd,
-                        id: updatedProd.id || `prd-new-${Date.now()}`,
-                        price: Number(updatedProd.price) || 0,
-                        inStock: Number(updatedProd.inStock) || 0
-                    },
-                    ...prev
-                ];
-            }
-        });
-        setDrawerOpen(false);
+    const handleSaveProduct = async (productData) => {
+        setIsSaving(true);
+        setDrawerError("");
+
+        const isUpdate = Boolean(productData.productId || productData.product_id || productData.id);
+        const prodName = productData.productName || productData.name || "";
+
+        let result;
+        if (isUpdate) {
+            result = await productService.updateProduct(productData);
+        } else {
+            result = await productService.createProduct(productData);
+        }
+        setIsSaving(false);
+
+        if (result?.success) {
+            setDrawerOpen(false);
+            await loadProducts();
+            setModalData({
+                type: "success",
+                title: isUpdate ? "PRODUCT UPDATED SUCCESSFULLY!" : "PRODUCT CREATED SUCCESSFULLY!",
+                message: isUpdate
+                    ? (result.message || `Product "${prodName}" has been updated successfully.`)
+                    : (result.message || `Product "${prodName}" has been registered into inventory.`)
+            });
+            setShowSuccessModal(true);
+        } else {
+            setDrawerError(result?.message || "Unable to save product. Please check all required fields.");
+        }
     };
 
-    const filteredProds = productsList.filter(p =>
-        !categoryFilter || p.categoryId === categoryFilter || p.categoryName === categoryFilter
-    );
+    const handleDeleteProduct = async (prod) => {
+        const prodId = prod.id || prod.code || prod.productId;
+        if (!prodId) return;
+
+        if (!window.confirm(`Are you sure you want to delete product "${prod.name}"?`)) return;
+
+        const res = await productService.deleteProduct(prodId);
+        if (res?.success) {
+            setModalData({
+                type: "success",
+                title: "PRODUCT DELETED SUCCESSFULLY!",
+                message: res.message || `Product "${prod.name}" was removed from database.`
+            });
+            setShowSuccessModal(true);
+            await loadProducts();
+        } else {
+            setModalData({
+                type: "error",
+                title: "DELETE FAILED",
+                message: res?.message || "Unable to delete product."
+            });
+            setShowSuccessModal(true);
+        }
+    };
+
+    const filteredProds = productsList.filter(p => {
+        const matchesCategory = !categoryFilter || p.categoryId === categoryFilter || p.categoryName === categoryFilter;
+        const matchesSearch = !searchQuery ||
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesCategory && matchesSearch;
+    });
 
     return (
         <>
@@ -82,6 +183,37 @@ export default function Products() {
                     countSubtitle={`${filteredProds.length} items cataloged`}
                     actions={
                         <>
+                            <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
+                                <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
+                                <input
+                                    type="text"
+                                    className="filter-dropdown-select"
+                                    style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
+                                    placeholder="Search products..."
+                                    value={searchQuery}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSearchChange("")}
+                                        style={{
+                                            position: "absolute",
+                                            right: "10px",
+                                            background: "transparent",
+                                            border: "none",
+                                            color: "#a0aec0",
+                                            cursor: "pointer",
+                                            padding: 0,
+                                            fontSize: "0.95rem"
+                                        }}
+                                        title="Clear search"
+                                    >
+                                        <i className="bi bi-x-circle-fill"></i>
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="filter-select-wrap">
                                 <i className="bi bi-funnel"></i>
                                 <select
@@ -92,8 +224,8 @@ export default function Products() {
                                 >
                                     <option value="">All Categories</option>
                                     {categories.map((cat) => (
-                                        <option key={cat.categories_id || cat.categoryId} value={cat.categories_id || cat.categoryId}>
-                                            {cat.categories_name || cat.categoryName}
+                                        <option key={cat.categories_id || cat.categoryId || cat.id} value={cat.categories_id || cat.categoryId || cat.id}>
+                                            {cat.categories_name || cat.categoryName || cat.name}
                                         </option>
                                     ))}
                                 </select>
@@ -124,6 +256,7 @@ export default function Products() {
                                 <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
                                 <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
                                 <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
+                                <th>Stock <span className="sort-icon">&uarr;&darr;</span></th>
                                 <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                 <th>Action</th>
                             </tr>
@@ -149,13 +282,18 @@ export default function Products() {
                                             )}
                                             <div className="prod-tbl-info">
                                                 <span className="prod-tbl-title">{prod.name}</span>
-                                                <span className="prod-tbl-sub">{prod.subtitle}</span>
+                                                {prod.description && (
+                                                    <span className="prod-tbl-sub" style={{ maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                                                        {prod.description}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="col-prod-id">{prod.code}</td>
                                     <td className="col-category">{prod.categoryName}</td>
                                     <td className="col-price">₦ {Number(prod.price || 0).toLocaleString()}</td>
+                                    <td>{prod.inStock}</td>
                                     <td>
                                         <span className={`status-badge-pill ${(prod.status || "active").toLowerCase()}`}>
                                             {prod.status}
@@ -177,6 +315,15 @@ export default function Products() {
                                             >
                                                 View
                                             </button>
+                                            <button
+                                                type="button"
+                                                className="btn-edit"
+                                                style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                onClick={() => handleDeleteProduct(prod)}
+                                                title="Delete Product"
+                                            >
+                                                <i className="bi bi-trash"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -194,7 +341,20 @@ export default function Products() {
                 icon="bi bi-box-seam-fill"
                 entityType="Store Product"
                 initialData={selectedProd || {}}
+                categoriesList={categories}
+                isSaving={isSaving}
+                errorMessage={drawerError}
                 onSave={handleSaveProduct}
+            />
+
+            <StatusModal
+                isOpen={showSuccessModal}
+                type={modalData.type || "success"}
+                title={modalData.title}
+                message={modalData.message}
+                buttonText="Okay, Thanks"
+                onConfirm={() => setShowSuccessModal(false)}
+                autoCloseDelay={2500}
             />
         </>
     );
