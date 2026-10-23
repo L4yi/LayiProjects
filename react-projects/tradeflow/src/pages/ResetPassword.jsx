@@ -266,9 +266,8 @@ export default function ResetPassword() {
                 type="success"
                 title="PASSWORD RESET SUCCESSFULLY!"
                 message="Your password has been securely updated. You can now log in with your new credentials."
-                buttonText="Okay, Thanks"
+                buttonText="Okay, Continue"
                 onConfirm={() => navigate("/signin")}
-                autoCloseDelay={2000}
             />
         </>
     );

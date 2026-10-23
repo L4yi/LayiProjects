@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { PageHeader, TableCard, StatusModal } from "../components/common";
+import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 
 export default function Products() {
     const [productsList, setProductsList] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedProd, setSelectedProd] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Product");
@@ -35,11 +37,23 @@ export default function Products() {
     };
 
     const loadProducts = async () => {
-        const res = await productService.fetchAllProducts();
-        if (res?.success && Array.isArray(res?.data)) {
-            setProductsList(mapProducts(res.data));
-        } else {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const res = await productService.fetchAllProducts();
+            if (res?.success && Array.isArray(res?.data)) {
+                setProductsList(mapProducts(res.data));
+            } else {
+                if (res?.success === false) {
+                    setHasNetworkError(true);
+                }
+                setProductsList([]);
+            }
+        } catch {
+            setHasNetworkError(true);
             setProductsList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -63,9 +77,18 @@ export default function Products() {
             return;
         }
 
-        const res = await productService.searchProduct(query);
-        if (res?.success && Array.isArray(res?.data)) {
-            setProductsList(mapProducts(res.data));
+        setIsLoading(true);
+        try {
+            const res = await productService.searchProduct(query);
+            if (res?.success && Array.isArray(res?.data)) {
+                setProductsList(mapProducts(res.data));
+            } else {
+                setProductsList([]);
+            }
+        } catch {
+            setProductsList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -242,95 +265,115 @@ export default function Products() {
                     }
                 />
 
-                <TableCard
-                    title="Product Catalog"
-                    subtitle="Live inventory records and stock statuses"
-                    isEmpty={filteredProds.length === 0}
-                    emptyMessage="No products cataloged yet in database."
-                >
-                    <table className="solara-data-table">
-                        <thead>
-                            <tr>
-                                <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Stock <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredProds.map((prod, idx) => (
-                                <tr key={prod.id || idx}>
-                                    <td className="col-sn">{idx + 1}</td>
-                                    <td>
-                                        <div className="product-table-cell">
-                                            {prod.image ? (
-                                                <img
-                                                    src={prod.image}
-                                                    alt={prod.name}
-                                                    className="prod-tbl-thumb"
-                                                    style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", maxWidth: "44px", maxHeight: "44px", objectFit: "contain", borderRadius: "6px" }}
-                                                    onError={(e) => { e.target.style.display = "none"; }}
-                                                />
-                                            ) : (
-                                                <div style={{ width: "44px", height: "44px", minWidth: "44px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
-                                                    <i className="bi bi-box"></i>
-                                                </div>
-                                            )}
-                                            <div className="prod-tbl-info">
-                                                <span className="prod-tbl-title">{prod.name}</span>
-                                                {prod.description && (
-                                                    <span className="prod-tbl-sub" style={{ maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
-                                                        {prod.description}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="col-prod-id">{prod.code}</td>
-                                    <td className="col-category">{prod.categoryName}</td>
-                                    <td className="col-price">₦ {Number(prod.price || 0).toLocaleString()}</td>
-                                    <td>{prod.inStock}</td>
-                                    <td>
-                                        <span className={`status-badge-pill ${(prod.status || "active").toLowerCase()}`}>
-                                            {prod.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button
-                                                type="button"
-                                                className="btn-edit"
-                                                onClick={() => handleOpenEdit(prod)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="action-pill-btn"
-                                                onClick={() => handleOpenEdit(prod)}
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn-edit"
-                                                style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
-                                                onClick={() => handleDeleteProduct(prod)}
-                                                title="Delete Product"
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                {isLoading ? (
+                    <LoadingSpinner />
+                ) : hasNetworkError ? (
+                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>
+                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>Network / Connection Issue</h3>
+                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                            Unable to load products from the server. Please check your internet connection and try again.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={loadProducts}
+                            style={{ display: "inline-flex" }}
+                        >
+                            <i className="bi bi-arrow-clockwise"></i> Retry Connection
+                        </button>
+                    </div>
+                ) : (
+                    <TableCard
+                        title="Product Catalog"
+                        subtitle="Live inventory records and stock statuses"
+                        isEmpty={filteredProds.length === 0}
+                        emptyMessage="No products cataloged yet in database."
+                    >
+                        <table className="solara-data-table">
+                            <thead>
+                                <tr>
+                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Stock <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </TableCard>
+                            </thead>
+                            <tbody>
+                                {filteredProds.map((prod, idx) => (
+                                    <tr key={prod.id || idx}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td>
+                                            <div className="product-table-cell">
+                                                {prod.image ? (
+                                                    <img
+                                                        src={prod.image}
+                                                        alt={prod.name}
+                                                        className="prod-tbl-thumb"
+                                                        style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", maxWidth: "44px", maxHeight: "44px", objectFit: "contain", borderRadius: "6px" }}
+                                                        onError={(e) => { e.target.style.display = "none"; }}
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: "44px", height: "44px", minWidth: "44px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                                                        <i className="bi bi-box"></i>
+                                                    </div>
+                                                )}
+                                                <div className="prod-tbl-info">
+                                                    <span className="prod-tbl-title">{prod.name}</span>
+                                                    {prod.description && (
+                                                        <span className="prod-tbl-sub" style={{ maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                                                            {prod.description}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="col-prod-id">{prod.code}</td>
+                                        <td className="col-category">{prod.categoryName}</td>
+                                        <td className="col-price">₦ {Number(prod.price || 0).toLocaleString()}</td>
+                                        <td>{prod.inStock}</td>
+                                        <td>
+                                            <span className={`status-badge-pill ${(prod.status || "active").toLowerCase()}`}>
+                                                {prod.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    onClick={() => handleOpenEdit(prod)}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(prod)}
+                                                >
+                                                    View
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    onClick={() => handleDeleteProduct(prod)}
+                                                    title="Delete Product"
+                                                >
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </TableCard>
+                )}
             </div>
 
             <AdminSlideDrawer
@@ -352,9 +395,8 @@ export default function Products() {
                 type={modalData.type || "success"}
                 title={modalData.title}
                 message={modalData.message}
-                buttonText="Okay, Thanks"
+                buttonText="Okay, Continue"
                 onConfirm={() => setShowSuccessModal(false)}
-                autoCloseDelay={2500}
             />
         </>
     );

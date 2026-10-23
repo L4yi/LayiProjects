@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { PageHeader, TableCard } from "../components/common";
+import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 
 export default function Orders() {
     const [ordersList, setOrdersList] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Order");
     const [statusFilter, setStatusFilter] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
     const handleOpenEdit = (order) => {
         setSelectedOrder({ ...order });
@@ -33,9 +36,9 @@ export default function Orders() {
     };
 
     const handleSaveOrder = (orderData) => {
+        const isUpdate = ordersList.some(o => o.id === orderData.id || (orderData.code && o.code === orderData.code));
         setOrdersList(prev => {
-            const exists = prev.some(o => o.id === orderData.id || (orderData.code && o.code === orderData.code));
-            if (exists) {
+            if (isUpdate) {
                 return prev.map(o => (o.id === orderData.id || (orderData.code && o.code === orderData.code)) ? { ...o, ...orderData } : o);
             } else {
                 return [
@@ -49,6 +52,12 @@ export default function Orders() {
             }
         });
         setDrawerOpen(false);
+        setModalData({
+            type: "success",
+            title: isUpdate ? "ORDER UPDATED SUCCESSFULLY!" : "ORDER CREATED SUCCESSFULLY!",
+            message: `Order for "${orderData.customerName || orderData.name || "Customer"}" has been recorded.`
+        });
+        setShowSuccessModal(true);
     };
 
     const filteredOrders = ordersList.filter(o =>
@@ -93,54 +102,58 @@ export default function Orders() {
                     }
                 />
 
-                <TableCard
-                    title="Order Processing"
-                    subtitle="Customer fulfillment pipelines and delivery logs"
-                    isEmpty={filteredOrders.length === 0}
-                    emptyMessage="No customer orders recorded yet in database."
-                >
-                    <table className="solara-data-table">
-                        <thead>
-                            <tr>
-                                <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Order ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Customer Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Product Details <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredOrders.map((order, idx) => (
-                                <tr key={order.id || idx}>
-                                    <td className="col-sn">{idx + 1}</td>
-                                    <td className="col-order-id">{order.code}</td>
-                                    <td><strong>{order.customerName || order.name || "Customer"}</strong></td>
-                                    <td>
-                                        <div className="order-product-cell">
-                                            <span className="prod-name">{order.productName || "Product"}</span>
-                                            {order.productId && <span className="prod-id">ID: {order.productId}</span>}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={`status-badge-pill ${(order.status || "pending").toLowerCase()}`}>
-                                            {order.status || "Pending"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            className="action-pill-btn"
-                                            onClick={() => handleOpenEdit(order)}
-                                        >
-                                            View / Edit
-                                        </button>
-                                    </td>
+                {isLoading ? (
+                    <LoadingSpinner />
+                ) : (
+                    <TableCard
+                        title="Order Processing"
+                        subtitle="Customer fulfillment pipelines and delivery logs"
+                        isEmpty={filteredOrders.length === 0}
+                        emptyMessage="No customer orders recorded yet in database."
+                    >
+                        <table className="solara-data-table">
+                            <thead>
+                                <tr>
+                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Order ID <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Customer Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Product Details <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </TableCard>
+                            </thead>
+                            <tbody>
+                                {filteredOrders.map((order, idx) => (
+                                    <tr key={order.id || idx}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td className="col-order-id">{order.code}</td>
+                                        <td><strong>{order.customerName || order.name || "Customer"}</strong></td>
+                                        <td>
+                                            <div className="order-product-cell">
+                                                <span className="prod-name">{order.productName || "Product"}</span>
+                                                {order.productId && <span className="prod-id">ID: {order.productId}</span>}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge-pill ${(order.status || "pending").toLowerCase()}`}>
+                                                {order.status || "Pending"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                className="action-pill-btn"
+                                                onClick={() => handleOpenEdit(order)}
+                                            >
+                                                View / Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </TableCard>
+                )}
             </div>
 
             <AdminSlideDrawer
@@ -152,6 +165,15 @@ export default function Orders() {
                 entityType="Customer Order"
                 initialData={selectedOrder || {}}
                 onSave={handleSaveOrder}
+            />
+
+            <StatusModal
+                isOpen={showSuccessModal}
+                type={modalData.type || "success"}
+                title={modalData.title}
+                message={modalData.message}
+                buttonText="Okay, Continue"
+                onConfirm={() => setShowSuccessModal(false)}
             />
         </>
     );

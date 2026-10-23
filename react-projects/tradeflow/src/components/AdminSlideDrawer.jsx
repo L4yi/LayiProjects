@@ -499,7 +499,11 @@ export default function AdminSlideDrawer({
                                         <select
                                             className="drawer-input"
                                             value={formData.status || "ACTIVE"}
-                                            onChange={(e) => handleChange("status", e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
+                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                            }}
                                         >
                                             <option value="ACTIVE">ACTIVE</option>
                                             <option value="INACTIVE">INACTIVE</option>
@@ -949,16 +953,15 @@ export default function AdminSlideDrawer({
                                         <select
                                             className="drawer-input"
                                             value={formData.role || "Store Manager"}
-                                            onChange={(e) => handleChange("role", e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const rId = val === "Store Manager" ? "5" : (val === "Super Admin" || val === "SUPER ADMIN") ? "3" : (val === "Admin" || val === "ADMIN") ? "2" : val === "System Administrator" ? "4" : "1";
+                                                setFormData(prev => ({ ...prev, role: val, roleId: rId }));
+                                            }}
                                         >
                                             <option value="Store Manager">Store Manager</option>
                                             <option value="Super Admin">Super Admin</option>
-                                            <option value="Senior Operations Lead">Senior Operations Lead</option>
-                                            <option value="Sales & Retail Lead">Sales & Retail Lead</option>
-                                            <option value="Inventory Lead">Inventory Lead</option>
-                                            <option value="Systems Specialist">Systems Specialist</option>
-                                            <option value="Customer Support">Customer Support</option>
-                                            <option value="Customer Success Officer">Customer Success Officer</option>
+                                            <option value="Admin">Admin</option>
                                             <option value="Staff Member">Staff Member</option>
                                         </select>
                                     </div>
@@ -968,7 +971,11 @@ export default function AdminSlideDrawer({
                                         <select
                                             className="drawer-input"
                                             value={formData.status || "ACTIVE"}
-                                            onChange={(e) => handleChange("status", e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
+                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                            }}
                                         >
                                             <option value="ACTIVE">ACTIVE</option>
                                             <option value="INACTIVE">INACTIVE</option>

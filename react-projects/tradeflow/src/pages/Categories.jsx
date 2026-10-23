@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { PageHeader, TableCard, StatusModal } from "../components/common";
+import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
 
 export default function Categories() {
     const [categoriesList, setCategoriesList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCat, setSelectedCat] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Category");
@@ -16,22 +18,34 @@ export default function Categories() {
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
     const loadCategories = async () => {
-        const result = await categoryService.fetchAllCategories();
-        if (result?.success && Array.isArray(result?.data)) {
-            const mapped = result.data.map((cat, idx) => ({
-                id: cat.categories_id || cat.categoryId || `cat-${idx}`,
-                code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
-                name: cat.categories_name || cat.categoryName || "Untitled Category",
-                status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
-                description: cat.description || "",
-                icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
-                itemCount: "Catalog Item",
-                createdAt: cat.created_at,
-                updatedAt: cat.updated_at
-            }));
-            setCategoriesList(mapped);
-        } else {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const result = await categoryService.fetchAllCategories();
+            if (result?.success && Array.isArray(result?.data)) {
+                const mapped = result.data.map((cat, idx) => ({
+                    id: cat.categories_id || cat.categoryId || `cat-${idx}`,
+                    code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
+                    name: cat.categories_name || cat.categoryName || "Untitled Category",
+                    status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+                    description: cat.description || "",
+                    icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
+                    itemCount: "Catalog Item",
+                    createdAt: cat.created_at,
+                    updatedAt: cat.updated_at
+                }));
+                setCategoriesList(mapped);
+            } else {
+                if (result?.success === false) {
+                    setHasNetworkError(true);
+                }
+                setCategoriesList([]);
+            }
+        } catch {
+            setHasNetworkError(true);
             setCategoriesList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -47,20 +61,29 @@ export default function Categories() {
             return;
         }
 
-        const result = await categoryService.searchCategory(query);
-        if (result?.success && Array.isArray(result?.data)) {
-            const mapped = result.data.map((cat, idx) => ({
-                id: cat.categories_id || cat.categoryId || `cat-${idx}`,
-                code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
-                name: cat.categories_name || cat.categoryName || "Untitled Category",
-                status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
-                description: cat.description || "",
-                icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
-                itemCount: "Catalog Item",
-                createdAt: cat.created_at,
-                updatedAt: cat.updated_at
-            }));
-            setCategoriesList(mapped);
+        setIsLoading(true);
+        try {
+            const result = await categoryService.searchCategory(query);
+            if (result?.success && Array.isArray(result?.data)) {
+                const mapped = result.data.map((cat, idx) => ({
+                    id: cat.categories_id || cat.categoryId || `cat-${idx}`,
+                    code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
+                    name: cat.categories_name || cat.categoryName || "Untitled Category",
+                    status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+                    description: cat.description || "",
+                    icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
+                    itemCount: "Catalog Item",
+                    createdAt: cat.created_at,
+                    updatedAt: cat.updated_at
+                }));
+                setCategoriesList(mapped);
+            } else {
+                setCategoriesList([]);
+            }
+        } catch {
+            setCategoriesList([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -218,81 +241,101 @@ export default function Categories() {
                     }
                 />
 
-                <TableCard
-                    title="Category Catalog"
-                    subtitle="Active and archived categories in the catalog"
-                    isEmpty={displayCats.length === 0}
-                    emptyMessage="No categories match the selected criteria."
-                >
-                    <table className="solara-data-table">
-                        <thead>
-                            <tr>
-                                <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {displayCats.map((cat, idx) => (
-                                <tr key={cat.id || idx}>
-                                    <td className="col-sn">{idx + 1}</td>
-                                    <td>
-                                        <div className="category-name-cell">
-                                            <div className="category-icon-box">
-                                                <i className={cat.icon || "bi bi-tag"}></i>
-                                            </div>
-                                            <div>
-                                                <span className="cat-title">{cat.name}</span>
-                                                {cat.description && (
-                                                    <div style={{ fontSize: "0.78rem", color: "#718096", maxWidth: "340px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                        {cat.description}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="col-cat-id">{cat.code}</td>
-                                    <td>
-                                        <span className={`status-badge-pill ${(cat.status || "active").toLowerCase()}`}>
-                                            {cat.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button
-                                                type="button"
-                                                className="btn-edit"
-                                                onClick={() => handleOpenEdit(cat)}
-                                                title="Edit Category"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="action-pill-btn"
-                                                onClick={() => handleOpenEdit(cat)}
-                                                title="View Category"
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn-edit"
-                                                style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
-                                                onClick={() => handleDeleteCategory(cat)}
-                                                title="Delete Category"
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                {isLoading ? (
+                    <LoadingSpinner />
+                ) : hasNetworkError ? (
+                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>
+                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>Network / Connection Issue</h3>
+                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                            Unable to load categories from the server. Please check your internet connection and try again.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={loadCategories}
+                            style={{ display: "inline-flex" }}
+                        >
+                            <i className="bi bi-arrow-clockwise"></i> Retry Connection
+                        </button>
+                    </div>
+                ) : (
+                    <TableCard
+                        title="Category Catalog"
+                        subtitle="Active and archived categories in the catalog"
+                        isEmpty={displayCats.length === 0}
+                        emptyMessage="No categories match the selected criteria."
+                    >
+                        <table className="solara-data-table">
+                            <thead>
+                                <tr>
+                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </TableCard>
+                            </thead>
+                            <tbody>
+                                {displayCats.map((cat, idx) => (
+                                    <tr key={cat.id || idx}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td>
+                                            <div className="category-name-cell">
+                                                <div className="category-icon-box">
+                                                    <i className={cat.icon || "bi bi-tag"}></i>
+                                                </div>
+                                                <div>
+                                                    <span className="cat-title">{cat.name}</span>
+                                                    {cat.description && (
+                                                        <div style={{ fontSize: "0.78rem", color: "#718096", maxWidth: "340px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                            {cat.description}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="col-cat-id">{cat.code}</td>
+                                        <td>
+                                            <span className={`status-badge-pill ${(cat.status || "active").toLowerCase()}`}>
+                                                {cat.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    onClick={() => handleOpenEdit(cat)}
+                                                    title="Edit Category"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(cat)}
+                                                    title="View Category"
+                                                >
+                                                    View
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    onClick={() => handleDeleteCategory(cat)}
+                                                    title="Delete Category"
+                                                >
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </TableCard>
+                )}
             </div>
 
             <AdminSlideDrawer
@@ -313,9 +356,8 @@ export default function Categories() {
                 type={modalData.type || "success"}
                 title={modalData.title}
                 message={modalData.message}
-                buttonText="Okay, Thanks"
+                buttonText="Okay, Continue"
                 onConfirm={() => setShowSuccessModal(false)}
-                autoCloseDelay={2500}
             />
         </>
     );

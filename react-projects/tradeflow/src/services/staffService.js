@@ -50,16 +50,19 @@ export function getTitleId(title = "") {
 
 export function getStatusId(status = "") {
     const s = String(status).toUpperCase().trim();
-    if (s === "INACTIVE") return "2";
-    if (s === "PENDING") return "3";
+    if (s === "2" || s === "INACTIVE") return "2";
+    if (s === "3" || s === "PENDING") return "3";
     return "1";
 }
 
 export function getRoleId(role = "") {
     const r = String(role).toUpperCase().trim();
-    if (r.includes("SUPER ADMIN") || r.includes("ADMIN")) return "3";
-    if (r.includes("MANAGER")) return "3";
-    return "3";
+    if (r === "5" || r.includes("MANAGER")) return "5";
+    if (r === "3" || r.includes("SUPER ADMIN")) return "3";
+    if (r === "2" || r.includes("ADMIN")) return "2";
+    if (r === "4" || r.includes("SYSTEM")) return "4";
+    if (r === "1" || r.includes("STAFF")) return "1";
+    return "5";
 }
 
 function normalizeResponse(resData, defaultSuccessMsg = "Success") {
@@ -140,9 +143,9 @@ export const staffService = {
     async updateStaff(staffData) {
         try {
             const staffId = staffData.staffId || staffData.id;
-            const titleId = staffData.titleId || getTitleId(staffData.title);
-            const statusId = staffData.statusId || getStatusId(staffData.status);
-            const roleId = staffData.roleId || getRoleId(staffData.role);
+            const titleId = staffData.title ? getTitleId(staffData.title) : (staffData.titleId || "1");
+            const statusId = staffData.status ? getStatusId(staffData.status) : (staffData.statusId || "1");
+            const roleId = staffData.role ? getRoleId(staffData.role) : (staffData.roleId || "5");
 
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
@@ -181,9 +184,9 @@ export const staffService = {
     },
 
     async createStaff(staffData) {
-        const titleId = staffData.titleId || getTitleId(staffData.title);
-        const statusId = staffData.statusId || getStatusId(staffData.status);
-        const roleId = staffData.roleId || getRoleId(staffData.role);
+        const titleId = staffData.title ? getTitleId(staffData.title) : (staffData.titleId || "1");
+        const statusId = staffData.status ? getStatusId(staffData.status) : (staffData.statusId || "1");
+        const roleId = staffData.role ? getRoleId(staffData.role) : (staffData.roleId || "5");
         const firstName = (staffData.firstName || staffData.name?.split(" ")[0] || "").trim();
         const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "").trim();
         const email = (staffData.emailAddress || staffData.email || "").trim();

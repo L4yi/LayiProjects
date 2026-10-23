@@ -6,9 +6,10 @@ export default function StatusModal({
     type = "success",
     title = "Operation Successful!",
     message = "",
-    buttonText = "Okay, Thanks",
+    buttonText = "Okay, Continue",
     onConfirm,
-    autoCloseDelay = null
+    autoCloseDelay = null,
+    closeOnOverlayClick = false
 }) {
     useEffect(() => {
         if (!isOpen || !autoCloseDelay) return;
@@ -27,7 +28,10 @@ export default function StatusModal({
     };
 
     return (
-        <div className="status-modal-overlay" onClick={onClose}>
+        <div
+            className="status-modal-overlay"
+            onClick={closeOnOverlayClick ? (onClose || handleAction) : undefined}
+        >
             <div className="status-modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className={`status-modal-icon-circle ${type}`}>
                     {type === "success" && <i className="bi bi-check-lg"></i>}

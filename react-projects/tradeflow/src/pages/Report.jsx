@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
-import { PageHeader, TableCard } from "../components/common";
+import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 
 export default function Report() {
     const [reportsList, setReportsList] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Generate Report");
     const [typeFilter, setTypeFilter] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
     const handleOpenEdit = (report) => {
         setSelectedReport({ ...report });
@@ -30,9 +33,9 @@ export default function Report() {
     };
 
     const handleSaveReport = (repData) => {
+        const isUpdate = reportsList.some(r => r.id === repData.id || (repData.code && r.code === repData.code));
         setReportsList(prev => {
-            const exists = prev.some(r => r.id === repData.id || (repData.code && r.code === repData.code));
-            if (exists) {
+            if (isUpdate) {
                 return prev.map(r => (r.id === repData.id || (repData.code && r.code === repData.code)) ? { ...r, ...repData } : r);
             } else {
                 return [
@@ -48,6 +51,12 @@ export default function Report() {
             }
         });
         setDrawerOpen(false);
+        setModalData({
+            type: "success",
+            title: isUpdate ? "REPORT UPDATED SUCCESSFULLY!" : "REPORT GENERATED SUCCESSFULLY!",
+            message: `Report "${repData.name || "Analytics Report"}" has been generated.`
+        });
+        setShowSuccessModal(true);
     };
 
     const filteredReports = reportsList.filter(r =>
@@ -109,55 +118,59 @@ export default function Report() {
                     </div>
                 </div>
 
-                <TableCard
-                    title="Generated Audit Logs"
-                    subtitle="Structured export artifacts and performance telemetry"
-                    isEmpty={filteredReports.length === 0}
-                    emptyMessage="No analytics reports generated yet."
-                >
-                    <table className="solara-data-table">
-                        <thead>
-                            <tr>
-                                <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Report Title <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Generated Date <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredReports.map((report, idx) => (
-                                <tr key={report.id || idx}>
-                                    <td className="col-sn">{idx + 1}</td>
-                                    <td>
-                                        <div className="report-name-cell">
-                                            <div className="report-icon-box">
-                                                <i className="bi bi-file-earmark-bar-graph"></i>
-                                            </div>
-                                            <div className="report-text-group">
-                                                <span className="report-title">{report.name || "Audit Report"}</span>
-                                                <span className="report-ref">{report.code}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="col-gen-date">{report.generatedDate || "Just now"}</td>
-                                    <td>
-                                        <span className={`status-badge-pill ${(report.status || "active").toLowerCase()}`}>
-                                            {report.status || "ACTIVE"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-btn-group">
-                                            <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit(report)}>
-                                                View
-                                            </button>
-                                        </div>
-                                    </td>
+                {isLoading ? (
+                    <LoadingSpinner />
+                ) : (
+                    <TableCard
+                        title="Generated Audit Logs"
+                        subtitle="Structured export artifacts and performance telemetry"
+                        isEmpty={filteredReports.length === 0}
+                        emptyMessage="No analytics reports generated yet."
+                    >
+                        <table className="solara-data-table">
+                            <thead>
+                                <tr>
+                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Report Title <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Generated Date <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </TableCard>
+                            </thead>
+                            <tbody>
+                                {filteredReports.map((report, idx) => (
+                                    <tr key={report.id || idx}>
+                                        <td className="col-sn">{idx + 1}</td>
+                                        <td>
+                                            <div className="report-name-cell">
+                                                <div className="report-icon-box">
+                                                    <i className="bi bi-file-earmark-bar-graph"></i>
+                                                </div>
+                                                <div className="report-text-group">
+                                                    <span className="report-title">{report.name || "Audit Report"}</span>
+                                                    <span className="report-ref">{report.code}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="col-gen-date">{report.generatedDate || "Just now"}</td>
+                                        <td>
+                                            <span className={`status-badge-pill ${(report.status || "active").toLowerCase()}`}>
+                                                {report.status || "ACTIVE"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-btn-group">
+                                                <button type="button" className="action-pill-btn" onClick={() => handleOpenEdit(report)}>
+                                                    View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </TableCard>
+                )}
             </div>
 
             <AdminSlideDrawer
@@ -169,6 +182,15 @@ export default function Report() {
                 entityType="Analytics Report"
                 initialData={selectedReport || {}}
                 onSave={handleSaveReport}
+            />
+
+            <StatusModal
+                isOpen={showSuccessModal}
+                type={modalData.type || "success"}
+                title={modalData.title}
+                message={modalData.message}
+                buttonText="Okay, Continue"
+                onConfirm={() => setShowSuccessModal(false)}
             />
         </>
     );

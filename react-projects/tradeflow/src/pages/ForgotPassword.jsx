@@ -171,9 +171,8 @@ export default function ForgotPassword() {
                 type="success"
                 title="RESET OTP SENT SUCCESSFULLY!"
                 message="A verification OTP code has been generated and dispatched to your email address."
-                buttonText="Okay, Thanks"
+                buttonText="Okay, Continue"
                 onConfirm={handleModalConfirm}
-                autoCloseDelay={2000}
             />
         </>
     );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import staffService from "../services/staffService";
-import { StatusModal, TableCard, PageHeader } from "../components/common";
+import { StatusModal, TableCard, PageHeader, LoadingSpinner } from "../components/common";
 
 export const mapServerStaff = (s) => {
     const staffId = s.staff_id || s.staffId || s.id || "";
@@ -11,12 +11,12 @@ export const mapServerStaff = (s) => {
     const email = s.email_address || s.emailAddress || "";
     const phone = s.phone_number || s.phoneNumber || "";
     const address = s.address || "Abeokuta, Ogun State";
-    const role = s.role_name || s.roleName || (String(s.role_id) === "3" || String(s.roleId) === "3" ? "Super Admin" : "Store Manager");
-    const roleId = String(s.role_id || s.roleId || "3");
-    const status = String(s.status_name || s.statusName || (String(s.status_id) === "2" || String(s.statusId) === "2" ? "INACTIVE" : "ACTIVE")).toUpperCase();
+    const roleId = String(s.role_id || s.roleId || "5");
+    const role = s.role_name || s.roleName || (roleId === "3" ? "SUPER ADMIN" : roleId === "2" ? "ADMIN" : roleId === "1" ? "STAFF" : "Store Manager");
     const statusId = String(s.status_id || s.statusId || "1");
-    const titleName = s.title_name || s.titleName || (String(s.title_id) === "2" ? "Mrs" : String(s.title_id) === "3" ? "Miss" : String(s.title_id) === "4" ? "Dr" : String(s.title_id) === "5" ? "Prof" : "Mr");
+    const status = String(s.status_name || s.statusName || (statusId === "2" ? "INACTIVE" : "ACTIVE")).toUpperCase();
     const titleId = String(s.title_id || s.titleId || "1");
+    const titleName = s.title_name || s.titleName || (titleId === "2" ? "Mrs" : titleId === "3" ? "Dr" : titleId === "4" ? "Prof" : titleId === "5" ? "Engr" : "Mr");
 
     const initials = (((firstName?.[0] || "") + (lastName?.[0] || "")).toUpperCase() || "ST");
 
@@ -40,7 +40,7 @@ export const mapServerStaff = (s) => {
         titleId,
         initials,
         avatarBg: "#143526",
-        accentColor: "#38a169",
+        accentColor: status === "ACTIVE" ? "#38a169" : "#e53e3e",
         lastLogin: s.last_login_date || s.lastLoginDate || "Just now"
     };
 };
@@ -49,6 +49,7 @@ export default function Staffs() {
     const [allStaffs, setAllStaffs] = useState([]);
     const [staffsList, setStaffsList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState("grid");
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -66,17 +67,22 @@ export default function Staffs() {
     const loadStaffs = async () => {
         try {
             setIsLoading(true);
+            setHasNetworkError(false);
             const result = await staffService.fetchAllStaff();
-            if (result.success && Array.isArray(result.data)) {
+            if (result?.success && Array.isArray(result?.data)) {
                 const list = result.data.map(mapServerStaff);
                 setAllStaffs(list);
                 setStaffsList(list);
             } else {
+                if (result?.success === false) {
+                    setHasNetworkError(true);
+                }
                 setAllStaffs([]);
                 setStaffsList([]);
             }
         } catch (error) {
             console.error("Failed to load staff:", error);
+            setHasNetworkError(true);
             setAllStaffs([]);
             setStaffsList([]);
         } finally {
@@ -351,16 +357,22 @@ export default function Staffs() {
                 )}
 
                 {isLoading ? (
-                    <div style={{ textAlign: "center", padding: "80px 0" }}>
-                        <i
-                            className="bi bi-arrow-repeat"
-                            style={{
-                                fontSize: "2.5rem",
-                                color: "#143526",
-                                display: "inline-block",
-                                animation: "spin 0.8s linear infinite"
-                            }}
-                        />
+                    <LoadingSpinner />
+                ) : hasNetworkError ? (
+                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>
+                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>Network / Connection Issue</h3>
+                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                            Unable to load staff records from the server. Please check your internet connection and try again.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-add-entity"
+                            onClick={loadStaffs}
+                            style={{ display: "inline-flex" }}
+                        >
+                            <i className="bi bi-arrow-clockwise"></i> Retry Connection
+                        </button>
                     </div>
                 ) : filteredStaffs.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #cbd5e0", margin: "20px 0" }}>
@@ -557,9 +569,8 @@ export default function Staffs() {
                 type="success"
                 title={modalData.title}
                 message={modalData.message}
-                buttonText="Okay, Thanks"
+                buttonText="Okay, Continue"
                 onConfirm={() => setShowSuccessModal(false)}
-                autoCloseDelay={2500}
             />
         </>
     );

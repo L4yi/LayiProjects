@@ -197,10 +197,9 @@ export default function SignIn() {
                 isOpen={showSuccessModal}
                 type="success"
                 title="USER LOGIN SUCCESSFULLY!"
-                message="Welcome back to TradeFlow. Redirecting to your dashboard..."
-                buttonText="Okay, Thanks"
+                message="Welcome back to TradeFlow. Click continue to proceed to your dashboard."
+                buttonText="Okay, Continue"
                 onConfirm={() => navigate("/dashboard")}
-                autoCloseDelay={1400}
             />
         </>
     );
