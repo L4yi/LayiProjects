@@ -16,6 +16,15 @@ import Orders from "./Orders";
 import Transactions from "./Transactions";
 import Report from "./Report";
 
+import CustomerLayout from "../components/CustomerLayout";
+import CustomerDashboard from "./customer/CustomerDashboard";
+import CustomerCategories from "./customer/CustomerCategories";
+import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
+import CustomerProductDetails from "./customer/CustomerProductDetails";
+import CustomerCart from "./customer/CustomerCart";
+import CustomerSignIn from "./customer/CustomerSignIn";
+import CustomerSignUp from "./customer/CustomerSignUp";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -31,7 +40,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    element: <Navigate to="/signin" replace />
+    element: <Navigate to="/customer/signup" replace />
   },
   {
     path: "/forgot-password",
@@ -44,6 +53,47 @@ export const router = createBrowserRouter([
   {
     path: "/profile",
     element: <Profile />
+  },
+  {
+    path: "/customer/signin",
+    element: <CustomerSignIn />
+  },
+  {
+    path: "/customer/signup",
+    element: <CustomerSignUp />
+  },
+  {
+    path: "/customer",
+    element: <Navigate to="/customer/dashboard" replace />
+  },
+  {
+    element: <CustomerLayout />,
+    children: [
+      {
+        path: "/customer/dashboard",
+        element: <CustomerDashboard />
+      },
+      {
+        path: "/customer/categories",
+        element: <CustomerCategories />
+      },
+      {
+        path: "/customer/category/:categoryId",
+        element: <CustomerCategoryProducts />
+      },
+      {
+        path: "/customer/product/:productId",
+        element: <CustomerProductDetails />
+      },
+      {
+        path: "/customer/cart",
+        element: <CustomerCart />
+      },
+      {
+        path: "/customer/settings",
+        element: <Profile />
+      }
+    ]
   },
   {
     element: <DashboardLayout />,

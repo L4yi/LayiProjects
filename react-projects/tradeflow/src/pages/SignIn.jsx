@@ -11,6 +11,7 @@ export default function SignIn() {
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
     const [apiError, setApiError] = useState("");
+    const [isCustomerAccount, setIsCustomerAccount] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const validateForm = () => {
@@ -34,6 +35,7 @@ export default function SignIn() {
     const handleSignIn = async (e) => {
         e.preventDefault();
         setApiError("");
+        setIsCustomerAccount(false);
 
         if (!validateForm()) {
             return;
@@ -48,6 +50,9 @@ export default function SignIn() {
         if (result.success) {
             setShowSuccessModal(true);
         } else {
+            if (result.isCustomerAccount) {
+                setIsCustomerAccount(true);
+            }
             setApiError(result.message || "Invalid credentials. Please check your email and password.");
         }
     };
@@ -70,7 +75,13 @@ export default function SignIn() {
                                     </Link>
 
                                     <div className="form-header">
-                                        <h2>Sign In</h2>
+                                        <h2>Staff Sign In</h2>
+                                        <p style={{ marginTop: "6px", fontSize: "0.88rem", color: "#64748b" }}>
+                                            Are you a shopper?{" "}
+                                            <Link to="/customer/signin" className="link" style={{ fontWeight: 600, color: "#10b981" }}>
+                                                Customer Portal &rarr;
+                                            </Link>
+                                        </p>
                                     </div>
 
                                     {apiError && (
@@ -78,20 +89,41 @@ export default function SignIn() {
                                             className="auth-alert-error"
                                             style={{
                                                 marginBottom: "1.2rem",
-                                                color: "#991b1b",
-                                                background: "#fee2e2",
-                                                border: "1px solid #f87171",
+                                                color: isCustomerAccount ? "#065f46" : "#991b1b",
+                                                background: isCustomerAccount ? "#ecfdf5" : "#fee2e2",
+                                                border: `1px solid ${isCustomerAccount ? "#a7f3d0" : "#f87171"}`,
                                                 borderRadius: "8px",
                                                 padding: "10px 14px",
                                                 fontSize: "0.88rem",
                                                 display: "flex",
-                                                alignItems: "center",
+                                                flexDirection: "column",
                                                 gap: "8px"
                                             }}
                                             role="alert"
                                         >
-                                            <i className="bi bi-exclamation-triangle-fill"></i>
-                                            <span>{apiError}</span>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <i className={`bi bi-${isCustomerAccount ? "info-circle-fill" : "exclamation-triangle-fill"}`}></i>
+                                                <span>{apiError}</span>
+                                            </div>
+                                            {isCustomerAccount && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => navigate("/customer/signin")}
+                                                    style={{
+                                                        alignSelf: "flex-start",
+                                                        padding: "6px 12px",
+                                                        background: "#10b981",
+                                                        color: "#ffffff",
+                                                        border: "none",
+                                                        borderRadius: "6px",
+                                                        fontWeight: 600,
+                                                        fontSize: "0.82rem",
+                                                        cursor: "pointer"
+                                                    }}
+                                                >
+                                                    Switch to Customer Sign In
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 
@@ -108,6 +140,7 @@ export default function SignIn() {
                                                     setFieldErrors((prev) => ({ ...prev, email: "" }));
                                                 }
                                                 setApiError("");
+                                                setIsCustomerAccount(false);
                                             }}
                                             error={fieldErrors.email}
                                             autoComplete="email"

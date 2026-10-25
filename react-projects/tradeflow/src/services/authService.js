@@ -1,34 +1,68 @@
 import api from "../api/axios";
 import { setSessionUser, clearSessionUser } from "../utils/session";
+import customerService from "./customerService";
+
+function extractErrorMessage(error, defaultMsg) {
+    if (error.response?.data?.message) {
+        return error.response.data.message;
+    }
+    if (typeof error.response?.data === "string" && error.response.data.trim()) {
+        const text = error.response.data.trim();
+        if (text.startsWith("<")) {
+            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+            if (titleMatch && titleMatch[1]) {
+                return titleMatch[1].trim();
+            }
+        } else {
+            return text;
+        }
+    }
+    if (error.response?.status === 405) {
+        return "Server security verification triggered. Please refresh or retry.";
+    }
+    if (error.message) {
+        return error.message;
+    }
+    return defaultMsg;
+}
 
 export const authService = {
     async signIn(emailAddress, password) {
+        const cleanEmail = (emailAddress || "").trim();
         try {
-            const formData = new FormData();
-            formData.append("emailAddress", (emailAddress || "").trim());
-            formData.append("password", password || "");
+            const params = new URLSearchParams();
+            params.append("emailAddress", cleanEmail);
+            params.append("email", cleanEmail);
+            params.append("password", password || "");
 
-            const response = await api.post("admin/auth/sign-in.php", formData);
+            const response = await api.post("admin/auth/sign-in.php", params);
             const resData = response.data;
 
             if (resData?.success === true && resData?.data) {
                 const serverUser = resData.data;
-                const fullName = `${serverUser.firstName || ""} ${serverUser.lastName || ""}`.trim() || serverUser.emailAddress;
+                const firstName = serverUser.firstName || serverUser.first_name || "";
+                const lastName = serverUser.lastName || serverUser.last_name || "";
+                const fullName = `${firstName} ${lastName}`.trim() || serverUser.emailAddress || serverUser.email_address || cleanEmail;
 
                 const userData = {
-                    staffId: serverUser.staffId,
+                    staffId: serverUser.staffId || serverUser.staff_id,
+                    id: serverUser.staffId || serverUser.staff_id,
                     name: fullName,
-                    firstName: serverUser.firstName,
-                    lastName: serverUser.lastName,
-                    email: serverUser.emailAddress,
-                    phone: serverUser.phoneNumber,
-                    address: serverUser.address,
-                    role: serverUser.roleName,
-                    roleId: serverUser.roleId,
-                    status: serverUser.statusName,
-                    statusId: serverUser.statusId,
-                    lastLogin: serverUser.lastLoginDate,
-                    createdAt: serverUser.createdAt,
+                    firstName,
+                    lastName,
+                    email: serverUser.emailAddress || serverUser.email_address || cleanEmail,
+                    emailAddress: serverUser.emailAddress || serverUser.email_address || cleanEmail,
+                    phone: serverUser.phoneNumber || serverUser.phone_number || "",
+                    phoneNumber: serverUser.phoneNumber || serverUser.phone_number || "",
+                    address: serverUser.address || "",
+                    role: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
+                    roleName: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
+                    roleId: serverUser.roleId || serverUser.role_id || "3",
+                    status: serverUser.statusName || serverUser.status_name || "ACTIVE",
+                    statusName: serverUser.statusName || serverUser.status_name || "ACTIVE",
+                    statusId: serverUser.statusId || serverUser.status_id || "1",
+                    lastLogin: serverUser.lastLoginDate || serverUser.last_login_date,
+                    createdAt: serverUser.createdAt || serverUser.created_at,
                 };
 
                 setSessionUser(userData);
@@ -43,28 +77,37 @@ export const authService = {
                 };
             }
 
+            try {
+                const checkCust = await customerService.searchCustomer(cleanEmail);
+                if (checkCust.success && checkCust.data.length > 0) {
+                    return {
+                        success: false,
+                        isCustomerAccount: true,
+                        message: "This email is registered as a Customer. Please sign in via the Customer Portal."
+                    };
+                }
+            } catch (_) {}
+
             return {
                 success: false,
                 message: resData?.message || "Invalid login credentials. Please try again."
             };
         } catch (error) {
-            const errorMsg =
-                error.response?.data?.message ||
-                error.message ||
-                "Failed to connect to authentication server. Please check your network.";
             return {
                 success: false,
-                message: errorMsg
+                message: extractErrorMessage(error, "Failed to connect to authentication server. Please check your network.")
             };
         }
     },
 
     async forgotPassword(emailAddress) {
         try {
-            const formData = new FormData();
-            formData.append("emailAddress", (emailAddress || "").trim());
+            const cleanEmail = (emailAddress || "").trim();
+            const params = new URLSearchParams();
+            params.append("emailAddress", cleanEmail);
+            params.append("email", cleanEmail);
 
-            const response = await api.post("admin/auth/forgot-password.php", formData);
+            const response = await api.post("admin/auth/forgot-password.php", params);
             const resData = response.data;
 
             if (resData?.success === true) {
@@ -76,26 +119,26 @@ export const authService = {
             }
 
             return {
-                success: resData.success,
+                success: false,
                 message: resData?.message || "Could not generate reset OTP for this email."
             };
         } catch (error) {
             return {
                 success: false,
-                message: error.response?.data?.message || error.message || "Failed to process forgot password request."
+                message: extractErrorMessage(error, "Failed to process forgot password request.")
             };
         }
     },
 
     async resetPassword({ staffId, resetOtp, password, confirmPassword }) {
         try {
-            const formData = new FormData();
-            formData.append("staffId", (staffId || "").trim());
-            formData.append("resetOtp", (resetOtp || "").toString().trim());
-            formData.append("password", password || "");
-            formData.append("confirmPassword", confirmPassword || "");
+            const params = new URLSearchParams();
+            params.append("staffId", (staffId || "").trim());
+            params.append("resetOtp", (resetOtp || "").toString().trim());
+            params.append("password", password || "");
+            params.append("confirmPassword", confirmPassword || "");
 
-            const response = await api.post("admin/auth/reset-password.php", formData);
+            const response = await api.post("admin/auth/reset-password.php", params);
             const resData = response.data;
 
             if (resData?.success === true) {
@@ -112,7 +155,7 @@ export const authService = {
         } catch (error) {
             return {
                 success: false,
-                message: error.response?.data?.message || error.message || "Failed to submit new password."
+                message: extractErrorMessage(error, "Failed to submit new password.")
             };
         }
     },

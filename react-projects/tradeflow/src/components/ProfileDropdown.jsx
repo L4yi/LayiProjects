@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
 import authService from "../services/authService";
 
-export default function ProfileDropdown({ isOpen, onClose }) {
+export default function ProfileDropdown({ isOpen, onClose, isCustomer = false }) {
     const [user, setUser] = useState(getSessionUser());
 
     useEffect(() => {
@@ -16,7 +16,7 @@ export default function ProfileDropdown({ isOpen, onClose }) {
 
     if (!isOpen) return null;
 
-    const navLinks = [
+    const adminNavLinks = [
         { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
         { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs" },
         { to: "/categories", icon: "bi bi-tags", label: "Categories" },
@@ -28,21 +28,29 @@ export default function ProfileDropdown({ isOpen, onClose }) {
         { to: "/profile", icon: "bi bi-gear", label: "Settings" }
     ];
 
+    const customerNavLinks = [
+        { to: "/customer/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
+        { to: "/customer/categories", icon: "bi bi-tags", label: "Categories" },
+        { to: "/customer/cart", icon: "bi bi-cart3", label: "Shopping Cart" },
+        { to: "/customer/settings", icon: "bi bi-gear", label: "Settings" }
+    ];
+
+    const navLinks = isCustomer ? customerNavLinks : adminNavLinks;
+    const logoutDestination = isCustomer ? "/customer/signin" : "/signin";
+
     return (
         <div className="profile-dropdown-card" onClick={(e) => e.stopPropagation()}>
-            {/* Header with Avatar & Details */}
             <div className="profile-card-header">
                 <div className="profile-initial-badge">
-                    {user?.initials || "SU"}
+                    {user?.initials || (isCustomer ? "CU" : "SU")}
                 </div>
                 <div className="profile-user-info">
-                    <div className="profile-user-name">{user?.name || "Staff Member"}</div>
-                    <div className="profile-user-email">{user?.email || "staff@tradeflow.com"}</div>
+                    <div className="profile-user-name">{user?.name || (isCustomer ? "Customer" : "Staff Member")}</div>
+                    <div className="profile-user-email">{user?.email || (isCustomer ? "customer@tradeflow.com" : "staff@tradeflow.com")}</div>
                     {user?.phone && <div className="profile-user-phone">{user.phone}</div>}
                 </div>
             </div>
 
-            {/* Menu Items */}
             <div className="profile-card-menu">
                 {navLinks.map((item, idx) => (
                     <Link
@@ -57,10 +65,9 @@ export default function ProfileDropdown({ isOpen, onClose }) {
                 ))}
             </div>
 
-            {/* Logout Button */}
             <div className="profile-card-footer">
                 <Link
-                    to="/signin"
+                    to={logoutDestination}
                     className="profile-logout-pill-btn"
                     onClick={() => {
                         authService.logout();
