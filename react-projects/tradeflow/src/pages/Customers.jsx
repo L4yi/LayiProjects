@@ -1,16 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
+import customerService from "../services/customerService";
 
 export default function Customers() {
     const [customersList, setCustomersList] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Customer");
     const [statusFilter, setStatusFilter] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    const loadCustomers = async () => {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const res = await customerService.fetchAllCustomers();
+            if (res.success && Array.isArray(res.data)) {
+                setCustomersList(res.data);
+            } else {
+                setCustomersList([]);
+                if (res.message?.includes("Failed to connect") || res.message?.includes("network")) {
+                    setHasNetworkError(true);
+                }
+            }
+        } catch (_) {
+            setHasNetworkError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCustomers();
+    }, []);
 
     const handleOpenEdit = (customer) => {
         setSelectedCustomer({ ...customer });
@@ -20,48 +46,99 @@ export default function Customers() {
 
     const handleOpenAdd = () => {
         setSelectedCustomer({
-            id: `CUST-${String(customersList.length + 1).padStart(2, "0")}`,
+            id: "",
+            customerId: "",
+            titleId: "1",
+            firstName: "",
+            lastName: "",
             name: "",
             email: "",
+            emailAddress: "",
             phone: "",
+            phoneNumber: "",
             role: "Customer",
+            roleId: "19",
             status: "ACTIVE",
-            address: "",
-            lastLogin: "Just now"
+            statusId: "1",
+            address: ""
         });
         setDrawerTitle("Add New Customer Account");
         setDrawerOpen(true);
     };
 
-    const handleSaveCustomer = (updatedData) => {
-        const isUpdate = customersList.some(c => c.id === updatedData.id);
-        setCustomersList(prev => {
-            if (isUpdate) {
-                return prev.map(c => c.id === updatedData.id ? { ...c, ...updatedData, status: (updatedData.status || c.status).toUpperCase() } : c);
-            } else {
-                return [
-                    {
-                        ...updatedData,
-                        status: (updatedData.status || "ACTIVE").toUpperCase(),
-                        initials: (updatedData.name || "CU").substring(0, 2).toUpperCase(),
-                        avatarBg: "#143526"
-                    },
-                    ...prev
-                ];
-            }
-        });
+    const handleSaveCustomer = async (formData) => {
+        const isUpdate = Boolean(formData.id || formData.customerId);
+        const firstName = formData.firstName || formData.name?.split(" ")[0] || "";
+        const lastName = formData.lastName || formData.name?.split(" ").slice(1).join(" ") || "Customer";
+        const emailAddress = formData.emailAddress || formData.email || "";
+        const phoneNumber = formData.phoneNumber || formData.phone || "";
+        const address = formData.address || "Abeokuta, Ogun State";
+        const titleId = formData.titleId || "1";
+        const statusId = formData.status?.toUpperCase() === "INACTIVE" || formData.statusId === "2" ? "2" : "1";
+        const roleId = formData.roleId || "19";
+
         setDrawerOpen(false);
-        setModalData({
-            type: "success",
-            title: isUpdate ? "CUSTOMER UPDATED SUCCESSFULLY!" : "CUSTOMER CREATED SUCCESSFULLY!",
-            message: `Customer account "${updatedData.name || "Customer"}" has been updated.`
-        });
-        setShowSuccessModal(true);
+        setIsLoading(true);
+
+        try {
+            let res;
+            if (isUpdate) {
+                res = await customerService.updateCustomer({
+                    customerId: formData.id || formData.customerId,
+                    titleId,
+                    firstName,
+                    lastName,
+                    emailAddress,
+                    phoneNumber,
+                    address,
+                    roleId,
+                    statusId
+                });
+            } else {
+                res = await customerService.createCustomer({
+                    titleId,
+                    firstName,
+                    lastName,
+                    emailAddress,
+                    phoneNumber,
+                    address,
+                    roleId,
+                    statusId
+                });
+            }
+
+            if (res.success) {
+                await loadCustomers();
+                setModalData({
+                    type: "success",
+                    title: isUpdate ? "CUSTOMER UPDATED SUCCESSFULLY!" : "CUSTOMER CREATED SUCCESSFULLY!",
+                    message: res.message || `Customer "${firstName} ${lastName}" has been saved.`
+                });
+                setShowSuccessModal(true);
+            } else {
+                setModalData({
+                    type: "error",
+                    title: "OPERATION FAILED",
+                    message: res.message || "Failed to save customer account."
+                });
+                setShowSuccessModal(true);
+            }
+        } catch (err) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: "Unable to reach server. Please check your network connection."
+            });
+            setShowSuccessModal(true);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const filteredCustomers = customersList.filter(cust => {
         if (!statusFilter) return true;
-        return cust.status.toLowerCase() === statusFilter.toLowerCase();
+        const s = (cust.status || "").toLowerCase();
+        return s === statusFilter.toLowerCase();
     });
 
     return (
@@ -72,7 +149,7 @@ export default function Customers() {
                     badgeTitle="Customers"
                     breadcrumb="Users → View customer accounts, activity logs, and status."
                     title="All Customers"
-                    countSubtitle={`${filteredCustomers.length} registered customers`}
+                    countSubtitle={`${filteredCustomers.length} registered customer${filteredCustomers.length === 1 ? "" : "s"}`}
                     actions={
                         <>
                             <div className="filter-select-wrap">
@@ -100,7 +177,39 @@ export default function Customers() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner message="Fetching customer records..." />
+                ) : hasNetworkError ? (
+                    <div
+                        style={{
+                            margin: "24px 0",
+                            padding: "24px",
+                            background: "#fff1f2",
+                            border: "1px solid #fecdd3",
+                            borderRadius: "12px",
+                            textAlign: "center"
+                        }}
+                    >
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
+                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
+                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                            Unable to connect to the customers endpoint. Please check your network.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={loadCustomers}
+                            style={{
+                                padding: "8px 18px",
+                                background: "#10b981",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                            }}
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
                 ) : (
                     <TableCard
                         title="Customer Accounts"
@@ -115,37 +224,37 @@ export default function Customers() {
                                     <th>Role / Type <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Email Address <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Last Login <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Address <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredCustomers.map((cust) => (
-                                    <tr key={cust.id}>
+                                    <tr key={cust.id || cust.customerId}>
                                         <td>
                                             <div className="customer-name-box">
                                                 <div
                                                     className="cust-avatar"
-                                                    style={{ backgroundColor: cust.avatarBg || "#143526" }}
+                                                    style={{ backgroundColor: "#143526" }}
                                                 >
-                                                    {cust.initials || cust.name.substring(0, 2).toUpperCase()}
+                                                    {cust.initials || (cust.name || "CU").substring(0, 2).toUpperCase()}
                                                 </div>
                                                 <div className="cust-text-wrap">
                                                     <span className="cust-text">{cust.name}</span>
-                                                    <span className="cust-id-sub">#{cust.id}</span>
+                                                    <span className="cust-id-sub">#{cust.id || cust.customerId}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <span className="customer-role-tag">{cust.role || "Customer"}</span>
                                         </td>
-                                        <td>{cust.email}</td>
-                                        <td>{cust.phone || "—"}</td>
-                                        <td>{cust.lastLogin || "—"}</td>
+                                        <td>{cust.email || cust.emailAddress}</td>
+                                        <td>{cust.phone || cust.phoneNumber || "—"}</td>
+                                        <td>{cust.address || "—"}</td>
                                         <td>
-                                            <span className={`status-badge-pill ${cust.status.toLowerCase()}`}>
-                                                {cust.status}
+                                            <span className={`status-badge-pill ${(cust.status || "ACTIVE").toLowerCase()}`}>
+                                                {cust.status || "ACTIVE"}
                                             </span>
                                         </td>
                                         <td>

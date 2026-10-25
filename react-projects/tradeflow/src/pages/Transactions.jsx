@@ -1,16 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
+import orderService from "../services/orderService";
 
 export default function Transactions() {
     const [transactionsList, setTransactionsList] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedTxn, setSelectedTxn] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Transaction Receipt");
     const [statusFilter, setStatusFilter] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    const loadTransactions = async () => {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const res = await orderService.fetchAllOrders();
+            if (res.success && Array.isArray(res.data)) {
+                const mapped = res.data.map((order, idx) => ({
+                    id: order.id || `TXN-${idx + 1}`,
+                    code: order.code ? (order.code.startsWith("#") ? order.code : `#${order.code}`) : `#TXN-${order.id || idx + 1}`,
+                    name: order.customerName || order.customer_name || "Customer",
+                    customerName: order.customerName || order.customer_name || "Customer",
+                    email: order.customerEmail || order.email || "—",
+                    amount: order.price || order.product_price || order.amount || 0,
+                    paymentMethod: "Bank Transfer",
+                    status: order.status || "PAID",
+                    date: order.date || order.created_at || "—",
+                    notes: order.productName || order.product_name || "Store Order"
+                }));
+                setTransactionsList(mapped);
+            } else {
+                setTransactionsList([]);
+                if (res.message?.includes("Failed to connect") || res.message?.includes("network")) {
+                    setHasNetworkError(true);
+                }
+            }
+        } catch (_) {
+            setHasNetworkError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadTransactions();
+    }, []);
 
     const handleOpenEdit = (txn) => {
         setSelectedTxn({ ...txn });
@@ -96,7 +134,39 @@ export default function Transactions() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner message="Fetching transactions from database..." />
+                ) : hasNetworkError ? (
+                    <div
+                        style={{
+                            margin: "24px 0",
+                            padding: "24px",
+                            background: "#fff1f2",
+                            border: "1px solid #fecdd3",
+                            borderRadius: "12px",
+                            textAlign: "center"
+                        }}
+                    >
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
+                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
+                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                            Unable to connect to transactions endpoint. Please check your network.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={loadTransactions}
+                            style={{
+                                padding: "8px 18px",
+                                background: "#10b981",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                            }}
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
                 ) : (
                     <TableCard
                         title="Transaction History"

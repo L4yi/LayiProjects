@@ -37,8 +37,8 @@ export default function AdminSlideDrawer({
     const norm = String(entityType || "").toLowerCase();
     const isCategory = norm.includes("categor");
     const isProduct = norm.includes("product") && !isCategory;
-    const isCustomer = norm.includes("customer");
     const isOrder = norm.includes("order");
+    const isCustomer = norm.includes("customer") && !isOrder;
     const isTransaction = norm.includes("transaction");
     const isReport = norm.includes("report");
     const isStaff = !isCategory && !isProduct && !isCustomer && !isOrder && !isTransaction && !isReport;

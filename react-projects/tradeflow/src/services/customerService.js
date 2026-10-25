@@ -59,9 +59,9 @@ export const customerService = {
 
     async fetchCustomerById(customerId) {
         try {
-            const params = new URLSearchParams();
-            params.append("customerId", customerId);
-            const response = await api.post("admin/customer/fetch-each-customer.php", params);
+            const formData = new FormData();
+            formData.append("customerId", customerId);
+            const response = await api.post("admin/customer/fetch-each-customer.php", formData);
             const resData = response.data;
             if (resData?.success === true && resData?.data) {
                 return {
@@ -86,9 +86,9 @@ export const customerService = {
 
     async searchCustomer(searchContent) {
         try {
-            const params = new URLSearchParams();
-            params.append("searchContent", (searchContent || "").trim());
-            const response = await api.post("admin/customer/search-customer.php", params);
+            const formData = new FormData();
+            formData.append("searchContent", (searchContent || "").trim());
+            const response = await api.post("admin/customer/search-customer.php", formData);
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return {
@@ -113,17 +113,17 @@ export const customerService = {
 
     async createCustomer({ titleId = "1", firstName, lastName, emailAddress, phoneNumber, address, roleId = "19", statusId = "1" }) {
         try {
-            const params = new URLSearchParams();
-            params.append("titleId", titleId);
-            params.append("firstName", (firstName || "").trim());
-            params.append("lastName", (lastName || "").trim());
-            params.append("emailAddress", (emailAddress || "").trim());
-            params.append("phoneNumber", (phoneNumber || "").trim());
-            params.append("address", (address || "").trim());
-            params.append("roleId", roleId);
-            params.append("statusId", statusId);
+            const formData = new FormData();
+            formData.append("titleId", titleId);
+            formData.append("firstName", (firstName || "").trim());
+            formData.append("lastName", (lastName || "").trim());
+            formData.append("emailAddress", (emailAddress || "").trim());
+            formData.append("phoneNumber", (phoneNumber || "").trim());
+            formData.append("address", (address || "").trim());
+            formData.append("roleId", roleId);
+            formData.append("statusId", statusId);
 
-            const response = await api.post("admin/customer/create-customer.php", params);
+            const response = await api.post("admin/customer/create-customer.php", formData);
             const resData = response.data;
             if (resData?.success === true) {
                 return {
@@ -146,18 +146,18 @@ export const customerService = {
 
     async updateCustomer({ customerId, titleId = "1", firstName, lastName, emailAddress, phoneNumber, address, roleId = "19", statusId = "1" }) {
         try {
-            const params = new URLSearchParams();
-            params.append("customerId", customerId);
-            params.append("titleId", titleId);
-            params.append("firstName", (firstName || "").trim());
-            params.append("lastName", (lastName || "").trim());
-            params.append("emailAddress", (emailAddress || "").trim());
-            params.append("phoneNumber", (phoneNumber || "").trim());
-            params.append("address", (address || "").trim());
-            params.append("roleId", roleId);
-            params.append("statusId", statusId);
+            const formData = new FormData();
+            formData.append("customerId", customerId);
+            formData.append("titleId", titleId);
+            formData.append("firstName", (firstName || "").trim());
+            formData.append("lastName", (lastName || "").trim());
+            formData.append("emailAddress", (emailAddress || "").trim());
+            formData.append("phoneNumber", (phoneNumber || "").trim());
+            formData.append("address", (address || "").trim());
+            formData.append("roleId", roleId);
+            formData.append("statusId", statusId);
 
-            const response = await api.post("admin/customer/update-customer.php", params);
+            const response = await api.post("admin/customer/update-customer.php", formData);
             const resData = response.data;
             return {
                 success: resData?.success === true,
@@ -173,9 +173,9 @@ export const customerService = {
 
     async deleteCustomer(customerId) {
         try {
-            const params = new URLSearchParams();
-            params.append("customerId", customerId);
-            const response = await api.post("admin/customer/delete-customer.php", params);
+            const formData = new FormData();
+            formData.append("customerId", customerId);
+            const response = await api.post("admin/customer/delete-customer.php", formData);
             const resData = response.data;
             return {
                 success: resData?.success === true,
@@ -185,28 +185,6 @@ export const customerService = {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Failed to delete customer."
-            };
-        }
-    },
-
-    async createOrder({ customerId, productId, statusId = "1" }) {
-        try {
-            const params = new URLSearchParams();
-            params.append("customerId", customerId);
-            params.append("productId", productId);
-            params.append("statusId", statusId);
-
-            const response = await api.post("admin/order/create-order.php", params);
-            const resData = response.data;
-            return {
-                success: resData?.success === true,
-                data: resData?.data,
-                message: resData?.message || (resData?.success ? "ORDER CREATED SUCCESSFULLY" : "Failed to create order.")
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to submit order."
             };
         }
     },

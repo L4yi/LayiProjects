@@ -4,12 +4,16 @@ import { MetricCard, LoadingSpinner } from "../components/common";
 import staffService from "../services/staffService";
 import categoryService from "../services/categoryService";
 import productService from "../services/productService";
+import orderService from "../services/orderService";
+import customerService from "../services/customerService";
 
 export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [staffCount, setStaffCount] = useState(0);
     const [categoryCount, setCategoryCount] = useState(0);
     const [productCount, setProductCount] = useState(0);
+    const [orderCount, setOrderCount] = useState(0);
+    const [customerCount, setCustomerCount] = useState(0);
     const [recentTransactions, setRecentTransactions] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [searchProd, setSearchProd] = useState("");
@@ -18,20 +22,25 @@ export default function Dashboard() {
         const loadDashboardData = async () => {
             setIsLoading(true);
             try {
-                const staffRes = await staffService.fetchAllStaff();
-                if (staffRes?.success && Array.isArray(staffRes?.data)) {
-                    setStaffCount(staffRes.data.length);
+                const [staffRes, catRes, prodRes, ordRes, custRes] = await Promise.allSettled([
+                    staffService.fetchAllStaff(),
+                    categoryService.fetchAllCategories(),
+                    productService.fetchAllProducts(),
+                    orderService.fetchAllOrders(),
+                    customerService.fetchAllCustomers()
+                ]);
+
+                if (staffRes.status === "fulfilled" && staffRes.value?.success && Array.isArray(staffRes.value?.data)) {
+                    setStaffCount(staffRes.value.data.length);
                 }
 
-                const catRes = await categoryService.fetchAllCategories();
-                if (catRes?.success && Array.isArray(catRes?.data)) {
-                    setCategoryCount(catRes.data.length);
+                if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
+                    setCategoryCount(catRes.value.data.length);
                 }
 
-                const prodRes = await productService.fetchAllProducts();
-                if (prodRes?.success && Array.isArray(prodRes?.data)) {
-                    setProductCount(prodRes.data.length);
-                    const mapped = prodRes.data.map(p => ({
+                if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data)) {
+                    setProductCount(prodRes.value.data.length);
+                    const mapped = prodRes.value.data.map(p => ({
                         id: p.product_id || p.productId,
                         name: p.product_name || p.productName,
                         code: p.product_id || p.productId,
@@ -39,6 +48,23 @@ export default function Dashboard() {
                         img: p.image || null
                     }));
                     setTopProducts(mapped);
+                }
+
+                if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value?.data)) {
+                    setOrderCount(ordRes.value.data.length);
+                    const mappedTxns = ordRes.value.data.slice(0, 5).map(o => ({
+                        id: o.id || o.code,
+                        code: o.code || `#ORD-${o.id}`,
+                        date: o.date || "Recent",
+                        status: o.status || "Paid",
+                        statusDot: (o.status || "").toLowerCase().includes("fail") ? "red" : (o.status || "").toLowerCase().includes("pend") ? "yellow" : "green",
+                        amount: o.price || o.amount || 0
+                    }));
+                    setRecentTransactions(mappedTxns);
+                }
+
+                if (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value?.data)) {
+                    setCustomerCount(custRes.value.data.length);
                 }
             } catch (e) {
                 console.error("Dashboard metrics load error:", e);
@@ -64,13 +90,13 @@ export default function Dashboard() {
                     <div className="metric-cards-grid">
                         <MetricCard
                             title="Active Staff Members"
-                            timeSubtitle="Live database records"
+                            timeSubtitle="Staff Accounts"
                             statNumber={String(staffCount)}
                             statTag="Staff"
                             trend="Live"
                             trendUp={true}
                             compareText="TradeFlow Admin"
-                            compareVal="Direct API"
+                            compareVal="Active"
                             detailsLink="/staffs"
                         />
 
@@ -92,7 +118,7 @@ export default function Dashboard() {
                             isSplit={true}
                             splitData={{
                                 left: { label: "Products", value: String(productCount), sub: "In Catalog" },
-                                right: { label: "Orders", value: "0", isNegative: false }
+                                right: { label: "Orders", value: String(orderCount), isNegative: false }
                             }}
                             detailsLink="/products"
                         />

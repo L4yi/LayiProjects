@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
+import orderService from "../services/orderService";
+import customerService from "../services/customerService";
+import productService from "../services/productService";
 
 export default function Orders() {
     const [ordersList, setOrdersList] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Order");
@@ -12,57 +16,114 @@ export default function Orders() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
+    const loadOrders = async () => {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const res = await orderService.fetchAllOrders();
+            if (res.success && Array.isArray(res.data)) {
+                setOrdersList(res.data);
+            } else {
+                setOrdersList([]);
+                if (res.message?.includes("Failed to connect") || res.message?.includes("network")) {
+                    setHasNetworkError(true);
+                }
+            }
+        } catch (_) {
+            setHasNetworkError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadOrders();
+    }, []);
+
     const handleOpenEdit = (order) => {
         setSelectedOrder({ ...order });
-        setDrawerTitle(`Edit Order - ${order.code || order.id}`);
+        setDrawerTitle(`Order Details - ${order.code || order.id}`);
         setDrawerOpen(true);
     };
 
     const handleOpenAdd = () => {
         setSelectedOrder({
-            id: `ORD-${Date.now()}`,
-            code: `#ORD-00${ordersList.length + 1}`,
+            id: "",
+            code: "",
+            customerId: "",
             customerName: "",
-            email: "",
+            productId: "",
             productName: "",
             price: 0,
             amount: 0,
             paymentMethod: "Bank Transfer",
-            status: "Pending",
+            status: "ACTIVE",
+            statusId: "1",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
         setDrawerOpen(true);
     };
 
-    const handleSaveOrder = (orderData) => {
-        const isUpdate = ordersList.some(o => o.id === orderData.id || (orderData.code && o.code === orderData.code));
-        setOrdersList(prev => {
-            if (isUpdate) {
-                return prev.map(o => (o.id === orderData.id || (orderData.code && o.code === orderData.code)) ? { ...o, ...orderData } : o);
-            } else {
-                return [
-                    {
-                        ...orderData,
-                        id: orderData.id || `ORD-${Date.now()}`,
-                        code: orderData.code || `#ORD-00${prev.length + 1}`
-                    },
-                    ...prev
-                ];
-            }
-        });
+    const handleSaveOrder = async (orderData) => {
         setDrawerOpen(false);
-        setModalData({
-            type: "success",
-            title: isUpdate ? "ORDER UPDATED SUCCESSFULLY!" : "ORDER CREATED SUCCESSFULLY!",
-            message: `Order for "${orderData.customerName || orderData.name || "Customer"}" has been recorded.`
-        });
-        setShowSuccessModal(true);
+        setIsLoading(true);
+
+        const customerId = orderData.customerId || orderData.customer_id;
+        const productId = orderData.productId || orderData.product_id;
+        const statusId = orderData.statusId || "1";
+
+        if (!customerId || !productId) {
+            setModalData({
+                type: "warning",
+                title: "REQUIRED FIELDS MISSING",
+                message: "Both Customer ID and Product ID are required to record an order."
+            });
+            setShowSuccessModal(true);
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const res = await orderService.createOrder({
+                customerId,
+                productId,
+                statusId
+            });
+
+            if (res.success) {
+                await loadOrders();
+                setModalData({
+                    type: "success",
+                    title: "ORDER CREATED SUCCESSFULLY!",
+                    message: res.message || `Order for "${orderData.customerName || "Customer"}" has been recorded in database.`
+                });
+                setShowSuccessModal(true);
+            } else {
+                setModalData({
+                    type: "error",
+                    title: "ORDER CREATION FAILED",
+                    message: res.message || "Failed to submit order."
+                });
+                setShowSuccessModal(true);
+            }
+        } catch (err) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: "Unable to reach server. Please check your network connection."
+            });
+            setShowSuccessModal(true);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const filteredOrders = ordersList.filter(o =>
-        !statusFilter || String(o.status || "").toLowerCase() === statusFilter.toLowerCase()
-    );
+    const filteredOrders = ordersList.filter(o => {
+        if (!statusFilter) return true;
+        const s = (o.status || "").toLowerCase();
+        return s === statusFilter.toLowerCase();
+    });
 
     return (
         <>
@@ -72,7 +133,7 @@ export default function Orders() {
                     badgeTitle="Orders"
                     breadcrumb="Sales → Track order fulfillment, customer requests, and items."
                     title="All Orders"
-                    countSubtitle={`${filteredOrders.length} customer orders`}
+                    countSubtitle={`${filteredOrders.length} customer order${filteredOrders.length === 1 ? "" : "s"}`}
                     actions={
                         <>
                             <div className="filter-select-wrap">
@@ -84,11 +145,10 @@ export default function Orders() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
+                                    <option value="active">Active</option>
                                     <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="failed">Failed</option>
-                                    <option value="progress">In Progress</option>
-                                    <option value="done">Done</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="successful">Successful</option>
                                 </select>
                             </div>
                             <button
@@ -103,7 +163,39 @@ export default function Orders() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner message="Fetching orders from database..." />
+                ) : hasNetworkError ? (
+                    <div
+                        style={{
+                            margin: "24px 0",
+                            padding: "24px",
+                            background: "#fff1f2",
+                            border: "1px solid #fecdd3",
+                            borderRadius: "12px",
+                            textAlign: "center"
+                        }}
+                    >
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
+                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
+                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                            Unable to connect to orders endpoint. Please check your network.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={loadOrders}
+                            style={{
+                                padding: "8px 18px",
+                                background: "#10b981",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                            }}
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
                 ) : (
                     <TableCard
                         title="Order Processing"
@@ -118,6 +210,7 @@ export default function Orders() {
                                     <th>Order ID <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Customer Name <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Product Details <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th>Price <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Action</th>
                                 </tr>
@@ -126,8 +219,11 @@ export default function Orders() {
                                 {filteredOrders.map((order, idx) => (
                                     <tr key={order.id || idx}>
                                         <td className="col-sn">{idx + 1}</td>
-                                        <td className="col-order-id">{order.code}</td>
-                                        <td><strong>{order.customerName || order.name || "Customer"}</strong></td>
+                                        <td className="col-order-id">{order.code || order.id}</td>
+                                        <td>
+                                            <strong>{order.customerName || "Customer"}</strong>
+                                            {order.phone && <div style={{ fontSize: "0.78rem", color: "#64748b" }}>{order.phone}</div>}
+                                        </td>
                                         <td>
                                             <div className="order-product-cell">
                                                 <span className="prod-name">{order.productName || "Product"}</span>
@@ -135,8 +231,13 @@ export default function Orders() {
                                             </div>
                                         </td>
                                         <td>
-                                            <span className={`status-badge-pill ${(order.status || "pending").toLowerCase()}`}>
-                                                {order.status || "Pending"}
+                                            <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                                                ₦ {Number(order.price || order.amount || 0).toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge-pill ${(order.status || "active").toLowerCase()}`}>
+                                                {order.status || "ACTIVE"}
                                             </span>
                                         </td>
                                         <td>
@@ -145,7 +246,7 @@ export default function Orders() {
                                                 className="action-pill-btn"
                                                 onClick={() => handleOpenEdit(order)}
                                             >
-                                                View / Edit
+                                                View Details
                                             </button>
                                         </td>
                                     </tr>
@@ -162,7 +263,7 @@ export default function Orders() {
                 title={drawerTitle}
                 subtitle="Please complete the form below to update order status and fulfillment details."
                 icon="bi bi-cart-check-fill"
-                entityType="Customer Order"
+                entityType="Order"
                 initialData={selectedOrder || {}}
                 onSave={handleSaveOrder}
             />

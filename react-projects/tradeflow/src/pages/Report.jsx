@@ -1,16 +1,109 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
+import orderService from "../services/orderService";
+import productService from "../services/productService";
+import customerService from "../services/customerService";
+import staffService from "../services/staffService";
+import categoryService from "../services/categoryService";
 
 export default function Report() {
     const [reportsList, setReportsList] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
+    const [stats, setStats] = useState({
+        totalGenerated: 0,
+        ordersCount: 0,
+        totalRevenue: 0,
+        systemHealth: "100%"
+    });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Generate Report");
     const [typeFilter, setTypeFilter] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    const loadReportsData = async () => {
+        setIsLoading(true);
+        setHasNetworkError(false);
+        try {
+            const [ordersRes, prodsRes, custsRes, staffsRes, catsRes] = await Promise.allSettled([
+                orderService.fetchAllOrders(),
+                productService.fetchAllProducts(),
+                customerService.fetchAllCustomers(),
+                staffService.fetchAllStaff(),
+                categoryService.fetchAllCategories()
+            ]);
+
+            const orders = ordersRes.status === "fulfilled" && ordersRes.value?.success && Array.isArray(ordersRes.value?.data) ? ordersRes.value.data : [];
+            const prods = prodsRes.status === "fulfilled" && prodsRes.value?.success && Array.isArray(prodsRes.value?.data) ? prodsRes.value.data : [];
+            const custs = custsRes.status === "fulfilled" && custsRes.value?.success && Array.isArray(custsRes.value?.data) ? custsRes.value.data : [];
+            const staffs = staffsRes.status === "fulfilled" && staffsRes.value?.success && Array.isArray(staffsRes.value?.data) ? staffsRes.value.data : [];
+            const cats = catsRes.status === "fulfilled" && catsRes.value?.success && Array.isArray(catsRes.value?.data) ? catsRes.value.data : [];
+
+            const totalRev = orders.reduce((acc, curr) => acc + (Number(curr.price || curr.amount || 0)), 0);
+
+            const initialReports = [
+                {
+                    id: "REP-1",
+                    code: "#REP-001",
+                    name: "Store Orders & Financial Audit",
+                    role: "Financial Audit",
+                    format: "PDF Document (.pdf)",
+                    generatedDate: new Date().toISOString().substring(0, 10),
+                    status: "ACTIVE",
+                    notes: `${orders.length} order(s) processed. Total revenue: ₦ ${totalRev.toLocaleString()}`
+                },
+                {
+                    id: "REP-2",
+                    code: "#REP-002",
+                    name: "Catalog Inventory & Valuation Log",
+                    role: "Inventory",
+                    format: "Excel Spreadsheet (.xlsx)",
+                    generatedDate: new Date().toISOString().substring(0, 10),
+                    status: "ACTIVE",
+                    notes: `${prods.length} product(s) across ${cats.length} category(ies)`
+                },
+                {
+                    id: "REP-3",
+                    code: "#REP-003",
+                    name: "Customer Registry & Accounts Audit",
+                    role: "Operational Audit",
+                    format: "CSV Dataset (.csv)",
+                    generatedDate: new Date().toISOString().substring(0, 10),
+                    status: "ACTIVE",
+                    notes: `${custs.length} verified customer profile(s)`
+                },
+                {
+                    id: "REP-4",
+                    code: "#REP-004",
+                    name: "Staff Permissions & Access Control Report",
+                    role: "Security Audit",
+                    format: "PDF Document (.pdf)",
+                    generatedDate: new Date().toISOString().substring(0, 10),
+                    status: "ACTIVE",
+                    notes: `${staffs.length} active administrative account(s)`
+                }
+            ];
+
+            setReportsList(initialReports);
+            setStats({
+                totalGenerated: initialReports.length,
+                ordersCount: orders.length,
+                totalRevenue: totalRev,
+                systemHealth: "100%"
+            });
+        } catch (_) {
+            setHasNetworkError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadReportsData();
+    }, []);
 
     const handleOpenEdit = (report) => {
         setSelectedReport({ ...report });
@@ -105,21 +198,53 @@ export default function Report() {
                         <span className="report-val">{reportsList.length}</span>
                     </div>
                     <div className="report-stat-box">
-                        <span className="report-label">Scheduled Audits</span>
-                        <span className="report-val">0</span>
+                        <span className="report-label">Live Orders</span>
+                        <span className="report-val">{stats.ordersCount}</span>
                     </div>
                     <div className="report-stat-box">
-                        <span className="report-label">Storage Consumed</span>
-                        <span className="report-val">0.0 MB</span>
+                        <span className="report-label">Total Revenue</span>
+                        <span className="report-val">₦ {Number(stats.totalRevenue || 0).toLocaleString()}</span>
                     </div>
                     <div className="report-stat-box">
                         <span className="report-label">System Health</span>
-                        <span className="report-val" style={{ color: "#10b981" }}>100%</span>
+                        <span className="report-val" style={{ color: "#10b981" }}>{stats.systemHealth}</span>
                     </div>
                 </div>
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner message="Aggregating store analytics from database..." />
+                ) : hasNetworkError ? (
+                    <div
+                        style={{
+                            margin: "24px 0",
+                            padding: "24px",
+                            background: "#fff1f2",
+                            border: "1px solid #fecdd3",
+                            borderRadius: "12px",
+                            textAlign: "center"
+                        }}
+                    >
+                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
+                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
+                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                            Unable to aggregate analytics reports. Please check your network.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={loadReportsData}
+                            style={{
+                                padding: "8px 18px",
+                                background: "#10b981",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                            }}
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
                 ) : (
                     <TableCard
                         title="Generated Audit Logs"
