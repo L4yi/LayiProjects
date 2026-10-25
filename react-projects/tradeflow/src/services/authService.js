@@ -30,12 +30,12 @@ export const authService = {
     async signIn(emailAddress, password) {
         const cleanEmail = (emailAddress || "").trim();
         try {
-            const params = new URLSearchParams();
-            params.append("emailAddress", cleanEmail);
-            params.append("email", cleanEmail);
-            params.append("password", password || "");
+            const formData = new FormData();
+            formData.append("emailAddress", cleanEmail);
+            formData.append("email", cleanEmail);
+            formData.append("password", password || "");
 
-            const response = await api.post("admin/auth/sign-in.php", params);
+            const response = await api.post("admin/auth/sign-in.php", formData);
             const resData = response.data;
 
             if (resData?.success === true && resData?.data) {
@@ -103,11 +103,11 @@ export const authService = {
     async forgotPassword(emailAddress) {
         try {
             const cleanEmail = (emailAddress || "").trim();
-            const params = new URLSearchParams();
-            params.append("emailAddress", cleanEmail);
-            params.append("email", cleanEmail);
+            const formData = new FormData();
+            formData.append("emailAddress", cleanEmail);
+            formData.append("email", cleanEmail);
 
-            const response = await api.post("admin/auth/forgot-password.php", params);
+            const response = await api.post("admin/auth/forgot-password.php", formData);
             const resData = response.data;
 
             if (resData?.success === true) {
@@ -132,13 +132,13 @@ export const authService = {
 
     async resetPassword({ staffId, resetOtp, password, confirmPassword }) {
         try {
-            const params = new URLSearchParams();
-            params.append("staffId", (staffId || "").trim());
-            params.append("resetOtp", (resetOtp || "").toString().trim());
-            params.append("password", password || "");
-            params.append("confirmPassword", confirmPassword || "");
+            const formData = new FormData();
+            formData.append("staffId", (staffId || "").trim());
+            formData.append("resetOtp", (resetOtp || "").toString().trim());
+            formData.append("password", password || "");
+            formData.append("confirmPassword", confirmPassword || "");
 
-            const response = await api.post("admin/auth/reset-password.php", params);
+            const response = await api.post("admin/auth/reset-password.php", formData);
             const resData = response.data;
 
             if (resData?.success === true) {

@@ -13,6 +13,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
+    } else if (config.data instanceof URLSearchParams) {
+        config.headers["Content-Type"] = "application/x-www-form-urlencoded;charset=utf-8";
     } else if (config.data !== undefined) {
         config.headers["Content-Type"] = "application/json";
     }
