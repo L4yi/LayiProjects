@@ -1,123 +1,76 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
-import { LoadingSpinner } from "../../components/common";
-import productService from "../../services/productService";
-import categoryService, { inferCategoryIcon } from "../../services/categoryService";
+import { STORE_CATEGORIES, STORE_PRODUCTS } from "../../data/storeData";
 
 export default function CustomerCategoryProducts() {
     const { categoryId } = useParams();
-    const [categories, setCategories] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState("popular");
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const [catRes, prodRes] = await Promise.all([
-                    categoryService.fetchAllCategories(),
-                    productService.fetchAllProducts()
-                ]);
+    const currentCat = STORE_CATEGORIES.find(c => c.id === categoryId) || STORE_CATEGORIES[0];
+    const filteredProducts = STORE_PRODUCTS.filter(
+        p => p.categoryId === currentCat.id
+    );
 
-                if (catRes.success) {
-                    setCategories(catRes.data || []);
-                }
-                if (prodRes.success) {
-                    setProducts(prodRes.data || []);
-                }
-            } catch (_) {}
-            finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    const activeCat = categories.find(
-        (c) => String(c.id || c.categories_id) === String(categoryId)
-    ) || (categories.length > 0 ? categories[0] : { id: categoryId, name: "Products" });
-
-    const filteredProducts = products.filter((p) => {
-        if (!categoryId) return true;
-        const pCatId = String(p.categoryId || p.categories_id || "");
-        const curCatId = String(activeCat.id || activeCat.categories_id || "");
-        const pCatName = (p.categoryName || p.categories_name || "").toLowerCase();
-        const curCatName = (activeCat.name || activeCat.categories_name || "").toLowerCase();
-        return pCatId === curCatId || (pCatName && curCatName && pCatName === curCatName);
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        if (sortBy === "low-high") return a.price - b.price;
+        if (sortBy === "high-low") return b.price - a.price;
+        if (sortBy === "rating") return b.rating - a.rating;
+        return 0; // Default / popular
     });
 
-    const displayList = filteredProducts.length > 0 ? filteredProducts : products;
-
-    const sortedProducts = [...displayList].sort((a, b) => {
-        const priceA = Number(a.price || a.product_price || 0);
-        const priceB = Number(b.price || b.product_price || 0);
-        if (sortBy === "low-high") return priceA - priceB;
-        if (sortBy === "high-low") return priceB - priceA;
-        return 0;
-    });
+    const displayProducts = sortedProducts.length > 0 ? sortedProducts : STORE_PRODUCTS;
 
     return (
         <div className="customer-category-catalog-container">
+            {/* Breadcrumb Header */}
             <div className="catalog-breadcrumb-bar">
                 <div className="cat-breadcrumb-links">
                     <Link to="/customer/dashboard">Dashboard</Link>
                     <span>/</span>
                     <Link to="/customer/categories">Categories</Link>
                     <span>/</span>
-                    <span className="current-page">{activeCat.name || activeCat.categories_name || "Category"}</span>
+                    <span className="current-page">{currentCat.title}</span>
                 </div>
             </div>
 
+            {/* Category Hero Banner */}
             <div className="category-hero-card">
                 <div className="hero-text-side">
-                    <span className="hero-badge-tag">{activeCat.status_name || "Official Category"}</span>
-                    <h2 className="hero-category-title">{activeCat.name || activeCat.categories_name || "Category Catalog"}</h2>
-                    <p className="hero-category-desc">
-                        {activeCat.description || "Discover verified quality items available in this category with real-time stock."}
-                    </p>
+                    <span className="hero-badge-tag">{currentCat.badge}</span>
+                    <h2 className="hero-category-title">{currentCat.name}</h2>
+                    <p className="hero-category-desc">{currentCat.description}</p>
                     <div className="hero-meta-stats">
-                        <span className="meta-pill"><i className="bi bi-box-seam"></i> {filteredProducts.length} Items</span>
+                        <span className="meta-pill"><i className="bi bi-box-seam"></i> {filteredProducts.length} Verified Items</span>
                         <span className="meta-pill"><i className="bi bi-truck"></i> Fast Delivery</span>
                         <span className="meta-pill"><i className="bi bi-shield-check"></i> 100% Genuine</span>
                     </div>
                 </div>
                 <div className="hero-image-side">
-                    <img
-                        src={activeCat.image || "/src/assets/icon.png"}
-                        alt={activeCat.name || "Category"}
-                        className="hero-cat-img"
-                        onError={(e) => { e.target.src = "/src/assets/icon.png"; }}
-                    />
+                    <img src={currentCat.image} alt={currentCat.name} className="hero-cat-img" />
                 </div>
             </div>
 
-            {categories.length > 0 && (
-                <div className="category-switcher-pills">
-                    {categories.map((cat) => {
-                        const cId = cat.id || cat.categories_id;
-                        const isMatch = String(cId) === String(activeCat.id || activeCat.categories_id);
-                        return (
-                            <Link
-                                key={cId}
-                                to={`/customer/category/${cId}`}
-                                className={`switcher-pill-btn ${isMatch ? "active" : ""}`}
-                            >
-                                <i className={inferCategoryIcon(cat.name || cat.categories_name)}></i>
-                                <span>{cat.name || cat.categories_name}</span>
-                            </Link>
-                        );
-                    })}
-                </div>
-            )}
+            {/* Quick Switch Category Pills */}
+            <div className="category-switcher-pills">
+                {STORE_CATEGORIES.map((cat) => (
+                    <Link
+                        key={cat.id}
+                        to={`/customer/category/${cat.id}`}
+                        className={`switcher-pill-btn ${cat.id === currentCat.id ? "active" : ""}`}
+                    >
+                        <i className={cat.icon}></i>
+                        <span>{cat.name}</span>
+                    </Link>
+                ))}
+            </div>
 
+            {/* Catalog Grid Section */}
             <section className="catalog-products-section">
                 <div className="catalog-section-header">
                     <div>
-                        <h3 className="section-title">Products in {activeCat.name || activeCat.categories_name}</h3>
-                        <p className="section-sub">Showing verified items with real-time stock</p>
+                        <h3 className="section-title">Products in {currentCat.name}</h3>
+                        <p className="section-sub">Showing top verified items with real-time stock</p>
                     </div>
                     <div className="catalog-sort-select-wrap">
                         <i className="bi bi-arrow-down-up"></i>
@@ -129,36 +82,26 @@ export default function CustomerCategoryProducts() {
                             <option value="popular">Sort: Most Popular</option>
                             <option value="low-high">Price: Low to High</option>
                             <option value="high-low">Price: High to Low</option>
+                            <option value="rating">Top Rated</option>
                         </select>
                     </div>
                 </div>
 
-                {loading ? (
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "240px" }}>
-                        <LoadingSpinner message="Loading products..." />
-                    </div>
-                ) : sortedProducts.length === 0 ? (
-                    <div style={{ padding: "40px 20px", textAlign: "center", color: "#64748b" }}>
-                        <i className="bi bi-box" style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}></i>
-                        <p>No products found in this category.</p>
-                    </div>
-                ) : (
-                    <div className="customer-products-grid">
-                        {sortedProducts.map((prod) => (
-                            <ProductItemCard
-                                key={prod.id || prod.product_id}
-                                id={prod.id || prod.product_id}
-                                name={prod.name || prod.product_name}
-                                title={prod.name || prod.product_name}
-                                subtitle={prod.categoryName || prod.categories_name || "Official Store"}
-                                rating={5}
-                                price={`₦ ${Number(prod.price || prod.product_price || 0).toLocaleString()}`}
-                                image={prod.image || "/src/assets/icon.png"}
-                                badge={prod.status_name || "In Stock"}
-                            />
-                        ))}
-                    </div>
-                )}
+                <div className="customer-products-grid">
+                    {displayProducts.map((prod) => (
+                        <ProductItemCard
+                            key={prod.id}
+                            id={prod.id}
+                            name={prod.name}
+                            subtitle={prod.subtitle}
+                            rating={prod.rating}
+                            price={`₦ ${prod.price.toLocaleString()}`}
+                            oldPrice={`₦ ${prod.oldPrice.toLocaleString()}`}
+                            image={prod.image}
+                            badge={prod.express ? "TradeFlow Express" : ""}
+                        />
+                    ))}
+                </div>
             </section>
         </div>
     );

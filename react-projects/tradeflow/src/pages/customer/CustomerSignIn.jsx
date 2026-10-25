@@ -1,178 +1,155 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import customerService from "../../services/customerService";
-import { InputField, StatusModal, Button } from "../../components/common";
+import { setSessionUser  } from "../../utils/session";
 
 export default function CustomerSignIn() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState({});
-    const [apiError, setApiError] = useState("");
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-    const validateForm = () => {
-        const errors = {};
-        if (!email.trim()) {
-            errors.email = "Email address is required.";
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            errors.email = "Please enter a valid email address.";
-        }
-        setFieldErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSignIn = async (e) => {
+    const handleSignIn = (e) => {
         e.preventDefault();
-        setApiError("");
+        const existing = setSessionUser();
 
-        if (!validateForm()) return;
-
-        if (loading) return;
-        setLoading(true);
-
-        const result = await customerService.customerSignIn(email.trim());
-        setLoading(false);
-
-        if (result.success) {
-            setShowSuccessModal(true);
-        } else {
-            setApiError(result.message || "Customer account not found. Please verify your email or sign up.");
+        let displayName = existing.name;
+        if (email) {
+            const namePart = email.split("@")[0].replace(/[._-]/g, " ");
+            const capitalized = namePart.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+            if (!existing.name || existing.name === "Afolabi Abayomi Layi" || email !== existing.email) {
+                displayName = capitalized || existing.name;
+            }
         }
+
+        setSessionUser({
+            email: email || existing.email,
+            name: displayName,
+            role: "Customer Member",
+            lastLogin: "Just now"
+        });
+
+        navigate("/customer/dashboard");
     };
 
     return (
-        <>
-            <section className="auth-section">
-                <div className="auth-background">
-                    <div className="overlay-bg">
-                        <div className="form-container customer-auth-container" style={{ maxWidth: "480px", margin: "0 auto" }}>
-                            <div className="form-content" style={{ width: "100%", padding: "40px" }}>
-                                <div className="inner-form">
-                                    <Link to="/" className="solara-logo">
-                                        <div className="brand-logo-icon">
-                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                            </svg>
-                                        </div>
-                                        <span className="brand-title">TradeFlow</span>
-                                    </Link>
-
-                                    <div className="form-header">
-                                        <div
-                                            style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: "6px",
-                                                padding: "4px 10px",
-                                                background: "#ecfdf5",
-                                                border: "1px solid #a7f3d0",
-                                                borderRadius: "20px",
-                                                color: "#059669",
-                                                fontSize: "0.8rem",
-                                                fontWeight: 600,
-                                                marginBottom: "12px"
-                                            }}
-                                        >
-                                            <i className="bi bi-person-check-fill"></i> Customer Portal
-                                        </div>
-                                        <h2>Customer Sign In</h2>
-                                        <p style={{ marginTop: "4px", fontSize: "0.9rem", color: "#64748b" }}>
-                                            New customer?{" "}
-                                            <Link to="/customer/signup" className="link" style={{ fontWeight: 600, color: "#10b981" }}>
-                                                Create an account
-                                            </Link>
-                                        </p>
+        <section className="auth-section">
+            <div className="auth-background">
+                <div className="overlay-bg">
+                    <div className="form-container customer-auth-container">
+                        <div className="form-content">
+                            <div className="inner-form">
+                                <Link to="/" className="solara-logo">
+                                    <div className="brand-logo-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                                        </svg>
                                     </div>
+                                    <span className="brand-title">TradeFlow</span>
+                                </Link>
 
-                                    {apiError && (
-                                        <div
-                                            className="auth-alert-error"
-                                            style={{
-                                                marginBottom: "1.2rem",
-                                                color: "#991b1b",
-                                                background: "#fee2e2",
-                                                border: "1px solid #f87171",
-                                                borderRadius: "8px",
-                                                padding: "10px 14px",
-                                                fontSize: "0.88rem",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "8px"
-                                            }}
-                                            role="alert"
-                                        >
-                                            <i className="bi bi-exclamation-triangle-fill"></i>
-                                            <span>{apiError}</span>
-                                        </div>
-                                    )}
+                                <div className="form-header">
+                                    <div className="portal-indicator-pill">
+                                        <i className="bi bi-person-check-fill"></i> Customer Portal
+                                    </div>
+                                    <h2>Customer Sign In</h2>
+                                    <p>
+                                        New customer?{" "}
+                                        <Link to="/customer/signup" className="link">
+                                            Create an account
+                                        </Link>
+                                    </p>
+                                </div>
 
-                                    <form onSubmit={handleSignIn} className="input-container" noValidate>
-                                        <InputField
-                                            label="E-mail Address"
-                                            id="customerEmail"
+                                <form onSubmit={handleSignIn} className="input-container">
+                                    <div className="input-wrapper">
+                                        <label htmlFor="customerEmail">E-mail Address</label>
+                                        <input
                                             type="email"
+                                            className="text-field"
+                                            id="customerEmail"
                                             placeholder="customer@example.com"
                                             value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                if (fieldErrors.email) {
-                                                    setFieldErrors((prev) => ({ ...prev, email: "" }));
-                                                }
-                                                setApiError("");
-                                            }}
-                                            error={fieldErrors.email}
+                                            onChange={(e) => setEmail(e.target.value)}
                                             autoComplete="email"
                                             required
                                         />
+                                    </div>
 
-                                        <InputField
-                                            label="Password"
-                                            id="customerPassword"
-                                            type="password"
-                                            placeholder="@#*%"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            autoComplete="current-password"
-                                        />
-
-                                        <Button
-                                            type="submit"
-                                            variant="primary"
-                                            size="md"
-                                            isLoading={loading}
-                                            loadingText="Signing in..."
-                                            style={{ width: "100%", height: "48px", marginTop: "12px" }}
-                                        >
-                                            Access Customer Portal
-                                        </Button>
-
-                                        <div style={{ textAlign: "center", marginTop: "20px", fontSize: "0.88rem", color: "#64748b" }}>
-                                            Staff or Administrator?{" "}
-                                            <Link to="/signin" style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}>
-                                                Staff Sign In &rarr;
-                                            </Link>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="customerPassword">Password</label>
+                                        <div className="password-input-group">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                className="text-field"
+                                                id="customerPassword"
+                                                placeholder="@#*%"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                autoComplete="current-password"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                className="password-toggle-btn"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                title="Toggle Password Visibility"
+                                            >
+                                                <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
+                                            </button>
                                         </div>
-                                    </form>
+                                    </div>
+
+                                    <div className="form-options">
+                                        <label className="checkbox-label">
+                                            <input type="checkbox" id="rememberCustomer" />
+                                            <span>Remember me</span>
+                                        </label>
+                                        <Link to="/forgot-password" className="forgot-link">
+                                            Forgot Password?
+                                        </Link>
+                                    </div>
+
+                                    <button
+                                        className="btn-primary customer-primary-btn"
+                                        type="submit"
+                                        title="Sign In to Customer Portal"
+                                    >
+                                        <i className="bi bi-box-arrow-in-right"></i> Sign In to Portal
+                                    </button>
+                                         <div className="divider">
+                                                                            <span>OR</span>
+                                                                        </div>
+                                    
+                                                                        <div className="social-btn-container">
+                                                                            <button type="button" className="social-btn">
+                                                                                <svg viewBox="0 0 24 24">
+                                                                                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                                                                                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" />
+                                                                                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z" />
+                                                                                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+                                                                                </svg>
+                                                                                Continue with Google
+                                                                            </button>
+                                                                            <button type="button" className="social-btn">
+                                                                                <svg viewBox="0 0 24 24" fill="#1877F2">
+                                                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                                                </svg>
+                                                                                Continue with Facebook
+                                                                            </button>
+                                                                        </div>
+                                </form>
+
+                                <div className="portal-switch-footer">
+                                    <span>Staff or Institute Administrator?</span>
+                                    <Link to="/signin" className="admin-return-link">
+                                        <i className="bi bi-shield-lock"></i> Go to Admin Portal
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <StatusModal
-                isOpen={showSuccessModal}
-                type="success"
-                title="CUSTOMER LOGIN SUCCESSFUL!"
-                message="Welcome to TradeFlow Customer Portal. Click continue to proceed to your shopping dashboard."
-                buttonText="Okay, Continue"
-                onConfirm={() => {
-                    setShowSuccessModal(false);
-                    navigate("/customer/dashboard");
-                }}
-            />
-        </>
+            </div>
+        </section>
     );
 }
