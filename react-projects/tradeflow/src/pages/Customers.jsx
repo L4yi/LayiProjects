@@ -139,6 +139,41 @@ export default function Customers() {
         }
     };
 
+    const handleDeleteCustomer = async (cust) => {
+        const customerId = cust.id || cust.customerId;
+        if (!customerId) return;
+        const name = cust.name || `${cust.firstName || ""} ${cust.lastName || ""}`.trim() || customerId;
+        if (!window.confirm(`Are you sure you want to delete customer "${name}"?`)) return;
+
+        setIsLoading(true);
+        try {
+            const res = await customerService.deleteCustomer(customerId);
+            if (res.success) {
+                await loadCustomers();
+                setModalData({
+                    type: "success",
+                    title: "CUSTOMER DELETED SUCCESSFULLY",
+                    message: `Customer account "${name}" has been permanently removed.`
+                });
+            } else {
+                setModalData({
+                    type: "warning",
+                    title: "DELETE FAILED",
+                    message: res.message || "Failed to delete customer from database."
+                });
+            }
+        } catch (e) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: e.message || "An error occurred while deleting the customer."
+            });
+        } finally {
+            setShowSuccessModal(true);
+            setIsLoading(false);
+        }
+    };
+
     const filteredCustomers = customersList.filter(cust => {
         if (!statusFilter) return true;
         const s = (cust.status || "").toLowerCase();
@@ -263,13 +298,25 @@ export default function Customers() {
                                             </span>
                                         </td>
                                         <td>
-                                            <button
-                                                type="button"
-                                                className="action-pill-btn"
-                                                onClick={() => handleOpenEdit(cust)}
-                                            >
-                                                View / Edit
-                                            </button>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(cust)}
+                                                    title="View / Edit Customer"
+                                                >
+                                                    View / Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    onClick={() => handleDeleteCustomer(cust)}
+                                                    title="Delete Customer"
+                                                >
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

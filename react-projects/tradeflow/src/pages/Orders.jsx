@@ -138,6 +138,40 @@ export default function Orders() {
         }
     };
 
+    const handleDeleteOrder = async (order) => {
+        const orderId = order.id || order.orderId || order.code;
+        if (!orderId) return;
+        if (!window.confirm(`Are you sure you want to delete order "${orderId}"?`)) return;
+
+        setIsLoading(true);
+        try {
+            const res = await orderService.deleteOrder(orderId);
+            if (res.success) {
+                await loadOrders();
+                setModalData({
+                    type: "success",
+                    title: "ORDER DELETED SUCCESSFULLY",
+                    message: `Order #${orderId} has been permanently removed.`
+                });
+            } else {
+                setModalData({
+                    type: "warning",
+                    title: "DELETE FAILED",
+                    message: res.message || "Failed to delete order from database."
+                });
+            }
+        } catch (e) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: e.message || "An error occurred while deleting the order."
+            });
+        } finally {
+            setShowSuccessModal(true);
+            setIsLoading(false);
+        }
+    };
+
     const filteredOrders = ordersList.filter(o => {
         if (!statusFilter) return true;
         const s = (o.status || "").toLowerCase();
@@ -260,13 +294,25 @@ export default function Orders() {
                                             </span>
                                         </td>
                                         <td>
-                                            <button
-                                                type="button"
-                                                className="action-pill-btn"
-                                                onClick={() => handleOpenEdit(order)}
-                                            >
-                                                View Details
-                                            </button>
+                                            <div className="action-btn-group">
+                                                <button
+                                                    type="button"
+                                                    className="action-pill-btn"
+                                                    onClick={() => handleOpenEdit(order)}
+                                                    title="View Details"
+                                                >
+                                                    View Details
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-edit"
+                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    onClick={() => handleDeleteOrder(order)}
+                                                    title="Delete Order"
+                                                >
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
