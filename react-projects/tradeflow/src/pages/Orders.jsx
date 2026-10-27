@@ -57,8 +57,8 @@ export default function Orders() {
             price: 0,
             amount: 0,
             paymentMethod: "Bank Transfer",
-            status: "Pending",
-            statusId: "3",
+            status: "Processing",
+            statusId: "4",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
@@ -74,7 +74,7 @@ export default function Orders() {
         const customerId = orderData.customerId || orderData.customer_id || selectedOrder?.customerId || selectedOrder?.customer_id;
         const productId = orderData.productId || orderData.product_id || selectedOrder?.productId || selectedOrder?.product_id;
         const sUpper = String(orderData.status || "").toUpperCase();
-        let statusId = "3";
+        let statusId = "4";
         if (sUpper.includes("SUCCESS")) statusId = "5";
         else if (sUpper.includes("FAIL")) statusId = "9";
         else if (sUpper.includes("PROCESS")) statusId = "4";
@@ -165,10 +165,9 @@ export default function Orders() {
                                 >
                                     <option value="">All Status</option>
                                     <option value="successful">Successful</option>
-                                    <option value="failed">Failed</option>
-                                    <option value="pending">Pending</option>
                                     <option value="processing">Processing</option>
                                     <option value="paid">Paid</option>
+                                    <option value="failed">Failed</option>
                                 </select>
                             </div>
                             <button
@@ -256,8 +255,8 @@ export default function Orders() {
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`status-badge-pill ${(order.status || "pending").toLowerCase()}`}>
-                                                {order.status || "Pending"}
+                                            <span className={`status-badge-pill ${(order.status || "processing").toLowerCase()}`}>
+                                                {order.status || "Processing"}
                                             </span>
                                         </td>
                                         <td>

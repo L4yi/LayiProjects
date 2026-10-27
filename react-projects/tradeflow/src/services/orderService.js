@@ -8,18 +8,16 @@ function normalizeOrder(item) {
     const orderId = item.order_id || item.orderId || "";
     const priceNum = Number(item.product_price || item.productPrice || item.price || 0);
     const rawStatus = (item.status_name || item.statusName || "").toUpperCase();
-    const sId = String(item.status_id || item.statusId || "3");
-    let displayStatus = "Pending";
+    const sId = String(item.status_id || item.statusId || "4");
+    let displayStatus = "Processing";
     if (sId === "5" || rawStatus === "SUCCESSFUL" || rawStatus === "ACTIVE") {
         displayStatus = "Successful";
     } else if (sId === "9" || rawStatus === "FAILED" || rawStatus === "INACTIVE") {
         displayStatus = "Failed";
-    } else if (sId === "4" || rawStatus === "PROCESSING") {
-        displayStatus = "Processing";
     } else if (sId === "8" || rawStatus === "PAID") {
         displayStatus = "Paid";
-    } else if (sId === "3" || rawStatus === "PENDING") {
-        displayStatus = "Pending";
+    } else if (sId === "4" || rawStatus === "PROCESSING" || sId === "3" || rawStatus === "PENDING") {
+        displayStatus = "Processing";
     } else if (item.status_name || item.statusName) {
         displayStatus = item.status_name || item.statusName;
     }

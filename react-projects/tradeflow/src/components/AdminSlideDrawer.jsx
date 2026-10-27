@@ -663,22 +663,19 @@ export default function AdminSlideDrawer({
                                                 const s = String(formData.status || "").toLowerCase();
                                                 if (s.includes("success") || s === "active") return "Successful";
                                                 if (s.includes("fail") || s === "inactive") return "Failed";
-                                                if (s.includes("process")) return "Processing";
                                                 if (s.includes("paid")) return "Paid";
-                                                return "Pending";
+                                                return "Processing";
                                             })()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sUpper = val.toUpperCase();
-                                                let sId = "3";
+                                                let sId = "4";
                                                 if (sUpper.includes("SUCCESS")) sId = "5";
                                                 else if (sUpper.includes("FAIL")) sId = "9";
-                                                else if (sUpper.includes("PROCESS")) sId = "4";
                                                 else if (sUpper.includes("PAID")) sId = "8";
                                                 setFormData(prev => ({ ...prev, status: val, statusId: sId }));
                                             }}
                                         >
-                                            <option value="Pending">Pending</option>
                                             <option value="Processing">Processing</option>
                                             <option value="Successful">Successful</option>
                                             <option value="Paid">Paid</option>
