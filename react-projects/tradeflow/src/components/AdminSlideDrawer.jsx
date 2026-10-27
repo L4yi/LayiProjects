@@ -659,16 +659,30 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Order Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={String(formData.status || "ACTIVE").toUpperCase()}
+                                            value={(() => {
+                                                const s = String(formData.status || "").toLowerCase();
+                                                if (s.includes("success") || s === "active") return "Successful";
+                                                if (s.includes("fail") || s === "inactive") return "Failed";
+                                                if (s.includes("process")) return "Processing";
+                                                if (s.includes("paid")) return "Paid";
+                                                return "Pending";
+                                            })()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
+                                                const sUpper = val.toUpperCase();
+                                                let sId = "3";
+                                                if (sUpper.includes("SUCCESS")) sId = "5";
+                                                else if (sUpper.includes("FAIL")) sId = "9";
+                                                else if (sUpper.includes("PROCESS")) sId = "4";
+                                                else if (sUpper.includes("PAID")) sId = "8";
                                                 setFormData(prev => ({ ...prev, status: val, statusId: sId }));
                                             }}
                                         >
-                                            <option value="ACTIVE">ACTIVE</option>
-                                            <option value="INACTIVE">INACTIVE</option>
-                                            <option value="PENDING">PENDING</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Processing">Processing</option>
+                                            <option value="Successful">Successful</option>
+                                            <option value="Paid">Paid</option>
+                                            <option value="Failed">Failed</option>
                                         </select>
                                     </div>
                                 </div>

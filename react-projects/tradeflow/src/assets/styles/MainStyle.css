@@ -1933,6 +1933,22 @@ html, body {
     color: #16a34a;
 }
 
+.solara-data-table tbody td .status-badge-pill.successful {
+    background-color: #e8fff1;
+    color: #16a34a;
+}
+
+.solara-data-table tbody td .status-badge-pill.failed {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.solara-data-table tbody td .status-badge-pill.processing {
+    background-color: #e0f2fe;
+    color: #0284c7;
+}
+
 .solara-data-table tbody td .action-pill-btn {
     display: inline-flex;
     align-items: center;

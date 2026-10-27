@@ -7,6 +7,22 @@ function normalizeOrder(item) {
     const customerName = `${firstName} ${lastName}`.trim() || item.email_address || item.emailAddress || "Customer";
     const orderId = item.order_id || item.orderId || "";
     const priceNum = Number(item.product_price || item.productPrice || item.price || 0);
+    const rawStatus = (item.status_name || item.statusName || "").toUpperCase();
+    const sId = String(item.status_id || item.statusId || "3");
+    let displayStatus = "Pending";
+    if (sId === "5" || rawStatus === "SUCCESSFUL" || rawStatus === "ACTIVE") {
+        displayStatus = "Successful";
+    } else if (sId === "9" || rawStatus === "FAILED" || rawStatus === "INACTIVE") {
+        displayStatus = "Failed";
+    } else if (sId === "4" || rawStatus === "PROCESSING") {
+        displayStatus = "Processing";
+    } else if (sId === "8" || rawStatus === "PAID") {
+        displayStatus = "Paid";
+    } else if (sId === "3" || rawStatus === "PENDING") {
+        displayStatus = "Pending";
+    } else if (item.status_name || item.statusName) {
+        displayStatus = item.status_name || item.statusName;
+    }
 
     return {
         id: orderId,
@@ -22,9 +38,9 @@ function normalizeOrder(item) {
         productName: item.product_name || item.productName || "Product",
         price: priceNum,
         amount: priceNum,
-        statusId: item.status_id || item.statusId || "1",
-        status: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
-        statusName: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
+        statusId: sId,
+        status: displayStatus,
+        statusName: displayStatus,
         createdAt: item.created_at || item.createdAt || "",
         updatedAt: item.updated_at || item.updatedAt || ""
     };

@@ -57,8 +57,8 @@ export default function Orders() {
             price: 0,
             amount: 0,
             paymentMethod: "Bank Transfer",
-            status: "ACTIVE",
-            statusId: "1",
+            status: "Pending",
+            statusId: "3",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
@@ -73,9 +73,14 @@ export default function Orders() {
         const orderId = selectedOrder?.id || selectedOrder?.orderId || selectedOrder?.code || orderData.id || orderData.orderId || orderData.code;
         const customerId = orderData.customerId || orderData.customer_id || selectedOrder?.customerId || selectedOrder?.customer_id;
         const productId = orderData.productId || orderData.product_id || selectedOrder?.productId || selectedOrder?.product_id;
-        const sStr = String(orderData.status || "").toUpperCase();
-        const statusId = (sStr === "INACTIVE" || String(orderData.statusId) === "2") ? "2" :
-                         (sStr === "PENDING" || String(orderData.statusId) === "3") ? "3" : "1";
+        const sUpper = String(orderData.status || "").toUpperCase();
+        let statusId = "3";
+        if (sUpper.includes("SUCCESS")) statusId = "5";
+        else if (sUpper.includes("FAIL")) statusId = "9";
+        else if (sUpper.includes("PROCESS")) statusId = "4";
+        else if (sUpper.includes("PAID")) statusId = "8";
+        else if (sUpper.includes("DONE")) statusId = "10";
+        else if (orderData.statusId) statusId = String(orderData.statusId);
 
         if (!customerId || !productId) {
             setModalData({
@@ -159,9 +164,11 @@ export default function Orders() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
+                                    <option value="successful">Successful</option>
+                                    <option value="failed">Failed</option>
                                     <option value="pending">Pending</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="paid">Paid</option>
                                 </select>
                             </div>
                             <button
@@ -249,8 +256,8 @@ export default function Orders() {
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`status-badge-pill ${(order.status || "active").toLowerCase()}`}>
-                                                {order.status || "ACTIVE"}
+                                            <span className={`status-badge-pill ${(order.status || "pending").toLowerCase()}`}>
+                                                {order.status || "Pending"}
                                             </span>
                                         </td>
                                         <td>
