@@ -69,9 +69,13 @@ export default function Orders() {
         setDrawerOpen(false);
         setIsLoading(true);
 
-        const customerId = orderData.customerId || orderData.customer_id;
-        const productId = orderData.productId || orderData.product_id;
-        const statusId = orderData.statusId || "1";
+        const isUpdate = Boolean(selectedOrder && (selectedOrder.id || selectedOrder.orderId || selectedOrder.code));
+        const orderId = selectedOrder?.id || selectedOrder?.orderId || selectedOrder?.code || orderData.id || orderData.orderId || orderData.code;
+        const customerId = orderData.customerId || orderData.customer_id || selectedOrder?.customerId || selectedOrder?.customer_id;
+        const productId = orderData.productId || orderData.product_id || selectedOrder?.productId || selectedOrder?.product_id;
+        const sStr = String(orderData.status || "").toUpperCase();
+        const statusId = (sStr === "INACTIVE" || String(orderData.statusId) === "2") ? "2" :
+                         (sStr === "PENDING" || String(orderData.statusId) === "3") ? "3" : "1";
 
         if (!customerId || !productId) {
             setModalData({
@@ -85,24 +89,34 @@ export default function Orders() {
         }
 
         try {
-            const res = await orderService.createOrder({
-                customerId,
-                productId,
-                statusId
-            });
+            let res;
+            if (isUpdate) {
+                res = await orderService.updateOrder({
+                    orderId,
+                    customerId,
+                    productId,
+                    statusId
+                });
+            } else {
+                res = await orderService.createOrder({
+                    customerId,
+                    productId,
+                    statusId
+                });
+            }
 
             if (res.success) {
                 await loadOrders();
                 setModalData({
                     type: "success",
-                    title: "ORDER CREATED SUCCESSFULLY!",
-                    message: res.message || `Order for "${orderData.customerName || "Customer"}" has been recorded in database.`
+                    title: isUpdate ? "ORDER UPDATED SUCCESSFULLY!" : "ORDER CREATED SUCCESSFULLY!",
+                    message: res.message || (isUpdate ? `Order "${orderId}" status updated successfully.` : `Order for "${orderData.customerName || "Customer"}" has been recorded in database.`)
                 });
                 setShowSuccessModal(true);
             } else {
                 setModalData({
                     type: "error",
-                    title: "ORDER CREATION FAILED",
+                    title: isUpdate ? "ORDER UPDATE FAILED" : "ORDER CREATION FAILED",
                     message: res.message || "Failed to submit order."
                 });
                 setShowSuccessModal(true);

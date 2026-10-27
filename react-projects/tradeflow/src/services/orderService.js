@@ -84,6 +84,35 @@ export const orderService = {
         }
     },
 
+    async updateOrder({ orderId, customerId, productId, statusId = "1" }) {
+        try {
+            const formData = new FormData();
+            formData.append("orderId", String(orderId).trim());
+            formData.append("customerId", String(customerId).trim());
+            formData.append("productId", String(productId).trim());
+            formData.append("statusId", String(statusId).trim());
+
+            const response = await api.post("admin/order/update-order.php", formData);
+            const resData = response.data;
+            if (resData?.success === true) {
+                return {
+                    success: true,
+                    data: normalizeOrder(resData.data),
+                    message: resData.message || "ORDER UPDATED SUCCESSFULLY"
+                };
+            }
+            return {
+                success: false,
+                message: resData?.message || "Failed to update order."
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Failed to update order."
+            };
+        }
+    },
+
     async searchOrder(searchContent) {
         try {
             const formData = new FormData();

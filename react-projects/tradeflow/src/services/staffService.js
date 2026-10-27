@@ -51,7 +51,6 @@ export function getTitleId(title = "") {
 export function getStatusId(status = "") {
     const s = String(status).toUpperCase().trim();
     if (s === "2" || s === "INACTIVE") return "2";
-    if (s === "3" || s === "PENDING") return "3";
     return "1";
 }
 

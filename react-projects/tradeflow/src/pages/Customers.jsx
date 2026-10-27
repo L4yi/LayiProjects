@@ -76,10 +76,9 @@ export default function Customers() {
         const phoneNumber = formData.phone || formData.phoneNumber || "";
         const address = formData.address || "Abeokuta, Ogun State";
         const titleId = formData.titleId || "1";
-        const statusId = formData.statusId || (
-            formData.status?.toUpperCase() === "INACTIVE" ? "2" :
-            formData.status?.toUpperCase() === "PENDING" ? "3" : "1"
-        );
+        const sStr = String(formData.status || "").toUpperCase();
+        const statusId = (sStr === "INACTIVE" || String(formData.statusId) === "2") ? "2" :
+                         (sStr === "PENDING" || String(formData.statusId) === "3") ? "3" : "1";
         const roleId = formData.roleId || "19";
 
         setDrawerOpen(false);

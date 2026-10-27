@@ -129,7 +129,7 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.status || "ACTIVE"}
+                                            value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
@@ -356,7 +356,7 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.status || "ACTIVE"}
+                                            value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
@@ -538,7 +538,7 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Account Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.status || "ACTIVE"}
+                                            value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
@@ -659,7 +659,7 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Order Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.status || "ACTIVE"}
+                                            value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
@@ -1013,7 +1013,7 @@ export default function AdminSlideDrawer({
                                         <label className="drawer-label">Account Status</label>
                                         <select
                                             className="drawer-input"
-                                            value={formData.status || "ACTIVE"}
+                                            value={(String(formData.status || "").toUpperCase() === "INACTIVE" || String(formData.statusId) === "2") ? "INACTIVE" : "ACTIVE"}
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const sId = val === "INACTIVE" ? "2" : "1";

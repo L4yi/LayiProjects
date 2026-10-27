@@ -13,8 +13,8 @@ export const mapServerStaff = (s) => {
     const address = s.address || "Abeokuta, Ogun State";
     const roleId = String(s.role_id || s.roleId || "5");
     const role = s.role_name || s.roleName || (roleId === "3" ? "SUPER ADMIN" : roleId === "2" ? "ADMIN" : roleId === "1" ? "STAFF" : "Store Manager");
-    const statusId = String(s.status_id || s.statusId || "1");
-    const status = String(s.status_name || s.statusName || (statusId === "2" ? "INACTIVE" : "ACTIVE")).toUpperCase();
+    const statusId = String(s.status_id || s.statusId || "1") === "2" ? "2" : "1";
+    const status = (statusId === "2" || String(s.status_name || s.statusName || "").toUpperCase() === "INACTIVE") ? "INACTIVE" : "ACTIVE";
     const titleId = String(s.title_id || s.titleId || "1");
     const titleName = s.title_name || s.titleName || (titleId === "2" ? "Mrs" : titleId === "3" ? "Dr" : titleId === "4" ? "Prof" : titleId === "5" ? "Engr" : "Mr");
 
