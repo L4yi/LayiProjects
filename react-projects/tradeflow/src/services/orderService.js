@@ -23,8 +23,8 @@ function normalizeOrder(item) {
         price: priceNum,
         amount: priceNum,
         statusId: item.status_id || item.statusId || "1",
-        status: item.status_name || item.statusName || (item.status_id === "1" ? "ACTIVE" : "PENDING"),
-        statusName: item.status_name || item.statusName || (item.status_id === "1" ? "ACTIVE" : "PENDING"),
+        status: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
+        statusName: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
         createdAt: item.created_at || item.createdAt || "",
         updatedAt: item.updated_at || item.updatedAt || ""
     };

@@ -95,8 +95,13 @@ export const categoryService = {
             const formData = new FormData();
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
+            const statusId = categoryData.statusId || (
+                String(categoryData.status).toUpperCase() === "INACTIVE" ? "2" :
+                String(categoryData.status).toUpperCase() === "PENDING" ? "3" : "1"
+            );
             formData.append("categoryName", name);
             formData.append("description", desc);
+            formData.append("statusId", String(statusId));
 
             const response = await api.post("admin/categories/create-category.php", formData);
             return normalizeResponse(response.data, "CATEGORY CREATED SUCCESSFULLY");
@@ -114,7 +119,10 @@ export const categoryService = {
             const id = categoryData.categoryId || categoryData.categories_id || categoryData.id || categoryData.code || "";
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
-            const statusId = categoryData.statusId || (String(categoryData.status).toUpperCase() === "INACTIVE" ? "2" : "1");
+            const statusId = categoryData.statusId || (
+                String(categoryData.status).toUpperCase() === "INACTIVE" ? "2" :
+                String(categoryData.status).toUpperCase() === "PENDING" ? "3" : "1"
+            );
 
             formData.append("categoryId", id);
             formData.append("categoryName", name);

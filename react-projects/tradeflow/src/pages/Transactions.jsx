@@ -93,9 +93,14 @@ export default function Transactions() {
         setDrawerOpen(true);
     };
 
-    const filteredTxns = transactionsList.filter(t =>
-        !statusFilter || String(t.status || "").toLowerCase() === statusFilter.toLowerCase()
-    );
+    const filteredTxns = transactionsList.filter(t => {
+        if (!statusFilter) return true;
+        const s = String(t.status || "").toLowerCase();
+        const f = statusFilter.toLowerCase();
+        if (f === "paid" && (s === "paid" || s === "active")) return true;
+        if (f === "active" && (s === "active" || s === "paid")) return true;
+        return s === f;
+    });
 
     return (
         <>
@@ -117,8 +122,10 @@ export default function Transactions() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    <option value="paid">Paid</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                     <option value="pending">Pending</option>
+                                    <option value="paid">Paid</option>
                                     <option value="failed">Failed</option>
                                 </select>
                             </div>

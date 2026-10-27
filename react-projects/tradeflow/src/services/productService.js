@@ -84,7 +84,10 @@ export const productService = {
             const price = productData.productPrice || productData.price || 0;
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
-            const statusId = productData.statusId || (String(productData.status).toUpperCase() === "INACTIVE" ? "2" : "1");
+            const statusId = productData.statusId || (
+                String(productData.status).toUpperCase() === "INACTIVE" ? "2" :
+                String(productData.status).toUpperCase() === "PENDING" ? "3" : "1"
+            );
 
             formData.append("categoryId", catId);
             formData.append("productName", name);
@@ -112,7 +115,10 @@ export const productService = {
             const price = productData.productPrice || productData.price || 0;
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
-            const statusId = productData.statusId || (String(productData.status).toUpperCase() === "INACTIVE" ? "2" : "1");
+            const statusId = productData.statusId || (
+                String(productData.status).toUpperCase() === "INACTIVE" ? "2" :
+                String(productData.status).toUpperCase() === "PENDING" ? "3" : "1"
+            );
 
             formData.append("productId", prodId);
             formData.append("categoryId", catId);

@@ -15,6 +15,7 @@ export default function Products() {
     const [drawerError, setDrawerError] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
@@ -28,7 +29,7 @@ export default function Products() {
             inStock: Number(prod.quantity ?? prod.inStock ?? 0),
             categoryId: prod.categories_id || prod.categoryId || "",
             categoryName: prod.categories_name || prod.categoryName || "General Category",
-            status: prod.status_name || (String(prod.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+            status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
             description: prod.description || "",
             image: prod.image || "",
             createdAt: prod.created_at,
@@ -188,11 +189,12 @@ export default function Products() {
 
     const filteredProds = productsList.filter(p => {
         const matchesCategory = !categoryFilter || p.categoryId === categoryFilter || p.categoryName === categoryFilter;
+        const matchesStatus = !statusFilter || (p.status || "").toLowerCase() === statusFilter.toLowerCase();
         const matchesSearch = !searchQuery ||
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesCategory && matchesSearch;
+        return matchesCategory && matchesStatus && matchesSearch;
     });
 
     return (
@@ -251,6 +253,21 @@ export default function Products() {
                                             {cat.categories_name || cat.categoryName || cat.name}
                                         </option>
                                     ))}
+                                </select>
+                            </div>
+
+                            <div className="filter-select-wrap">
+                                <i className="bi bi-funnel"></i>
+                                <select
+                                    className="filter-dropdown-select"
+                                    title="Filter by Status"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="pending">Pending</option>
                                 </select>
                             </div>
                             <button

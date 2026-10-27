@@ -146,9 +146,8 @@ export default function Orders() {
                                 >
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                     <option value="pending">Pending</option>
-                                    <option value="processing">Processing</option>
-                                    <option value="successful">Successful</option>
                                 </select>
                             </div>
                             <button

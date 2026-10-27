@@ -27,7 +27,7 @@ export default function Categories() {
                     id: cat.categories_id || cat.categoryId || `cat-${idx}`,
                     code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
                     name: cat.categories_name || cat.categoryName || "Untitled Category",
-                    status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+                    status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
                     itemCount: "Catalog Item",
@@ -69,7 +69,7 @@ export default function Categories() {
                     id: cat.categories_id || cat.categoryId || `cat-${idx}`,
                     code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
                     name: cat.categories_name || cat.categoryName || "Untitled Category",
-                    status: cat.status_name || (String(cat.status_id) === "1" ? "ACTIVE" : "INACTIVE"),
+                    status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
                     itemCount: "Catalog Item",
@@ -227,6 +227,7 @@ export default function Categories() {
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
+                                    <option value="pending">Pending</option>
                                 </select>
                             </div>
 

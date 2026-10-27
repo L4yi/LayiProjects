@@ -67,14 +67,19 @@ export default function Customers() {
     };
 
     const handleSaveCustomer = async (formData) => {
-        const isUpdate = Boolean(formData.id || formData.customerId);
-        const firstName = formData.firstName || formData.name?.split(" ")[0] || "";
-        const lastName = formData.lastName || formData.name?.split(" ").slice(1).join(" ") || "Customer";
-        const emailAddress = formData.emailAddress || formData.email || "";
-        const phoneNumber = formData.phoneNumber || formData.phone || "";
+        const targetCustomerId = selectedCustomer?.id || selectedCustomer?.customerId || formData.customerId || formData.id;
+        const isUpdate = Boolean(targetCustomerId);
+        const nameParts = (formData.name || "").trim().split(/\s+/);
+        const firstName = nameParts[0] || formData.firstName || "";
+        const lastName = nameParts.slice(1).join(" ") || formData.lastName || "Customer";
+        const emailAddress = formData.email || formData.emailAddress || "";
+        const phoneNumber = formData.phone || formData.phoneNumber || "";
         const address = formData.address || "Abeokuta, Ogun State";
         const titleId = formData.titleId || "1";
-        const statusId = formData.status?.toUpperCase() === "INACTIVE" || formData.statusId === "2" ? "2" : "1";
+        const statusId = formData.statusId || (
+            formData.status?.toUpperCase() === "INACTIVE" ? "2" :
+            formData.status?.toUpperCase() === "PENDING" ? "3" : "1"
+        );
         const roleId = formData.roleId || "19";
 
         setDrawerOpen(false);
@@ -84,7 +89,7 @@ export default function Customers() {
             let res;
             if (isUpdate) {
                 res = await customerService.updateCustomer({
-                    customerId: formData.id || formData.customerId,
+                    customerId: formData.id || formData.customerId || targetCustomerId,
                     titleId,
                     firstName,
                     lastName,
@@ -163,6 +168,7 @@ export default function Customers() {
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
+                                    <option value="pending">Pending</option>
                                 </select>
                             </div>
                             <button
