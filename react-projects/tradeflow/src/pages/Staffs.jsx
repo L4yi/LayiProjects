@@ -12,12 +12,13 @@ export const mapServerStaff = (s) => {
     const email = s.email_address || s.emailAddress || "";
     const phone = s.phone_number || s.phoneNumber || "";
     const address = s.address || "Abeokuta, Ogun State";
-    const roleId = String(s.role_id || s.roleId || "5");
+    const roleId = String(s.role_id || s.roleId || "");
     const role = s.role_name || s.roleName || (roleId === "3" ? "SUPER ADMIN" : roleId === "2" ? "ADMIN" : roleId === "1" ? "STAFF" : "Store Manager");
-    const statusId = String(s.status_id || s.statusId || "1") === "2" ? "2" : "1";
+    const statusId = String(s.status_id || s.statusId || "");
     const status = (statusId === "2" || String(s.status_name || s.statusName || "").toUpperCase() === "INACTIVE") ? "INACTIVE" : "ACTIVE";
-    const titleId = String(s.title_id || s.titleId || "1");
-    const titleName = s.title_name || s.titleName || (titleId === "2" ? "Mrs" : titleId === "3" ? "Dr" : titleId === "4" ? "Prof" : titleId === "5" ? "Engr" : "Mr");
+    const titleId = String(s.title_id || s.titleId || "");
+    // Pull title from backend response or lookup by title ID
+    const titleName = s.title_name || s.titleName || setupService.getTitleName(titleId) || "";
 
     const initials = (((firstName?.[0] || "") + (lastName?.[0] || "")).toUpperCase() || "ST");
 
@@ -59,6 +60,7 @@ export default function Staffs() {
     const [filterRole, setFilterRole] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
     const [rolesList, setRolesList] = useState([]);
+    const [statusesList, setStatusesList] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [toastMsg, setToastMsg] = useState("");
@@ -94,10 +96,16 @@ export default function Staffs() {
 
     useEffect(() => {
         loadStaffs();
-        // load roles from backend for filtering
+        // Fetch roles from backend setup endpoint for the role filter dropdown
         setupService.fetchAllRoles().then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setRolesList(res.data);
+            }
+        });
+        // Fetch statuses from backend setup endpoint for the status filter dropdown
+        setupService.fetchAllStatus().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setStatusesList(res.data);
             }
         });
     }, []);
@@ -156,15 +164,15 @@ export default function Staffs() {
     const handleOpenAdd = () => {
         setSelectedStaff({
             title: "Mr",
-            titleId: "1",
+            titleId: setupService.getTitleId(),
             name: "",
             firstName: "",
             lastName: "",
             role: "Store Manager",
-            roleId: "3",
+            roleId: setupService.getRoleId(),
             roleCategory: "STAFF",
             status: "ACTIVE",
-            statusId: "1",
+            statusId: setupService.getStatusId(),
             phone: "",
             phoneNumber: "",
             email: "",
@@ -308,8 +316,10 @@ export default function Staffs() {
                                     onChange={(e) => setFilterStatus(e.target.value)}
                                 >
                                     <option value="">All Statuses</option>
-                                    <option value="ACTIVE">ACTIVE</option>
-                                    <option value="INACTIVE">INACTIVE</option>
+                                    {/* Render account statuses from backend setup list */}
+                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
+                                        <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
 

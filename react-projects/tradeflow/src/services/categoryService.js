@@ -1,3 +1,4 @@
+import setupService from './setupService';
 import api from "../api/axios";
 
 export function getCategoryErrorMessage(error, defaultMsg = "An unexpected error occurred") {
@@ -64,6 +65,7 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const categoryService = {
+    // Fetches all categories from database (admin/categories/fetch-all-category.php)
     async fetchAllCategories() {
         try {
             const response = await api.post("admin/categories/fetch-all-category.php", new FormData());
@@ -90,15 +92,13 @@ export const categoryService = {
         }
     },
 
+    // Adds a new product category to the database
     async createCategory(categoryData) {
         try {
             const formData = new FormData();
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
-            const statusId = categoryData.statusId || (
-                String(categoryData.status).toUpperCase() === "INACTIVE" ? "2" :
-                String(categoryData.status).toUpperCase() === "PENDING" ? "3" : "1"
-            );
+            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
             formData.append("categoryName", name);
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
@@ -113,16 +113,14 @@ export const categoryService = {
         }
     },
 
+    // Updates an existing category's name, description, and status
     async updateCategory(categoryData) {
         try {
             const formData = new FormData();
             const id = categoryData.categoryId || categoryData.categories_id || categoryData.id || categoryData.code || "";
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
-            const statusId = categoryData.statusId || (
-                String(categoryData.status).toUpperCase() === "INACTIVE" ? "2" :
-                String(categoryData.status).toUpperCase() === "PENDING" ? "3" : "1"
-            );
+            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
 
             formData.append("categoryId", id);
             formData.append("categoryName", name);

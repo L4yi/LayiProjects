@@ -21,7 +21,8 @@ export default function AdminSlideDrawer({
     const [statusesList, setStatusesList] = useState([]);
     const [paymentMethodsList, setPaymentMethodsList] = useState([]);
 
-    // load setup tables from backend so dropdowns are always new and updated
+    // Load setup tables (titles, roles, payment methods, statuses) from the database
+    // This ensures dropdowns across all drawer forms use real data from the backend
     useEffect(() => {
         const loadSetupData = async () => {
             const [titlesRes, rolesRes, pmRes, statusesRes] = await Promise.all([
@@ -55,10 +56,12 @@ export default function AdminSlideDrawer({
 
     if (!isOpen) return null;
 
+    // Generic helper to update a single form field in state
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    // When the user clicks Save in the drawer, validate and pass the form data up to the parent page
     const handleSubmit = (e) => {
         e.preventDefault();
         if (onSave) onSave(formData);
@@ -163,19 +166,13 @@ export default function AdminSlideDrawer({
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
-                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || statusesList[0]?.status_id || "" }));
                                             }}
                                         >
-                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
-                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="ACTIVE">ACTIVE</option>
-                                                    <option value="INACTIVE">INACTIVE</option>
-                                                </>
-                                            )}
+                                            {/* Render category statuses from backend setup list */}
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
+                                                <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -397,20 +394,13 @@ export default function AdminSlideDrawer({
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
-                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || statusesList[0]?.status_id || "" }));
                                             }}
                                         >
-                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).map(s => (
-                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="ACTIVE">ACTIVE</option>
-                                                    <option value="INACTIVE">INACTIVE</option>
-                                                    <option value="OUT OF STOCK">OUT OF STOCK</option>
-                                                </>
-                                            )}
+                                            {/* Render product statuses from backend setup list */}
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).map(s => (
+                                                <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -572,16 +562,13 @@ export default function AdminSlideDrawer({
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const matched = rolesList.find(r => r.role_name === val);
-                                                setFormData(prev => ({ ...prev, role: val, roleId: matched?.role_id || "19" }));
+                                                setFormData(prev => ({ ...prev, role: val, roleId: matched?.role_id || rolesList.find(r => r.role_name.toLowerCase().includes("customer"))?.role_id || rolesList[0]?.role_id || "" }));
                                             }}
                                         >
-                                            {rolesList.filter(r => r.role_name.toLowerCase().includes("customer") || r.role_id === "19").length > 0 ? (
-                                                rolesList.filter(r => r.role_name.toLowerCase().includes("customer") || r.role_id === "19").map(r => (
-                                                    <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
-                                                ))
-                                            ) : (
-                                                <option value="Customer">Customer</option>
-                                            )}
+                                            {/* Render customer role from backend setup list */}
+                                            {rolesList.filter(r => r.role_name.toLowerCase().includes("customer") || r.role_id === "19").map(r => (
+                                                <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -593,19 +580,13 @@ export default function AdminSlideDrawer({
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
-                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || statusesList[0]?.status_id || "" }));
                                             }}
                                         >
-                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
-                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="ACTIVE">ACTIVE</option>
-                                                    <option value="INACTIVE">INACTIVE</option>
-                                                </>
-                                            )}
+                                            {/* Render customer statuses from backend setup list */}
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
+                                                <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -706,19 +687,12 @@ export default function AdminSlideDrawer({
                                             value={formData.paymentMethod || "Bank Transfer"}
                                             onChange={(e) => handleChange("paymentMethod", e.target.value)}
                                         >
-                                            {paymentMethodsList.length > 0 ? (
-                                                paymentMethodsList.map(pm => (
-                                                    <option key={pm.payment_method_id} value={pm.payment_method_name}>
-                                                        {pm.payment_method_name}
-                                                    </option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="Bank Transfer">Bank Transfer</option>
-                                                    <option value="Wallet">Wallet</option>
-                                                    <option value="Cash">Cash</option>
-                                                </>
-                                            )}
+                                            {/* Render payment methods from backend setup list */}
+                                            {paymentMethodsList.map(pm => (
+                                                <option key={pm.payment_method_id} value={pm.payment_method_name}>
+                                                    {pm.payment_method_name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -735,18 +709,14 @@ export default function AdminSlideDrawer({
                                             })()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sUpper = val.toUpperCase();
-                                                let sId = "4";
-                                                if (sUpper.includes("SUCCESS")) sId = "5";
-                                                else if (sUpper.includes("FAIL")) sId = "9";
-                                                else if (sUpper.includes("PAID")) sId = "8";
-                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                                const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "" }));
                                             }}
                                         >
-                                            <option value="Processing">Processing</option>
-                                            <option value="Successful">Successful</option>
-                                            <option value="Paid">Paid</option>
-                                            <option value="Failed">Failed</option>
+                                            {/* Render order fulfillment statuses from backend setup list */}
+                                            {statusesList.filter(s => ["PROCESSING", "SUCCESSFUL", "PAID", "FAILED"].includes(s.status_name.toUpperCase())).map(s => (
+                                                <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -951,20 +921,13 @@ export default function AdminSlideDrawer({
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 const matched = titlesList.find(t => t.title_name === val);
-                                                setFormData(prev => ({ ...prev, title: val, titleId: matched?.title_id || "1" }));
+                                                setFormData(prev => ({ ...prev, title: val, titleId: matched?.title_id || titlesList[0]?.title_id || "" }));
                                             }}
                                         >
-                                            {titlesList.length > 0 ? (
-                                                titlesList.map(t => (
-                                                    <option key={t.title_id} value={t.title_name}>{t.title_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="Mr">Mr</option>
-                                                    <option value="Mrs">Mrs</option>
-                                                    <option value="Dr">Dr</option>
-                                                </>
-                                            )}
+                                            {/* Render staff titles from backend setup list */}
+                                            {titlesList.map(t => (
+                                                <option key={t.title_id} value={t.title_name}>{t.title_name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -1090,22 +1053,14 @@ export default function AdminSlideDrawer({
                                                 setFormData(prev => ({
                                                     ...prev,
                                                     role: val,
-                                                    roleId: matched?.role_id || "5"
+                                                    roleId: matched?.role_id || rolesList.find(r => !r.role_name.toLowerCase().includes("customer"))?.role_id || rolesList[0]?.role_id || ""
                                                 }));
                                             }}
                                         >
-                                            {rolesList.filter(r => r.role_id !== "19").length > 0 ? (
-                                                rolesList.filter(r => r.role_id !== "19").map(r => (
-                                                    <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="Store Manager">Store Manager</option>
-                                                    <option value="Super Admin">Super Admin</option>
-                                                    <option value="Admin">Admin</option>
-                                                    <option value="STAFF">STAFF</option>
-                                                </>
-                                            )}
+                                            {/* Render staff administrative roles from backend setup list */}
+                                            {rolesList.filter(r => r.role_id !== "19" && !r.role_name.toLowerCase().includes("customer")).map(r => (
+                                                <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -1120,20 +1075,14 @@ export default function AdminSlideDrawer({
                                                 setFormData(prev => ({
                                                     ...prev,
                                                     status: val,
-                                                    statusId: matched?.status_id || (val === "INACTIVE" ? "2" : "1")
+                                                    statusId: matched?.status_id || statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase())?.status_id || statusesList[0]?.status_id || ""
                                                 }));
                                             }}
                                         >
-                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                                statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
-                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
-                                                ))
-                                            ) : (
-                                                <>
-                                                    <option value="ACTIVE">ACTIVE</option>
-                                                    <option value="INACTIVE">INACTIVE</option>
-                                                </>
-                                            )}
+                                            {/* Render staff account statuses from backend setup list */}
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
+                                                <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

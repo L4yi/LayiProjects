@@ -1,9 +1,37 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CategoryCard from "../../components/CategoryCard";
-import { STORE_CATEGORIES } from "../../data/storeData";
+import categoryService from "../../services/categoryService";
 
 export default function CustomerCategories() {
+    const [categories, setCategories] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch categories directly from backend database
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const res = await categoryService.fetchAllCategories();
+                if (res.success && Array.isArray(res.data)) {
+                    const mapped = res.data.map((cat) => ({
+                        id: cat.categories_id || cat.categoryId || cat.id,
+                        title: cat.category_name || cat.name || "Category",
+                        badge: cat.status_name || "Active",
+                        image: cat.image || null,
+                        itemCount: 0
+                    }));
+                    setCategories(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to load store categories:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadCategories();
+    }, []);
+
     return (
         <div className="customer-categories-page-container">
             {/* Breadcrumb Navigation */}
@@ -29,19 +57,25 @@ export default function CustomerCategories() {
                     </div>
                 </div>
 
-                {/* Categories Grid */}
-                <div className="customer-categories-grid">
-                    {STORE_CATEGORIES.map((cat) => (
-                        <CategoryCard
-                            key={cat.id}
-                            id={cat.id}
-                            title={cat.title}
-                            badge={cat.badge}
-                            image={cat.image}
-                            itemCount={cat.itemCount}
-                        />
-                    ))}
-                </div>
+                {/* Categories Grid loaded from backend */}
+                {isLoading ? (
+                    <div style={{ padding: "40px", textAlign: "center", color: "#718096" }}>
+                        Loading categories from database...
+                    </div>
+                ) : (
+                    <div className="customer-categories-grid">
+                        {categories.map((cat) => (
+                            <CategoryCard
+                                key={cat.id}
+                                id={cat.id}
+                                title={cat.title}
+                                badge={cat.badge}
+                                image={cat.image}
+                                itemCount={cat.itemCount}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

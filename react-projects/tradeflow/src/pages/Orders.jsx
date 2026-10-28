@@ -66,7 +66,7 @@ export default function Orders() {
             amount: 0,
             paymentMethod: "Bank Transfer",
             status: "Processing",
-            statusId: "4",
+            statusId: setupService.getStatusId("Processing"),
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
@@ -81,14 +81,8 @@ export default function Orders() {
         const orderId = selectedOrder?.id || selectedOrder?.orderId || selectedOrder?.code || orderData.id || orderData.orderId || orderData.code;
         const customerId = orderData.customerId || orderData.customer_id || selectedOrder?.customerId || selectedOrder?.customer_id;
         const productId = orderData.productId || orderData.product_id || selectedOrder?.productId || selectedOrder?.product_id;
-        const sUpper = String(orderData.status || "").toUpperCase();
-        let statusId = "4";
-        if (sUpper.includes("SUCCESS")) statusId = "5";
-        else if (sUpper.includes("FAIL")) statusId = "9";
-        else if (sUpper.includes("PROCESS")) statusId = "4";
-        else if (sUpper.includes("PAID")) statusId = "8";
-        else if (sUpper.includes("DONE")) statusId = "10";
-        else if (orderData.statusId) statusId = String(orderData.statusId);
+        // Look up status ID from backend setup data or use what the drawer passed
+        const statusId = orderData.statusId || setupService.getStatusId(orderData.status);
 
         if (!customerId || !productId) {
             setModalData({

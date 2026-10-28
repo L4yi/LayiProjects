@@ -1,5 +1,8 @@
+import setupService from './setupService';
 import api from "../api/axios";
 
+// Formats a raw order row from the database into a clean object.
+// Extracts customer name, product price, and backend order status cleanly.
 function normalizeOrder(item) {
     if (!item) return null;
     const firstName = item.first_name || item.firstName || "";
@@ -7,20 +10,8 @@ function normalizeOrder(item) {
     const customerName = `${firstName} ${lastName}`.trim() || item.email_address || item.emailAddress || "Customer";
     const orderId = item.order_id || item.orderId || "";
     const priceNum = Number(item.product_price || item.productPrice || item.price || 0);
-    const rawStatus = (item.status_name || item.statusName || "").toUpperCase();
-    const sId = String(item.status_id || item.statusId || "4");
-    let displayStatus = "Processing";
-    if (sId === "5" || rawStatus === "SUCCESSFUL" || rawStatus === "ACTIVE") {
-        displayStatus = "Successful";
-    } else if (sId === "9" || rawStatus === "FAILED" || rawStatus === "INACTIVE") {
-        displayStatus = "Failed";
-    } else if (sId === "8" || rawStatus === "PAID") {
-        displayStatus = "Paid";
-    } else if (sId === "4" || rawStatus === "PROCESSING" || sId === "3" || rawStatus === "PENDING") {
-        displayStatus = "Processing";
-    } else if (item.status_name || item.statusName) {
-        displayStatus = item.status_name || item.statusName;
-    }
+    const orderStatus = item.status_name || item.statusName || "";
+    const sId = String(item.status_id || item.statusId || "");
 
     return {
         id: orderId,
@@ -37,14 +28,15 @@ function normalizeOrder(item) {
         price: priceNum,
         amount: priceNum,
         statusId: sId,
-        status: displayStatus,
-        statusName: displayStatus,
+        status: orderStatus,
+        statusName: orderStatus,
         createdAt: item.created_at || item.createdAt || "",
         updatedAt: item.updated_at || item.updatedAt || ""
     };
 }
 
 export const orderService = {
+    // Fetches all customer orders from backend (admin/order/fetch-all-orders.php)
     async fetchAllOrders() {
         try {
             const response = await api.get("admin/order/fetch-all-orders.php");
@@ -70,7 +62,9 @@ export const orderService = {
         }
     },
 
-    async createOrder({ customerId, productId, statusId = "1" }) {
+    // Places a new order in the database for a customer and product
+    async createOrder({ customerId, productId, statusId }) {
+        statusId = statusId || setupService.getStatusId("Processing");
         try {
             const formData = new FormData();
             formData.append("customerId", customerId);
@@ -98,7 +92,8 @@ export const orderService = {
         }
     },
 
-    async updateOrder({ orderId, customerId, productId, statusId = "1" }) {
+    async updateOrder({ orderId, customerId, productId, statusId }) {
+        statusId = statusId || setupService.getStatusId("Processing");
         try {
             const formData = new FormData();
             formData.append("orderId", String(orderId).trim());

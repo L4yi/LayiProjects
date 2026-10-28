@@ -56,7 +56,7 @@ export default function Customers() {
         setSelectedCustomer({
             id: "",
             customerId: "",
-            titleId: "1",
+            titleId: setupService.getTitleId(),
             firstName: "",
             lastName: "",
             name: "",
@@ -65,9 +65,9 @@ export default function Customers() {
             phone: "",
             phoneNumber: "",
             role: "Customer",
-            roleId: "19",
+            roleId: setupService.getRoleId("Customer"),
             status: "ACTIVE",
-            statusId: "1",
+            statusId: setupService.getStatusId("Active"),
             address: ""
         });
         setDrawerTitle("Add New Customer Account");
@@ -83,11 +83,9 @@ export default function Customers() {
         const emailAddress = formData.email || formData.emailAddress || "";
         const phoneNumber = formData.phone || formData.phoneNumber || "";
         const address = formData.address || "Abeokuta, Ogun State";
-        const titleId = formData.titleId || "1";
-        const sStr = String(formData.status || "").toUpperCase();
-        const statusId = (sStr === "INACTIVE" || String(formData.statusId) === "2") ? "2" :
-                         (sStr === "PENDING" || String(formData.statusId) === "3") ? "3" : "1";
-        const roleId = formData.roleId || "19";
+        const titleId = formData.titleId || setupService.getTitleId(formData.title);
+        const statusId = formData.statusId || setupService.getStatusId(formData.status || "Active");
+        const roleId = formData.roleId || setupService.getRoleId(formData.role || "Customer");
 
         setDrawerOpen(false);
         setIsLoading(true);

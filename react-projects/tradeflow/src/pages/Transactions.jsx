@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import orderService from "../services/orderService";
+import setupService from "../services/setupService";
 
 export default function Transactions() {
     const [transactionsList, setTransactionsList] = useState([]);
@@ -11,19 +12,28 @@ export default function Transactions() {
     const [selectedTxn, setSelectedTxn] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Transaction Receipt");
     const [statusFilter, setStatusFilter] = useState("");
+    const [statusesList, setStatusesList] = useState([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
+    // Check for transaction records and load backend statuses
     const loadTransactions = async () => {
         setIsLoading(true);
         setHasNetworkError(false);
-        // backend transactions api does not exist yet
+        // Note: The backend developer confirmed that transactions API endpoint is not yet created.
+        // We set transactionsList to empty so the UI shows an honest, clean pending state.
         setTransactionsList([]);
         setIsLoading(false);
     };
 
     useEffect(() => {
         loadTransactions();
+        // Fetch statuses from backend setup endpoint for the status filter dropdown
+        setupService.fetchAllStatus().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setStatusesList(res.data);
+            }
+        });
     }, []);
 
     const handleOpenEdit = (txn) => {
@@ -98,11 +108,10 @@ export default function Transactions() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="failed">Failed</option>
+                                    {/* Render statuses dynamically from backend setup list */}
+                                    {statusesList.map(s => (
+                                        <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <button

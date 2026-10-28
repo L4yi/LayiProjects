@@ -1,23 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { STORE_PRODUCTS } from "../../data/storeData";
+import productService from "../../services/productService";
 import { addToCart } from "../../utils/cart";
 
 export default function CustomerProductDetails() {
     const { productId } = useParams();
     const navigate = useNavigate();
+    const [product, setProduct] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedImgIndex, setSelectedImgIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [addedNotice, setAddedNotice] = useState(false);
 
-    const product = STORE_PRODUCTS.find(p => p.id === productId) || STORE_PRODUCTS[0];
+    // Fetch product details live from backend
+    useEffect(() => {
+        const loadProduct = async () => {
+            try {
+                const res = await productService.fetchAllProducts();
+                if (res.success && Array.isArray(res.data)) {
+                    const found = res.data.find(
+                        p => String(p.product_id || p.productId || p.id) === String(productId)
+                    ) || res.data[0];
+
+                    if (found) {
+                        setProduct({
+                            id: String(found.product_id || found.productId || found.id),
+                            name: found.product_name || found.name || "Product",
+                            categoryId: String(found.category_id || found.categoryId || ""),
+                            categoryName: found.category_name || "Catalog",
+                            price: Number(found.product_price || found.price || 0),
+                            oldPrice: Number(found.product_price || found.price || 0) * 1.15,
+                            rating: 5,
+                            reviewCount: 12,
+                            sku: `SKU-${found.product_id || found.productId || "001"}`,
+                            stockCount: found.quantity || found.inStock || 25,
+                            description: found.description || "Premium quality retail product backed by TradeFlow authenticity warranty.",
+                            image: found.image || null,
+                            highlights: [
+                                "Official Manufacturer Warranty included",
+                                "Doorstep delivery available across all zones",
+                                "7-day return and exchange guarantee"
+                            ]
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load product details:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProduct();
+    }, [productId]);
+
+    if (isLoading) {
+        return (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "#718096" }}>
+                Loading product details from database...
+            </div>
+        );
+    }
+
+    if (!product) {
+        return (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "#718096" }}>
+                Product not found. <Link to="/customer/dashboard">Return to Dashboard</Link>
+            </div>
+        );
+    }
 
     const galleryImages = [
         product.image,
         product.image,
         product.image,
         product.image
-    ];
+    ].filter(Boolean);
 
     const handleAddToCart = () => {
         addToCart(product, quantity);
@@ -52,169 +110,145 @@ export default function CustomerProductDetails() {
                 {/* Left Side: Interactive Image Gallery */}
                 <div className="product-gallery-side">
                     <div className="main-image-viewport">
-                        <img
-                            src={galleryImages[selectedImgIndex]}
-                            alt={product.name}
-                            className="active-display-img"
-                        />
+                        {galleryImages[selectedImgIndex] ? (
+                            <img
+                                src={galleryImages[selectedImgIndex]}
+                                alt={product.name}
+                                className="active-display-img"
+                            />
+                        ) : (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", color: "#94a3b8" }}>
+                                <i className="bi bi-box-seam" style={{ fontSize: "3rem" }}></i>
+                            </div>
+                        )}
                         <button type="button" className="btn-wishlist-heart" title="Save to Wishlist">
                             <i className="bi bi-heart"></i>
                         </button>
                     </div>
 
-                    {/* Thumbnail Strip */}
-                    <div className="thumbnail-strip">
-                        {galleryImages.map((img, idx) => (
-                            <button
-                                key={idx}
-                                type="button"
-                                className={`thumb-button ${selectedImgIndex === idx ? "selected" : ""}`}
-                                onClick={() => setSelectedImgIndex(idx)}
-                            >
-                                <img src={img} alt={`View ${idx + 1}`} />
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="share-product-row">
-                        <span className="share-label">SHARE THIS PRODUCT:</span>
-                        <div className="social-icons-group">
-                            <button type="button" className="social-btn" title="Share on Facebook"><i className="bi bi-facebook"></i></button>
-                            <button type="button" className="social-btn" title="Share on Twitter"><i className="bi bi-twitter-x"></i></button>
-                            <button type="button" className="social-btn" title="Share on WhatsApp"><i className="bi bi-whatsapp"></i></button>
+                    {galleryImages.length > 1 && (
+                        <div className="thumbnail-strip">
+                            {galleryImages.map((img, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    className={`thumb-btn ${selectedImgIndex === idx ? "active-thumb" : ""}`}
+                                    onClick={() => setSelectedImgIndex(idx)}
+                                >
+                                    <img src={img} alt={`View ${idx + 1}`} />
+                                </button>
+                            ))}
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* Right Side: Product Information */}
-                <div className="product-info-side">
-                    {/* Brand & Store Badge */}
-                    <div className="store-badge-row">
-                        <span className="official-store-tag">Official Store</span>
-                        <span className="brand-name-tag">Brand: <strong>{product.brand}</strong></span>
-                    </div>
+                {/* Right Side: Product Buy Details */}
+                <div className="product-buy-side">
+                    <span className="product-category-tag">{product.categoryName}</span>
+                    <h1 className="product-details-title">{product.name}</h1>
 
-                    <h1 className="product-full-title">{product.name}</h1>
-                    <p className="product-full-subtitle">{product.subtitle}</p>
-
-                    {/* Rating and Reviews */}
                     <div className="product-rating-row">
-                        <div className="star-icons">
-                            {"★".repeat(Math.floor(product.rating))}
-                            {"☆".repeat(5 - Math.floor(product.rating))}
+                        <div className="star-rating">
+                            {[...Array(5)].map((_, i) => (
+                                <i
+                                    key={i}
+                                    className={`bi bi-star-fill ${i < Math.floor(product.rating) ? "filled" : "empty"}`}
+                                ></i>
+                            ))}
                         </div>
-                        <span className="rating-score">{product.rating}</span>
-                        <span className="rating-divider">|</span>
-                        <span className="rating-reviews-link">({product.reviewsCount} verified ratings)</span>
+                        <span className="rating-score">({product.rating} stars)</span>
+                        <span className="review-count">| {product.reviewCount} verified reviews</span>
+                        <span className="sku-tag">SKU: {product.sku}</span>
                     </div>
 
-                    {/* Flash Sales Promotional Banner */}
-                    <div className="flash-sales-promo-bar">
-                        <div className="flash-title">
-                            <i className="bi bi-lightning-charge-fill"></i>
-                            <span>Flash Sales</span>
-                        </div>
-                        <div className="flash-timer">
-                            <span className="time-label">Time Left:</span>
-                            <span className="timer-pill">04:32:19</span>
-                        </div>
+                    <div className="pricing-box">
+                        <span className="current-price-tag">₦ {product.price.toLocaleString()}</span>
+                        {product.oldPrice && (
+                            <span className="old-strikethrough-price">₦ {product.oldPrice.toLocaleString()}</span>
+                        )}
                     </div>
 
-                    {/* Price Block */}
-                    <div className="product-price-block">
-                        <div className="main-price-row">
-                            <span className="naira-price">₦ {(product.price * quantity).toLocaleString()}</span>
-                            {product.oldPrice && (
-                                <span className="naira-old-price">₦ {(product.oldPrice * quantity).toLocaleString()}</span>
-                            )}
-                            <span className="discount-pill">-{product.discountPercent}%</span>
-                            {quantity > 1 && (
-                                <span className="unit-price-pill">(₦ {product.price.toLocaleString()} each)</span>
-                            )}
-                        </div>
-                        <div className="stock-progress-wrap">
-                            <span className="stock-text">{product.inStock} items left</span>
-                            <div className="stock-bar">
-                                <div className="stock-fill-level" style={{ width: `${Math.min(100, (product.inStock / 50) * 100)}%` }}></div>
-                            </div>
-                        </div>
+                    <div className="stock-availability-bar">
+                        <i className="bi bi-check-circle-fill green-icon"></i>
+                        <span>In Stock ({product.stockCount} units available in warehouse)</span>
                     </div>
 
-                    {/* Quantity Stepper */}
-                    <div className="quantity-selector-row">
-                        <span className="qty-label">Quantity:</span>
-                        <div className="qty-counter-box">
+                    <p className="product-description-snippet">{product.description}</p>
+
+                    <div className="product-highlights-box">
+                        <h4>Key Specifications:</h4>
+                        <ul>
+                            {product.highlights.map((h, idx) => (
+                                <li key={idx}>
+                                    <i className="bi bi-check2"></i>
+                                    <span>{h}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Quantity Selector and CTA Actions */}
+                    <div className="buy-actions-toolbar">
+                        <div className="quantity-picker">
                             <button
                                 type="button"
-                                className="qty-btn"
-                                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                disabled={quantity <= 1}
                             >
                                 -
                             </button>
-                            <span className="qty-value">{quantity}</span>
+                            <span>{quantity}</span>
                             <button
                                 type="button"
-                                className="qty-btn"
-                                onClick={() => setQuantity(prev => prev + 1)}
+                                onClick={() => setQuantity(quantity + 1)}
                             >
                                 +
                             </button>
                         </div>
-                    </div>
 
-                    {/* Add to Cart CTA */}
-                    <div className="cart-action-group">
                         <button
                             type="button"
-                            className="btn-add-to-cart-jumia"
+                            className="btn-add-to-cart-primary"
                             onClick={handleAddToCart}
                         >
-                            <i className="bi bi-cart3"></i>
-                            <span>Add to cart</span>
+                            <i className="bi bi-cart-plus-fill"></i>
+                            <span>Add to Cart</span>
                         </button>
-                        <Link to="/customer/cart" className="btn-view-cart-link">
-                            <i className="bi bi-bag-check"></i>
-                            <span>View Cart</span>
-                        </Link>
+
+                        <button
+                            type="button"
+                            className="btn-buy-now-accent"
+                            onClick={handleAddToCart}
+                        >
+                            Buy Now
+                        </button>
                     </div>
 
-                    {/* Delivery & Returns Info */}
-                    <div className="delivery-info-card">
-                        <div className="delivery-header">
-                            <i className="bi bi-truck text-emerald"></i>
-                            <span>DELIVERY & RETURNS</span>
-                        </div>
-                        <div className="delivery-details-list">
-                            <div className="delivery-item">
-                                <div className="deliv-icon"><i className="bi bi-geo-alt"></i></div>
-                                <div className="deliv-text">
-                                    <strong>Delivery to Abeokuta, Ogun State</strong>
-                                    <p>Estimated delivery within 24-48 hours. Express shipping available.</p>
-                                </div>
+                    {/* Trust Badges */}
+                    <div className="trust-badges-bar">
+                        <div className="trust-badge-item">
+                            <i className="bi bi-shield-check"></i>
+                            <div>
+                                <strong>Authentic Product</strong>
+                                <p>100% genuine guaranteed</p>
                             </div>
-                            <div className="delivery-item">
-                                <div className="deliv-icon"><i className="bi bi-arrow-repeat"></i></div>
-                                <div className="deliv-text">
-                                    <strong>Free Return within 7 Days</strong>
-                                    <p>Free return on all eligible items. Full money-back guarantee.</p>
-                                </div>
+                        </div>
+                        <div className="trust-badge-item">
+                            <i className="bi bi-truck"></i>
+                            <div>
+                                <strong>Fast Dispatch</strong>
+                                <p>Dispatches within 24 hours</p>
+                            </div>
+                        </div>
+                        <div className="trust-badge-item">
+                            <i className="bi bi-arrow-repeat"></i>
+                            <div>
+                                <strong>Easy Returns</strong>
+                                <p>7-day hassle-free returns</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Product Specifications & Details Card */}
-            <div className="product-specifications-card">
-                <h3 className="specs-section-title">Product Details</h3>
-                <p className="specs-description">{product.description}</p>
-
-                <h4 className="specs-features-title">Key Features:</h4>
-                <ul className="specs-features-list">
-                    {product.features && product.features.map((feat, idx) => (
-                        <li key={idx}><i className="bi bi-check2-circle"></i> {feat}</li>
-                    ))}
-                </ul>
             </div>
         </div>
     );

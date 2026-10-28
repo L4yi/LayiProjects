@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { WISHLIST_ITEMS, STORE_PRODUCTS } from "../../data/storeData";
+import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
 
 export default function CustomerCart() {
     const [cartItems, setCartItems] = useState(getCartItems());
     const [checkoutComplete, setCheckoutComplete] = useState(false);
+    const [suggestedProducts, setSuggestedProducts] = useState([]);
+
+    // Fetch suggested products live from database
+    useEffect(() => {
+        productService.fetchAllProducts().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setSuggestedProducts(res.data.map(p => ({
+                    id: String(p.product_id || p.productId || p.id),
+                    name: p.product_name || p.name || 'Product',
+                    price: Number(p.product_price || p.price || 0),
+                    oldPrice: Number(p.product_price || p.price || 0) * 1.15,
+                    image: p.image || null
+                })));
+            }
+        });
+    }, []);
 
     useEffect(() => {
         const handleCartUpdate = (e) => {
@@ -229,7 +245,7 @@ export default function CustomerCart() {
                                 <Link to="/customer/categories" className="link-see-all">See All &gt;</Link>
                             </div>
                             <div className="recently-viewed-grid">
-                                {STORE_PRODUCTS.slice(0, 4).map((p) => (
+                                {suggestedProducts.slice(0, 4).map((p) => (
                                     <Link key={p.id} to={`/customer/product/${p.id}`} className="recent-prod-mini-card">
                                         <img src={p.image} alt={p.name} />
                                         <span className="recent-mini-title">{p.name}</span>

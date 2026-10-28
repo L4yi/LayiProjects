@@ -1,3 +1,4 @@
+import setupService from './setupService';
 import api from "../api/axios";
 
 export function getProductErrorMessage(error, defaultMsg = "An unexpected error occurred") {
@@ -49,6 +50,7 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const productService = {
+    // Fetches all products from database (admin/product/fetch-all-products.php)
     async fetchAllProducts() {
         try {
             const response = await api.post("admin/product/fetch-all-products.php", new FormData());
@@ -76,6 +78,8 @@ export const productService = {
         }
     },
 
+    // Adds a new product to the catalog.
+    // Packs product details, category ID, price, and status ID into FormData for PHP backend.
     async createProduct(productData) {
         try {
             const formData = new FormData();
@@ -84,10 +88,7 @@ export const productService = {
             const price = productData.productPrice || productData.price || 0;
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
-            const statusId = productData.statusId || (
-                String(productData.status).toUpperCase() === "INACTIVE" ? "2" :
-                String(productData.status).toUpperCase() === "PENDING" ? "3" : "1"
-            );
+            const statusId = productData.statusId || setupService.getStatusId(productData.status);
 
             formData.append("categoryId", catId);
             formData.append("productName", name);
@@ -106,6 +107,7 @@ export const productService = {
         }
     },
 
+    // Updates an existing product in the database by its product ID
     async updateProduct(productData) {
         try {
             const formData = new FormData();
@@ -115,10 +117,7 @@ export const productService = {
             const price = productData.productPrice || productData.price || 0;
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
-            const statusId = productData.statusId || (
-                String(productData.status).toUpperCase() === "INACTIVE" ? "2" :
-                String(productData.status).toUpperCase() === "PENDING" ? "3" : "1"
-            );
+            const statusId = productData.statusId || setupService.getStatusId(productData.status);
 
             formData.append("productId", prodId);
             formData.append("categoryId", catId);

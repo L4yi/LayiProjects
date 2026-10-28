@@ -1,3 +1,4 @@
+import setupService from './setupService';
 import api from "../api/axios";
 import { setSessionUser, clearSessionUser } from "../utils/session";
 import customerService from "./customerService";
@@ -57,10 +58,10 @@ export const authService = {
                     address: serverUser.address || "",
                     role: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
                     roleName: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
-                    roleId: serverUser.roleId || serverUser.role_id || "3",
+                    roleId: serverUser.roleId || serverUser.role_id || setupService.getRoleId(),
                     status: serverUser.statusName || serverUser.status_name || "ACTIVE",
                     statusName: serverUser.statusName || serverUser.status_name || "ACTIVE",
-                    statusId: serverUser.statusId || serverUser.status_id || "1",
+                    statusId: serverUser.statusId || serverUser.status_id || setupService.getStatusId(),
                     lastLogin: serverUser.lastLoginDate || serverUser.last_login_date,
                     createdAt: serverUser.createdAt || serverUser.created_at,
                 };

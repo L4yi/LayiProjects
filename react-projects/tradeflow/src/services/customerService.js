@@ -1,6 +1,10 @@
+import setupService from './setupService';
 import api from "../api/axios";
 import { setSessionUser } from "../utils/session";
 
+// Formats a raw database row into a clean customer object.
+// The backend returns snake_case fields (e.g. first_name, status_name).
+// We map them here so our React components can access them reliably.
 function normalizeCustomer(item) {
     if (!item) return null;
     const firstName = item.first_name || item.firstName || "";
@@ -10,8 +14,8 @@ function normalizeCustomer(item) {
     return {
         id: item.customer_id || item.customerId || "",
         customerId: item.customer_id || item.customerId || "",
-        titleId: item.title_id || item.titleId || "1",
-        titleName: item.title_name || item.titleName || "Mr",
+        titleId: item.title_id || item.titleId || "",
+        titleName: item.title_name || item.titleName || "",
         firstName,
         lastName,
         name: fullName,
@@ -20,18 +24,19 @@ function normalizeCustomer(item) {
         phone: item.phone_number || item.phoneNumber || "",
         phoneNumber: item.phone_number || item.phoneNumber || "",
         address: item.address || "",
-        statusId: item.status_id || item.statusId || "1",
-        status: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
-        statusName: item.status_name || item.statusName || (String(item.status_id) === "2" ? "INACTIVE" : String(item.status_id) === "3" ? "PENDING" : "ACTIVE"),
-        roleId: item.role_id || item.roleId || "19",
-        role: item.role_name || item.roleName || "Customer",
-        roleName: item.role_name || item.roleName || "Customer",
+        statusId: item.status_id || item.statusId || "",
+        status: item.status_name || item.statusName || "",
+        statusName: item.status_name || item.statusName || "",
+        roleId: item.role_id || item.roleId || "",
+        role: item.role_name || item.roleName || "",
+        roleName: item.role_name || item.roleName || "",
         createdAt: item.created_at || item.createdAt || "",
         updatedAt: item.updated_at || item.updatedAt || ""
     };
 }
 
 export const customerService = {
+    // Fetches all customers from the backend (admin/customer/fetch-all-customer.php)
     async fetchAllCustomers() {
         try {
             const response = await api.get("admin/customer/fetch-all-customer.php");
@@ -111,7 +116,12 @@ export const customerService = {
         }
     },
 
-    async createCustomer({ titleId = "1", firstName, lastName, emailAddress, phoneNumber, address, roleId = "19", statusId = "1" }) {
+    // Creates a new customer account in the backend.
+    // Title, role, and status IDs are dynamically looked up from the setupService.
+    async createCustomer({ titleId, firstName, lastName, emailAddress, phoneNumber, address, roleId, statusId }) {
+        titleId = titleId || setupService.getTitleId("Mr");
+        roleId = roleId || setupService.getRoleId("Customer");
+        statusId = statusId || setupService.getStatusId("Active");
         try {
             const formData = new FormData();
             formData.append("titleId", titleId);
@@ -144,7 +154,11 @@ export const customerService = {
         }
     },
 
-    async updateCustomer({ customerId, titleId = "1", firstName, lastName, emailAddress, phoneNumber, address, roleId = "19", statusId = "1" }) {
+    // Updates an existing customer's contact and account details in the database
+    async updateCustomer({ customerId, titleId, firstName, lastName, emailAddress, phoneNumber, address, roleId, statusId }) {
+        titleId = titleId || setupService.getTitleId("Mr");
+        roleId = roleId || setupService.getRoleId("Customer");
+        statusId = statusId || setupService.getStatusId("Active");
         try {
             const formData = new FormData();
             formData.append("customerId", customerId);
@@ -189,6 +203,8 @@ export const customerService = {
         }
     },
 
+    // Authenticates a customer by email.
+    // Finds customer by email, checks that their status is ACTIVE, and saves their session.
     async customerSignIn(emailAddress) {
         const cleanEmail = (emailAddress || "").trim().toLowerCase();
         if (!cleanEmail) {
@@ -221,9 +237,9 @@ export const customerService = {
                 phone: matched.phoneNumber,
                 address: matched.address,
                 role: "Customer",
-                roleId: matched.roleId || "19",
+                roleId: matched.roleId || setupService.getRoleId("Customer"),
                 status: matched.status || "ACTIVE",
-                statusId: matched.statusId || "1"
+                statusId: matched.statusId || setupService.getStatusId("Active")
             };
 
             setSessionUser(sessionPayload);
