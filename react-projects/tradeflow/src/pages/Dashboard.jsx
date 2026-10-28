@@ -60,7 +60,7 @@ export default function Dashboard() {
                         statusDot: (o.status || "").toLowerCase().includes("fail") ? "red" : (o.status || "").toLowerCase().includes("pend") ? "yellow" : "green",
                         amount: o.price || o.amount || 0
                     }));
-                    setRecentTransactions(mappedTxns);
+                   
                 }
 
                 if (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value?.data)) {

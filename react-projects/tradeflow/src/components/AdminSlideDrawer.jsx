@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import setupService from "../services/setupService";
 
 export default function AdminSlideDrawer({
     isOpen,
@@ -15,6 +16,35 @@ export default function AdminSlideDrawer({
 }) {
     const [formData, setFormData] = useState({});
     const [showPassword, setShowPassword] = useState(false);
+    const [titlesList, setTitlesList] = useState([]);
+    const [rolesList, setRolesList] = useState([]);
+    const [statusesList, setStatusesList] = useState([]);
+    const [paymentMethodsList, setPaymentMethodsList] = useState([]);
+
+    // load setup tables from backend so dropdowns are always new and updated
+    useEffect(() => {
+        const loadSetupData = async () => {
+            const [titlesRes, rolesRes, pmRes, statusesRes] = await Promise.all([
+                setupService.fetchAllTitles(),
+                setupService.fetchAllRoles(),
+                setupService.fetchAllPaymentMethods(),
+                setupService.fetchAllStatus()
+            ]);
+            if (titlesRes.success && Array.isArray(titlesRes.data)) {
+                setTitlesList(titlesRes.data);
+            }
+            if (rolesRes.success && Array.isArray(rolesRes.data)) {
+                setRolesList(rolesRes.data);
+            }
+            if (pmRes.success && Array.isArray(pmRes.data)) {
+                setPaymentMethodsList(pmRes.data);
+            }
+            if (statusesRes.success && Array.isArray(statusesRes.data)) {
+                setStatusesList(statusesRes.data);
+            }
+        };
+        loadSetupData();
+    }, []);
 
     useEffect(() => {
         if (initialData) {
@@ -132,13 +162,20 @@ export default function AdminSlideDrawer({
                                             value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
-                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                                const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
                                             }}
                                         >
-                                            <option value="ACTIVE">ACTIVE</option>
-                                            <option value="INACTIVE">INACTIVE</option>
-                                            <option value="PENDING">PENDING</option>
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
+                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
+                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="ACTIVE">ACTIVE</option>
+                                                    <option value="INACTIVE">INACTIVE</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
 
@@ -359,14 +396,21 @@ export default function AdminSlideDrawer({
                                             value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
-                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                                const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
                                             }}
                                         >
-                                            <option value="ACTIVE">ACTIVE</option>
-                                            <option value="INACTIVE">INACTIVE</option>
-                                            <option value="PENDING">PENDING</option>
-                                            <option value="OUT OF STOCK">OUT OF STOCK</option>
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).length > 0 ? (
+                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).map(s => (
+                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="ACTIVE">ACTIVE</option>
+                                                    <option value="INACTIVE">INACTIVE</option>
+                                                    <option value="OUT OF STOCK">OUT OF STOCK</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
                                 </div>
@@ -525,12 +569,19 @@ export default function AdminSlideDrawer({
                                         <select
                                             className="drawer-input"
                                             value={formData.role || "Customer"}
-                                            onChange={(e) => handleChange("role", e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const matched = rolesList.find(r => r.role_name === val);
+                                                setFormData(prev => ({ ...prev, role: val, roleId: matched?.role_id || "19" }));
+                                            }}
                                         >
-                                            <option value="Customer">Customer</option>
-                                            <option value="VIP Customer">VIP Customer</option>
-                                            <option value="Wholesale Buyer">Wholesale Buyer</option>
-                                            <option value="Retail Member">Retail Member</option>
+                                            {rolesList.filter(r => r.role_name.toLowerCase().includes("customer") || r.role_id === "19").length > 0 ? (
+                                                rolesList.filter(r => r.role_name.toLowerCase().includes("customer") || r.role_id === "19").map(r => (
+                                                    <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                                ))
+                                            ) : (
+                                                <option value="Customer">Customer</option>
+                                            )}
                                         </select>
                                     </div>
 
@@ -541,13 +592,20 @@ export default function AdminSlideDrawer({
                                             value={String(formData.status || "ACTIVE").toUpperCase()}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sId = val === "INACTIVE" ? "2" : val === "PENDING" ? "3" : "1";
-                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                                const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
+                                                setFormData(prev => ({ ...prev, status: val, statusId: matched?.status_id || "1" }));
                                             }}
                                         >
-                                            <option value="ACTIVE">ACTIVE</option>
-                                            <option value="INACTIVE">INACTIVE</option>
-                                            <option value="PENDING">PENDING</option>
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
+                                                statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
+                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="ACTIVE">ACTIVE</option>
+                                                    <option value="INACTIVE">INACTIVE</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
                                 </div>
@@ -648,10 +706,19 @@ export default function AdminSlideDrawer({
                                             value={formData.paymentMethod || "Bank Transfer"}
                                             onChange={(e) => handleChange("paymentMethod", e.target.value)}
                                         >
-                                            <option value="Bank Transfer">Bank Transfer</option>
-                                            <option value="Credit Card">Credit Card</option>
-                                            <option value="Debit Card">Debit Card</option>
-                                            <option value="Cash on Delivery">Cash on Delivery</option>
+                                            {paymentMethodsList.length > 0 ? (
+                                                paymentMethodsList.map(pm => (
+                                                    <option key={pm.payment_method_id} value={pm.payment_method_name}>
+                                                        {pm.payment_method_name}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="Bank Transfer">Bank Transfer</option>
+                                                    <option value="Wallet">Wallet</option>
+                                                    <option value="Cash">Cash</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
 
@@ -881,13 +948,23 @@ export default function AdminSlideDrawer({
                                         <select
                                             className="drawer-input"
                                             value={formData.title || "Mr"}
-                                            onChange={(e) => handleChange("title", e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const matched = titlesList.find(t => t.title_name === val);
+                                                setFormData(prev => ({ ...prev, title: val, titleId: matched?.title_id || "1" }));
+                                            }}
                                         >
-                                            <option value="Mr">Mr</option>
-                                            <option value="Mrs">Mrs</option>
-                                            <option value="Miss">Miss</option>
-                                            <option value="Dr">Dr</option>
-                                            <option value="Prof">Prof</option>
+                                            {titlesList.length > 0 ? (
+                                                titlesList.map(t => (
+                                                    <option key={t.title_id} value={t.title_name}>{t.title_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="Mr">Mr</option>
+                                                    <option value="Mrs">Mrs</option>
+                                                    <option value="Dr">Dr</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
 
@@ -1009,14 +1086,26 @@ export default function AdminSlideDrawer({
                                             value={formData.role || "Store Manager"}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const rId = val === "Store Manager" ? "5" : (val === "Super Admin" || val === "SUPER ADMIN") ? "3" : (val === "Admin" || val === "ADMIN") ? "2" : val === "System Administrator" ? "4" : "1";
-                                                setFormData(prev => ({ ...prev, role: val, roleId: rId }));
+                                                const matched = rolesList.find(r => r.role_name === val);
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    role: val,
+                                                    roleId: matched?.role_id || "5"
+                                                }));
                                             }}
                                         >
-                                            <option value="Store Manager">Store Manager</option>
-                                            <option value="Super Admin">Super Admin</option>
-                                            <option value="Admin">Admin</option>
-                                            <option value="Staff Member">Staff Member</option>
+                                            {rolesList.filter(r => r.role_id !== "19").length > 0 ? (
+                                                rolesList.filter(r => r.role_id !== "19").map(r => (
+                                                    <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="Store Manager">Store Manager</option>
+                                                    <option value="Super Admin">Super Admin</option>
+                                                    <option value="Admin">Admin</option>
+                                                    <option value="STAFF">STAFF</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
 
@@ -1027,12 +1116,24 @@ export default function AdminSlideDrawer({
                                             value={(String(formData.status || "").toUpperCase() === "INACTIVE" || String(formData.statusId) === "2") ? "INACTIVE" : "ACTIVE"}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const sId = val === "INACTIVE" ? "2" : "1";
-                                                setFormData(prev => ({ ...prev, status: val, statusId: sId }));
+                                                const matched = statusesList.find(s => s.status_name.toUpperCase() === val.toUpperCase());
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    status: val,
+                                                    statusId: matched?.status_id || (val === "INACTIVE" ? "2" : "1")
+                                                }));
                                             }}
                                         >
-                                            <option value="ACTIVE">ACTIVE</option>
-                                            <option value="INACTIVE">INACTIVE</option>
+                                            {statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).length > 0 ? (
+                                                statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
+                                                    <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option value="ACTIVE">ACTIVE</option>
+                                                    <option value="INACTIVE">INACTIVE</option>
+                                                </>
+                                            )}
                                         </select>
                                     </div>
                                 </div>

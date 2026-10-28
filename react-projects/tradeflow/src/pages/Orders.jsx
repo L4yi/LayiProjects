@@ -4,9 +4,11 @@ import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../component
 import orderService from "../services/orderService";
 import customerService from "../services/customerService";
 import productService from "../services/productService";
+import setupService from "../services/setupService";
 
 export default function Orders() {
     const [ordersList, setOrdersList] = useState([]);
+    const [statusesList, setStatusesList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -38,6 +40,12 @@ export default function Orders() {
 
     useEffect(() => {
         loadOrders();
+        // load statuses from backend for filter
+        setupService.fetchAllStatus().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setStatusesList(res.data);
+            }
+        });
     }, []);
 
     const handleOpenEdit = (order) => {
@@ -198,10 +206,18 @@ export default function Orders() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    <option value="successful">Successful</option>
-                                    <option value="processing">Processing</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="failed">Failed</option>
+                                    {statusesList.filter(s => ["4", "5", "8", "9"].includes(String(s.status_id))).length > 0 ? (
+                                        statusesList.filter(s => ["4", "5", "8", "9"].includes(String(s.status_id))).map(s => (
+                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <option value="successful">Successful</option>
+                                            <option value="processing">Processing</option>
+                                            <option value="paid">Paid</option>
+                                            <option value="failed">Failed</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
                             <button

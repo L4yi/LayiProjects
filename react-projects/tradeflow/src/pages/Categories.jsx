@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
+import setupService from "../services/setupService";
 
 export default function Categories() {
     const [categoriesList, setCategoriesList] = useState([]);
+    const [statusesList, setStatusesList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,6 +53,12 @@ export default function Categories() {
 
     useEffect(() => {
         loadCategories();
+        // load statuses from backend for filter
+        setupService.fetchAllStatus().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setStatusesList(res.data);
+            }
+        });
     }, []);
 
     const handleSearchChange = async (val) => {
@@ -225,9 +233,17 @@ export default function Categories() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="pending">Pending</option>
+                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
+                                        statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
+                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="pending">Pending</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
 

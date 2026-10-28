@@ -17,33 +17,9 @@ export default function Transactions() {
     const loadTransactions = async () => {
         setIsLoading(true);
         setHasNetworkError(false);
-        try {
-            const res = await orderService.fetchAllOrders();
-            if (res.success && Array.isArray(res.data)) {
-                const mapped = res.data.map((order, idx) => ({
-                    id: order.id || `TXN-${idx + 1}`,
-                    code: order.code ? (order.code.startsWith("#") ? order.code : `#${order.code}`) : `#TXN-${order.id || idx + 1}`,
-                    name: order.customerName || order.customer_name || "Customer",
-                    customerName: order.customerName || order.customer_name || "Customer",
-                    email: order.customerEmail || order.email || "—",
-                    amount: order.price || order.product_price || order.amount || 0,
-                    paymentMethod: "Bank Transfer",
-                    status: order.status || "PAID",
-                    date: order.date || order.created_at || "—",
-                    notes: order.productName || order.product_name || "Store Order"
-                }));
-                setTransactionsList(mapped);
-            } else {
-                setTransactionsList([]);
-                if (res.message?.includes("Failed to connect") || res.message?.includes("network")) {
-                    setHasNetworkError(true);
-                }
-            }
-        } catch (_) {
-            setHasNetworkError(true);
-        } finally {
-            setIsLoading(false);
-        }
+        // backend transactions api does not exist yet
+        setTransactionsList([]);
+        setIsLoading(false);
     };
 
     useEffect(() => {
@@ -110,7 +86,7 @@ export default function Transactions() {
                     badgeTitle="Transactions"
                     breadcrumb="Finance → Monitor payment flows, methods, and transaction receipts."
                     title="All Transactions"
-                    countSubtitle={`${filteredTxns.length} recorded payment logs`}
+                    countSubtitle={filteredTxns.length > 0 ? `${filteredTxns.length} recorded payment logs` : "Backend API integration pending"}
                     actions={
                         <>
                             <div className="filter-select-wrap">
@@ -179,7 +155,7 @@ export default function Transactions() {
                         title="Transaction History"
                         subtitle="Verified customer checkouts, gateway references, and amounts"
                         isEmpty={filteredTxns.length === 0}
-                        emptyMessage="No transactions recorded yet in database."
+                        emptyMessage="Transaction API endpoint is not yet available on the backend. Records will appear once deployed."
                     >
                         <table className="solara-data-table">
                             <thead>

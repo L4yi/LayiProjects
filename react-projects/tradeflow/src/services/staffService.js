@@ -1,10 +1,7 @@
 import api from "../api/axios";
+import setupService from "./setupService";
 
-try {
-    localStorage.removeItem("tradeflow_created_staffs");
-} catch {
-}
-
+// Helper to pull clean error messages from server responses
 export function getErrorMessage(error, defaultMsg = "An unexpected error occurred") {
     if (error.response?.data?.message) {
         return error.response.data.message;
@@ -12,58 +9,28 @@ export function getErrorMessage(error, defaultMsg = "An unexpected error occurre
     if (error.response?.data?.error) {
         return error.response.data.error;
     }
-    if (typeof error.response?.data === "string" && error.response.data.trim()) {
-        const text = error.response.data.trim();
-        if (text.startsWith("<")) {
-            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
-            if (titleMatch && titleMatch[1]) {
-                return titleMatch[1].trim();
-            }
-            const stripped = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-            if (stripped && stripped.length < 200) {
-                return stripped;
-            }
-        } else {
-            return text;
-        }
-    }
-    if (error.response?.status) {
-        const status = error.response.status;
-        const statusText = error.response.statusText || "";
-        return `Server Error (${status})${statusText ? ": " + statusText : ""}`;
-    }
     if (error.message) {
         return error.message;
     }
     return defaultMsg;
 }
 
+// Find title id from setup data
 export function getTitleId(title = "") {
-    const t = String(title).toLowerCase().trim();
-    if (t === "mr") return "1";
-    if (t === "mrs") return "2";
-    if (t === "miss") return "3";
-    if (t === "dr") return "4";
-    if (t === "prof") return "5";
-    return "1";
+    return setupService.getTitleId(title, "1");
 }
 
+// Find status id from setup data
 export function getStatusId(status = "") {
-    const s = String(status).toUpperCase().trim();
-    if (s === "2" || s === "INACTIVE") return "2";
-    return "1";
+    return setupService.getStatusId(status, "1");
 }
 
+// Find role id from setup data
 export function getRoleId(role = "") {
-    const r = String(role).toUpperCase().trim();
-    if (r === "5" || r.includes("MANAGER")) return "5";
-    if (r === "3" || r.includes("SUPER ADMIN")) return "3";
-    if (r === "2" || r.includes("ADMIN")) return "2";
-    if (r === "4" || r.includes("SYSTEM")) return "4";
-    if (r === "1" || r.includes("STAFF")) return "1";
-    return "5";
+    return setupService.getRoleId(role, "5");
 }
 
+// Helper to keep response format consistent across requests
 function normalizeResponse(resData, defaultSuccessMsg = "Success") {
     if (typeof resData === "object" && resData !== null) {
         const isSuccess = resData.success === true || resData.success === "true";
@@ -80,26 +47,17 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const staffService = {
+    // Fetch all staff members from the database
     async fetchAllStaff() {
         try {
+            // PHP backend expects POST with FormData
             const response = await api.post("admin/staff/fetch-all-staff.php", new FormData());
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return resData;
             }
-            const searchFallback = await this.searchStaff("STAFF");
-            if (searchFallback?.success && Array.isArray(searchFallback?.data) && searchFallback.data.length > 0) {
-                return searchFallback;
-            }
             return normalizeResponse(resData, "Staff fetched successfully");
         } catch (error) {
-            try {
-                const searchFallback = await this.searchStaff("STAFF");
-                if (searchFallback?.success && Array.isArray(searchFallback?.data) && searchFallback.data.length > 0) {
-                    return searchFallback;
-                }
-            } catch {
-            }
             return {
                 success: false,
                 message: getErrorMessage(error, "Failed to fetch staff members"),
@@ -108,6 +66,7 @@ export const staffService = {
         }
     },
 
+    // Fetch details for a single staff member using their staffId
     async fetchEachStaff(staffId) {
         try {
             const formData = new FormData();
@@ -123,6 +82,7 @@ export const staffService = {
         }
     },
 
+    // Search staff by keyword (name, email, or role)
     async searchStaff(searchContent) {
         try {
             const formData = new FormData();
@@ -139,12 +99,14 @@ export const staffService = {
         }
     },
 
+    // Update an existing staff member in the database
     async updateStaff(staffData) {
         try {
             const staffId = staffData.staffId || staffData.id;
-            const titleId = staffData.title ? getTitleId(staffData.title) : (staffData.titleId || "1");
-            const statusId = staffData.status ? getStatusId(staffData.status) : (staffData.statusId || "1");
-            const roleId = staffData.role ? getRoleId(staffData.role) : (staffData.roleId || "5");
+            // Resolve IDs from setup service or data passed from drawer
+            const titleId = staffData.titleId || getTitleId(staffData.title);
+            const statusId = staffData.statusId || getStatusId(staffData.status);
+            const roleId = staffData.roleId || getRoleId(staffData.role);
 
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
@@ -167,25 +129,11 @@ export const staffService = {
         }
     },
 
-    async deleteStaff(staffId) {
-        try {
-            const formData = new FormData();
-            formData.append("staffId", String(staffId).trim());
-
-            const response = await api.post("admin/staff/delete-staff.php", formData);
-            return normalizeResponse(response.data, "Staff member deleted successfully!");
-        } catch (error) {
-            return {
-                success: false,
-                message: getErrorMessage(error, "Failed to delete staff member")
-            };
-        }
-    },
-
+    // Create a new staff account
     async createStaff(staffData) {
-        const titleId = staffData.title ? getTitleId(staffData.title) : (staffData.titleId || "1");
-        const statusId = staffData.status ? getStatusId(staffData.status) : (staffData.statusId || "1");
-        const roleId = staffData.role ? getRoleId(staffData.role) : (staffData.roleId || "5");
+        const titleId = staffData.titleId || getTitleId(staffData.title);
+        const statusId = staffData.statusId || getStatusId(staffData.status);
+        const roleId = staffData.roleId || getRoleId(staffData.role);
         const firstName = (staffData.firstName || staffData.name?.split(" ")[0] || "").trim();
         const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "").trim();
         const email = (staffData.emailAddress || staffData.email || "").trim();

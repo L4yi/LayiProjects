@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import AdminSlideDrawer from "../components/AdminSlideDrawer";
 import staffService from "../services/staffService";
+import setupService from "../services/setupService";
 import { StatusModal, TableCard, PageHeader, LoadingSpinner } from "../components/common";
 
 export const mapServerStaff = (s) => {
@@ -57,6 +58,7 @@ export default function Staffs() {
     const [drawerTitle, setDrawerTitle] = useState("Edit Staff Details");
     const [filterRole, setFilterRole] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
+    const [rolesList, setRolesList] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [toastMsg, setToastMsg] = useState("");
@@ -92,6 +94,12 @@ export default function Staffs() {
 
     useEffect(() => {
         loadStaffs();
+        // load roles from backend for filtering
+        setupService.fetchAllRoles().then(res => {
+            if (res.success && Array.isArray(res.data)) {
+                setRolesList(res.data);
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -207,26 +215,7 @@ export default function Staffs() {
         }
     };
 
-    const handleDeleteStaff = async (staffId) => {
-        if (!staffId) return;
-        if (!window.confirm("Are you sure you want to delete this staff member?")) return;
-
-        const result = await staffService.deleteStaff(staffId);
-        if (result?.success) {
-            setModalData({
-                title: "STAFF DELETED SUCCESSFULLY!",
-                message: result.message || "Staff member deleted successfully."
-            });
-            setShowSuccessModal(true);
-            loadStaffs();
-        } else {
-            setModalData({
-                title: "DELETE FAILED",
-                message: result?.message || "Unable to delete staff member from database."
-            });
-            setShowSuccessModal(true);
-        }
-    };
+    
 
     const filteredStaffs = staffsList.filter((staff) => {
         const matchesRole = !filterRole || staff.role.toLowerCase().includes(filterRole.toLowerCase());
@@ -304,8 +293,9 @@ export default function Staffs() {
                                     onChange={(e) => setFilterRole(e.target.value)}
                                 >
                                     <option value="">All Roles</option>
-                                    <option value="Store Manager">Store Manager</option>
-                                    <option value="Super Admin">Super Admin</option>
+                                    {rolesList.filter(r => r.role_id !== "19").map(r => (
+                                        <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -452,19 +442,6 @@ export default function Staffs() {
                                             <span>Edit</span>
                                         </button>
 
-                                        {staff.staffId && (
-                                            <button
-                                                type="button"
-                                                className="staff-card-btn-delete"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteStaff(staff.staffId);
-                                                }}
-                                                title="Delete Staff"
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -530,17 +507,6 @@ export default function Staffs() {
                                                 >
                                                     View
                                                 </button>
-                                                {staff.staffId && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn-edit"
-                                                        style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
-                                                        onClick={() => handleDeleteStaff(staff.staffId)}
-                                                        title="Delete Staff"
-                                                    >
-                                                        <i className="bi bi-trash"></i>
-                                                    </button>
-                                                )}
                                             </div>
                                         </td>
                                     </tr>
