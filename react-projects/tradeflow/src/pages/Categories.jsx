@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AdminSlideDrawer from "../components/AdminSlideDrawer";
+import { CategorySlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
 import setupService from "../services/setupService";
@@ -355,7 +355,7 @@ export default function Categories() {
                 )}
             </div>
 
-            <AdminSlideDrawer
+            <CategorySlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}

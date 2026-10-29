@@ -117,7 +117,7 @@ export const staffService = {
             const phone = (staffData.phoneNumber || staffData.phone || "").trim();
             const address = (staffData.address || "Abeokuta, Ogun State").trim();
 
-            // Pack all fields into FormData as expected by PHP backend
+            // converts all fields into FormData as expected by PHP backend
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
             formData.append("titleId", titleId);
@@ -139,7 +139,7 @@ export const staffService = {
         }
     },
 
-    // Creates a new staff account in the database (admin/staff/create-staff.php)
+    // Creates a new staff account in the database 
     async createStaff(staffData) {
         // Resolve title, status, and role IDs from backend setup data
         const titleId = staffData.titleId || getTitleId(staffData.title);
@@ -152,10 +152,10 @@ export const staffService = {
         const email = (staffData.emailAddress || staffData.email || "").trim();
         const phone = (staffData.phoneNumber || staffData.phone || "").trim();
         const address = (staffData.address || "").trim();
-        const password = staffData.password || "Password123!";
+        const password = staffData.password || "Tradeflow123!";
 
         try {
-            // Build FormData payload for PHP endpoint
+           
             const formData = new FormData();
             formData.append("titleId", titleId);
             formData.append("firstName", firstName);

@@ -29,15 +29,19 @@ let cachedPaymentMethods = null;
 export const setupService = {
     // Fetches all account and order statuses from backend (setup/fetch-all-status.php)
     // Returns list of statuses like Active, Inactive, Processing, Successful, etc.
-    async fetchAllStatus() {
+    async fetchAllStatus(statusIds) {
         // If we already have the list saved in memory, return it directly
         if (cachedStatuses) {
             return { success: true, data: cachedStatuses, message: "Statuses loaded from cache" };
         }
         try {
             // PHP backend requires POST with FormData
-            const response = await api.post("setup/fetch-all-status.php", new FormData());
-            const normalized = normalizeResponse(response.data, "STATUSES FETCHED SUCCESSFULLY");
+            const formData = new FormData();
+            if (statusIds) {
+                formData.append("statusIds", statusIds);
+            }
+            const response = await api.post("setup/fetch-all-status.php", formData);
+            const normalized = normalizeResponse(response.data,response.data.message     );
             if (normalized.success && Array.isArray(normalized.data)) {
                 cachedStatuses = normalized.data; // save to cache
             }
@@ -81,11 +85,11 @@ export const setupService = {
         }
         try {
             const response = await api.post("setup/fetch-all-role.php", new FormData());
-            const normalized = normalizeResponse(response.data, "ROLES FETCHED SUCCESSFULLY");
+            const normalized = normalizeResponse(response.data, response.data.message);
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedRoles = normalized.data; // save to cache
+                cachedRoles = normalized.data; // save to cache 
             }
-            return normalized;
+            return normalized; 
         } catch (error) {
             return {
                 success: false,

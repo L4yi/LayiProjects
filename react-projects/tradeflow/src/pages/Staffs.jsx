@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import AdminSlideDrawer from "../components/AdminSlideDrawer";
+import { StaffSlideDrawer } from "../components/drawers";
 import staffService from "../services/staffService";
 import setupService from "../services/setupService";
 import { StatusModal, TableCard, PageHeader, LoadingSpinner } from "../components/common";
@@ -223,11 +223,13 @@ export default function Staffs() {
         }
     };
 
-    
+
 
     const filteredStaffs = staffsList.filter((staff) => {
-        const matchesRole = !filterRole || staff.role.toLowerCase().includes(filterRole.toLowerCase());
-        const matchesStatus = !filterStatus || staff.status.toLowerCase() === filterStatus.toLowerCase();
+        // Matches by roleId (from dropdown) or by role name
+        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole) || staff.role.toLowerCase().includes(filterRole.toLowerCase());
+        // Matches by statusId (from dropdown) or by status name
+        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus) || staff.status.toLowerCase() === filterStatus.toLowerCase();
         return matchesRole && matchesStatus;
     });
 
@@ -302,8 +304,9 @@ export default function Staffs() {
                                 >
                                     <option value="">All Roles</option>
                                     {rolesList.filter(r => r.role_id !== "19").map(r => (
-                                        <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+                                        <option key={r.role_id} value={r.role_id}>{r.role_name}</option>
                                     ))}
+                                 
                                 </select>
                             </div>
 
@@ -316,9 +319,9 @@ export default function Staffs() {
                                     onChange={(e) => setFilterStatus(e.target.value)}
                                 >
                                     <option value="">All Statuses</option>
-                                    {/* Render account statuses from backend setup list */}
-                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
-                                        <option key={s.status_id} value={s.status_name}>{s.status_name}</option>
+                                    {/* Render account statuses (ACTIVE / INACTIVE) from backend setup list */}
+                                    {statusesList.filter(s => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -527,7 +530,7 @@ export default function Staffs() {
                 )}
             </div>
 
-            <AdminSlideDrawer
+            <StaffSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}

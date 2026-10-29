@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AdminSlideDrawer from "../components/AdminSlideDrawer";
+import { TransactionSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import orderService from "../services/orderService";
 import setupService from "../services/setupService";
@@ -221,7 +221,7 @@ export default function Transactions() {
                 )}
             </div>
 
-            <AdminSlideDrawer
+            <TransactionSlideDrawer
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}
