@@ -17,12 +17,12 @@ export default function CustomerSlideDrawer({
     const [rolesList, setRolesList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load customer roles and statuses from the backend setup endpoints
+    // Load customer roles and statuses from the backend setup endpoints by ID
     useEffect(() => {
         const loadSetup = async () => {
             const [rRes, sRes] = await Promise.all([
-                setupService.fetchAllRoles(),
-                setupService.fetchAllStatus()
+                setupService.fetchAllRoles("19"),
+                setupService.fetchAllStatus("1, 2, 3")
             ]);
             if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
             if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
@@ -32,7 +32,13 @@ export default function CustomerSlideDrawer({
 
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "19");
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            setFormData({
+                ...initialData,
+                roleId: roleId || "19",
+                statusId: statusId || "1"
+            });
         }
     }, [initialData, isOpen]);
 
@@ -164,23 +170,26 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Customer Tier / Role</label>
                         <select
                             className="drawer-input"
-                            value={formData.role || "Customer"}
+                            value={String(formData.roleId || "19")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = rolesList.find((r) => r.role_name === val);
+                                const matched = rolesList.find((r) => String(r.role_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    role: val,
-                                    roleId: matched?.role_id || rolesList.find((r) => r.role_name.toLowerCase().includes("customer"))?.role_id || ""
+                                    roleId: val,
+                                    role: matched?.role_name || prev.role || "Customer"
                                 }));
                             }}
                         >
-                            {/* Render customer role from backend setup */}
-                            {rolesList.filter((r) => r.role_id === "19" || r.role_name.toLowerCase().includes("customer")).map((r) => (
-                                <option key={r.role_id} value={r.role_name}>
-                                    {r.role_name}
-                                </option>
-                            ))}
+                            {rolesList.length > 0 ? (
+                                rolesList.map((r) => (
+                                    <option key={r.role_id} value={r.role_id}>
+                                        {r.role_name}
+                                    </option>
+                                ))
+                            ) : (
+                                <option value="19">Customer</option>
+                            )}
                         </select>
                     </div>
 
@@ -189,19 +198,19 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.status || "ACTIVE").toUpperCase()}
+                            value={String(formData.statusId || "1")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: val,
-                                    statusId: matched?.status_id || statusesList[0]?.status_id || ""
+                                    statusId: val,
+                                    status: matched?.status_name || prev.status || "ACTIVE"
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map((s) => (
-                                <option key={s.status_id} value={s.status_name}>
+                            {statusesList.map((s) => (
+                                <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}
                                 </option>
                             ))}

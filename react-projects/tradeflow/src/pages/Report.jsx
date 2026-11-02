@@ -212,7 +212,7 @@ export default function Report() {
                 </div>
 
                 {isLoading ? (
-                    <LoadingSpinner message="Aggregating store analytics from database..." />
+                    <LoadingSpinner variant="report" />
                 ) : hasNetworkError ? (
                     <div
                         style={{

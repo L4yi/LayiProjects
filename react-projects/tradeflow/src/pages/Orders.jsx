@@ -40,8 +40,8 @@ export default function Orders() {
 
     useEffect(() => {
         loadOrders();
-        // load statuses from backend for filter
-        setupService.fetchAllStatus().then(res => {
+        // Load order statuses from backend setup endpoint by ID
+        setupService.fetchAllStatus("3, 4, 5, 7, 8, 9, 10, 12").then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -174,10 +174,10 @@ export default function Orders() {
         }
     };
 
-    const filteredOrders = ordersList.filter(o => {
-        if (!statusFilter) return true;
-        const s = (o.status || "").toLowerCase();
-        return s === statusFilter.toLowerCase();
+    const filteredOrders = ordersList.filter((o) => {
+        // Compare o.statusId with statusFilter
+        const matchesStatus = !statusFilter || String(o.statusId) === String(statusFilter);
+        return matchesStatus;
     });
 
     return (
@@ -200,18 +200,9 @@ export default function Orders() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    {statusesList.filter(s => ["4", "5", "8", "9"].includes(String(s.status_id))).length > 0 ? (
-                                        statusesList.filter(s => ["4", "5", "8", "9"].includes(String(s.status_id))).map(s => (
-                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <option value="successful">Successful</option>
-                                            <option value="processing">Processing</option>
-                                            <option value="paid">Paid</option>
-                                            <option value="failed">Failed</option>
-                                        </>
-                                    )}
+                                    {statusesList.map(s => (
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <button
@@ -226,7 +217,7 @@ export default function Orders() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner message="Fetching orders from database..." />
+                    <LoadingSpinner variant="table" columns={["SN", "Order ID", "Customer Name", "Items / Product", "Price / Amount", "Payment Method", "Status", "Action"]} />
                 ) : hasNetworkError ? (
                     <div
                         style={{

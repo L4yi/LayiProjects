@@ -29,6 +29,7 @@ export default function Categories() {
                     id: cat.categories_id || cat.categoryId || `cat-${idx}`,
                     code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
                     name: cat.categories_name || cat.categoryName || "Untitled Category",
+                    statusId: String(cat.status_id || cat.statusId || ""),
                     status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
@@ -53,8 +54,8 @@ export default function Categories() {
 
     useEffect(() => {
         loadCategories();
-        // load statuses from backend for filter
-        setupService.fetchAllStatus().then(res => {
+        // Load category statuses (Active, Inactive, Pending) from backend setup endpoint by ID
+        setupService.fetchAllStatus("1, 2, 3").then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -77,6 +78,7 @@ export default function Categories() {
                     id: cat.categories_id || cat.categoryId || `cat-${idx}`,
                     code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
                     name: cat.categories_name || cat.categoryName || "Untitled Category",
+                    statusId: String(cat.status_id || cat.statusId || ""),
                     status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
@@ -174,7 +176,8 @@ export default function Categories() {
     };
 
     const displayCats = categoriesList.filter((c) => {
-        const matchesStatus = !statusFilter || c.status.toLowerCase() === statusFilter.toLowerCase();
+        // Compare c.statusId with statusFilter
+        const matchesStatus = !statusFilter || String(c.statusId) === String(statusFilter);
         const matchesSearch = !searchQuery ||
             c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (c.code && c.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -233,17 +236,9 @@ export default function Categories() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                        statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
-                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="pending">Pending</option>
-                                        </>
-                                    )}
+                                    {statusesList.map(s => (
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -259,7 +254,7 @@ export default function Categories() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner variant="table" columns={["SN", "Category Name", "Code", "Description", "Scope / Models", "Status", "Action"]} />
                 ) : hasNetworkError ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
                         <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>

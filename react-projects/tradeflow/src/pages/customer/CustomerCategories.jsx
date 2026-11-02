@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CategoryCard from "../../components/CategoryCard";
+import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
 
 export default function CustomerCategories() {
@@ -59,9 +60,7 @@ export default function CustomerCategories() {
 
                 {/* Categories Grid loaded from backend */}
                 {isLoading ? (
-                    <div style={{ padding: "40px", textAlign: "center", color: "#718096" }}>
-                        Loading categories from database...
-                    </div>
+                    <PageSkeleton variant="category-grid" />
                 ) : (
                     <div className="customer-categories-grid">
                         {categories.map((cat) => (

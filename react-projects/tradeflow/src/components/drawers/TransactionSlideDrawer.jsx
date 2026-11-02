@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BaseDrawerShell from "./BaseDrawerShell";
+import setupService from "../../services/setupService";
 
 // Slide drawer specifically for viewing or exporting transaction details.
 export default function TransactionSlideDrawer({
@@ -13,10 +14,24 @@ export default function TransactionSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
+    const [statusesList, setStatusesList] = useState([]);
+
+    // Load payment transaction statuses from backend setup endpoint by ID
+    useEffect(() => {
+        setupService.fetchAllStatus("1, 2, 4, 5").then((res) => {
+            if (res.success && Array.isArray(res.data)) {
+                setStatusesList(res.data);
+            }
+        });
+    }, []);
 
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            setFormData({
+                ...initialData,
+                statusId: statusId || "1"
+            });
         }
     }, [initialData, isOpen]);
 
@@ -112,15 +127,26 @@ export default function TransactionSlideDrawer({
                         <label className="drawer-label">Payment Status</label>
                         <select
                             className="drawer-input"
-                            value={formData.status || "ACTIVE"}
-                            onChange={(e) => handleChange("status", e.target.value)}
+                            value={String(formData.statusId || "1")}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val));
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    statusId: val,
+                                    status: matched?.status_name || prev.status || "ACTIVE"
+                                }));
+                            }}
                         >
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="INACTIVE">INACTIVE</option>
-                            <option value="PENDING">PENDING</option>
-                            <option value="PAID">PAID</option>
-                            <option value="FAILED">FAILED</option>
-                            <option value="REFUNDED">REFUNDED</option>
+                            {statusesList.length > 0 ? (
+                                statusesList.map((s) => (
+                                    <option key={s.status_id} value={s.status_id}>
+                                        {s.status_name}
+                                    </option>
+                                ))
+                            ) : (
+                                <option value="1">ACTIVE</option>
+                            )}
                         </select>
                     </div>
 

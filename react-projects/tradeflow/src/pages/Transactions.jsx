@@ -28,8 +28,8 @@ export default function Transactions() {
 
     useEffect(() => {
         loadTransactions();
-        // Fetch statuses from backend setup endpoint for the status filter dropdown
-        setupService.fetchAllStatus().then(res => {
+        // Fetch transaction statuses from backend setup endpoint by ID
+        setupService.fetchAllStatus("1, 2, 4, 5").then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -79,13 +79,10 @@ export default function Transactions() {
         setDrawerOpen(true);
     };
 
-    const filteredTxns = transactionsList.filter(t => {
-        if (!statusFilter) return true;
-        const s = String(t.status || "").toLowerCase();
-        const f = statusFilter.toLowerCase();
-        if (f === "paid" && (s === "paid" || s === "active")) return true;
-        if (f === "active" && (s === "active" || s === "paid")) return true;
-        return s === f;
+    const filteredTxns = transactionsList.filter((t) => {
+        // Compare t.statusId with statusFilter
+        const matchesStatus = !statusFilter || String(t.statusId || "") === String(statusFilter);
+        return matchesStatus;
     });
 
     return (
@@ -108,9 +105,9 @@ export default function Transactions() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    {/* Render statuses dynamically from backend setup list */}
+                                    {/* Render statuses dynamically from backend setup list by ID */}
                                     {statusesList.map(s => (
-                                        <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -126,7 +123,7 @@ export default function Transactions() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner message="Fetching transactions from database..." />
+                    <LoadingSpinner variant="table" columns={["SN", "Customer Name", "Customer ID", "Order Date", "Payment Method", "Amount (₦)", "Status", "Action"]} />
                 ) : hasNetworkError ? (
                     <div
                         style={{

@@ -17,12 +17,12 @@ export default function OrderSlideDrawer({
     const [paymentMethodsList, setPaymentMethodsList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load payment methods and fulfillment statuses from backend setup endpoints
+    // Load payment methods and fulfillment statuses from backend setup endpoints by ID
     useEffect(() => {
         const loadSetup = async () => {
             const [pmRes, sRes] = await Promise.all([
                 setupService.fetchAllPaymentMethods(),
-                setupService.fetchAllStatus()
+                setupService.fetchAllStatus("3, 4, 5, 8, 9, 10")
             ]);
             if (pmRes.success && Array.isArray(pmRes.data)) setPaymentMethodsList(pmRes.data);
             if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
@@ -32,7 +32,11 @@ export default function OrderSlideDrawer({
 
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "4");
+            setFormData({
+                ...initialData,
+                statusId: statusId || "4"
+            });
         }
     }, [initialData, isOpen]);
 
@@ -169,21 +173,19 @@ export default function OrderSlideDrawer({
                         <label className="drawer-label">Order Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.status || "Processing")}
+                            value={String(formData.statusId || (statusesList.find(s => s.status_name === formData.status)?.status_id) || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: val,
-                                    statusId: matched?.status_id || ""
+                                    status: matched?.status_name || val,
+                                    statusId: matched?.status_id || val
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["PROCESSING", "SUCCESSFUL", "PAID", "FAILED"].includes(s.status_name.toUpperCase())).map((s) => (
-                                <option key={s.status_id} value={s.status_name}>
-                                    {s.status_name}
-                                </option>
+                            {statusesList.filter(s => ["3", "4", "5", "8", "9", "10"].includes(String(s.status_id)) || ["PROCESSING", "SUCCESSFUL", "PAID", "FAILED", "PENDING", "DONE"].includes(s.status_name.toUpperCase())).map((s) => (
+                                <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                             ))}
                         </select>
                     </div>

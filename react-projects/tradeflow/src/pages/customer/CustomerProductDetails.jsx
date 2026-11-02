@@ -56,8 +56,19 @@ export default function CustomerProductDetails() {
 
     if (isLoading) {
         return (
-            <div style={{ padding: "60px 20px", textAlign: "center", color: "#718096" }}>
-                Loading product details from database...
+            <div className="customer-product-details-container">
+                <div className="jumia-product-details-card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", padding: "24px" }}>
+                    <div className="skeleton-box" style={{ width: "100%", height: "380px", borderRadius: "12px" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div className="skeleton-box skeleton-pill" style={{ width: "90px", height: "20px" }} />
+                        <div className="skeleton-box skeleton-title" style={{ width: "80%", height: "28px" }} />
+                        <div className="skeleton-box skeleton-text" style={{ width: "40%" }} />
+                        <div className="skeleton-box skeleton-title" style={{ width: "140px", height: "36px" }} />
+                        <div className="skeleton-box skeleton-text" style={{ width: "90%" }} />
+                        <div className="skeleton-box skeleton-text" style={{ width: "85%" }} />
+                        <div className="skeleton-box skeleton-pill" style={{ width: "160px", height: "45px", marginTop: "14px" }} />
+                    </div>
+                </div>
             </div>
         );
     }

@@ -38,8 +38,8 @@ export default function Customers() {
 
     useEffect(() => {
         loadCustomers();
-        // load statuses from backend
-        setupService.fetchAllStatus().then(res => {
+        // Load customer statuses (Active, Inactive, Pending) from backend setup endpoint by ID
+        setupService.fetchAllStatus("1, 2, 3").then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -180,10 +180,10 @@ export default function Customers() {
         }
     };
 
-    const filteredCustomers = customersList.filter(cust => {
-        if (!statusFilter) return true;
-        const s = (cust.status || "").toLowerCase();
-        return s === statusFilter.toLowerCase();
+    const filteredCustomers = customersList.filter((cust) => {
+        // Compare cust.statusId with statusFilter
+        const matchesStatus = !statusFilter || String(cust.statusId) === String(statusFilter);
+        return matchesStatus;
     });
 
     return (
@@ -206,17 +206,9 @@ export default function Customers() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                        statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map(s => (
-                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="pending">Pending</option>
-                                        </>
-                                    )}
+                                    {statusesList.map(s => (
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <button
@@ -231,7 +223,7 @@ export default function Customers() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner message="Fetching customer records..." />
+                    <LoadingSpinner variant="table" columns={["SN", "Customer Name", "Customer ID", "Email Address", "Contact Phone", "Status", "Action"]} />
                 ) : hasNetworkError ? (
                     <div
                         style={{

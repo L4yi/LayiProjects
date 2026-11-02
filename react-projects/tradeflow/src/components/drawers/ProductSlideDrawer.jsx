@@ -17,9 +17,9 @@ export default function ProductSlideDrawer({
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load product statuses from backend setup endpoint
+    // Load product statuses from backend setup endpoint by ID
     useEffect(() => {
-        setupService.fetchAllStatus().then((res) => {
+        setupService.fetchAllStatus("1, 2, 3").then((res) => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -28,7 +28,13 @@ export default function ProductSlideDrawer({
 
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            const categoryId = initialData.categoryId ? String(initialData.categoryId) : (initialData.categories_id ? String(initialData.categories_id) : "");
+            setFormData({
+                ...initialData,
+                statusId: statusId || "1",
+                categoryId: categoryId || ""
+            });
         }
     }, [initialData, isOpen]);
 
@@ -204,21 +210,19 @@ export default function ProductSlideDrawer({
                         <label className="drawer-label">Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.status || "ACTIVE").toUpperCase()}
+                            value={String(formData.statusId || (statusesList.find(s => s.status_name === formData.status)?.status_id) || "1")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: val,
-                                    statusId: matched?.status_id || statusesList[0]?.status_id || ""
+                                    status: matched?.status_name || val,
+                                    statusId: matched?.status_id || val
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK", "IN STOCK"].includes(s.status_name.toUpperCase())).map((s) => (
-                                <option key={s.status_id} value={s.status_name}>
-                                    {s.status_name}
-                                </option>
+                            {statusesList.map((s) => (
+                                <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                             ))}
                         </select>
                     </div>

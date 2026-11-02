@@ -18,21 +18,23 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
     };
 }
 
-// In-memory cache variables.
-// Once we fetch roles, statuses, or titles from the backend, we save them here.
-// This avoids hitting the server repeatedly on every single dropdown click.
+// In-memory cache stores.
+// Caches responses by query key (e.g. "ALL" or filtered subset like "1,2") so
+// calling fetchAllStatus("1,2") does not overwrite or limit the full list for other pages/drawers.
+const statusCache = new Map();
+const roleCache = new Map();
 let cachedStatuses = null;
 let cachedTitles = null;
 let cachedRoles = null;
 let cachedPaymentMethods = null;
 
 export const setupService = {
-    // Fetches all account and order statuses from backend (setup/fetch-all-status.php)
-    // Returns list of statuses like Active, Inactive, Processing, Successful, etc.
+    // Fetches account and order statuses from backend (setup/fetch-all-status.php)
+    // Optional statusIds (e.g. "1, 2" or "3, 4, 5") filters the results directly on the backend.
     async fetchAllStatus(statusIds) {
-        // If we already have the list saved in memory, return it directly
-        if (cachedStatuses) {
-            return { success: true, data: cachedStatuses, message: "Statuses loaded from cache" };
+        const cacheKey = statusIds ? String(statusIds).replace(/\s+/g, "") : "ALL";
+        if (statusCache.has(cacheKey)) {
+            return { success: true, data: statusCache.get(cacheKey), message: "Statuses loaded from cache" };
         }
         try {
             // PHP backend requires POST with FormData
@@ -41,9 +43,15 @@ export const setupService = {
                 formData.append("statusIds", statusIds);
             }
             const response = await api.post("setup/fetch-all-status.php", formData);
-            const normalized = normalizeResponse(response.data,response.data.message     );
+            const normalized = normalizeResponse(response.data, response.data.message || "STATUSES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedStatuses = normalized.data; // save to cache
+                statusCache.set(cacheKey, normalized.data);
+                // If fetching all statuses, save to global reference for synchronous helper lookups
+                if (!statusIds) {
+                    cachedStatuses = normalized.data;
+                } else if (!cachedStatuses) {
+                    cachedStatuses = normalized.data;
+                }
             }
             return normalized;
         } catch (error) {
@@ -77,17 +85,28 @@ export const setupService = {
         }
     },
 
-    // Fetches all user roles from backend (setup/fetch-all-role.php)
-    // Returns list of roles like Staff, Admin, Super Admin, Store Manager, Customer, etc.
-    async fetchAllRoles() {
-        if (cachedRoles) {
-            return { success: true, data: cachedRoles, message: "Roles loaded from cache" };
+    // Fetches user roles from backend (setup/fetch-all-role.php)
+    // Optional roleIds (e.g. "1, 2, 3" or "19") filters the results directly on the backend.
+    async fetchAllRoles(roleIds) {
+        const cacheKey = roleIds ? String(roleIds).replace(/\s+/g, "") : "ALL";
+        if (roleCache.has(cacheKey)) {
+            return { success: true, data: roleCache.get(cacheKey), message: "Roles loaded from cache" };
         }
         try {
-            const response = await api.post("setup/fetch-all-role.php", new FormData());
-            const normalized = normalizeResponse(response.data, response.data.message);
+            const formData = new FormData();
+            if (roleIds) {
+                formData.append("roleIds", roleIds);
+            }
+            const response = await api.post("setup/fetch-all-role.php", formData);
+            const normalized = normalizeResponse(response.data, response.data.message || "ROLES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedRoles = normalized.data; // save to cache 
+                roleCache.set(cacheKey, normalized.data);
+                // If fetching all roles, save to global reference for synchronous helper lookups
+                if (!roleIds) {
+                    cachedRoles = normalized.data;
+                } else if (!cachedRoles) {
+                    cachedRoles = normalized.data;
+                }
             }
             return normalized; 
         } catch (error) {

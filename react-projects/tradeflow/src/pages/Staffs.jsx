@@ -226,10 +226,9 @@ export default function Staffs() {
 
 
     const filteredStaffs = staffsList.filter((staff) => {
-        // Matches by roleId (from dropdown) or by role name
-        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole) || staff.role.toLowerCase().includes(filterRole.toLowerCase());
-        // Matches by statusId (from dropdown) or by status name
-        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus) || staff.status.toLowerCase() === filterStatus.toLowerCase();
+        // Compare staff.roleId with filterRole, and staff.statusId with filterStatus
+        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole);
+        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus);
         return matchesRole && matchesStatus;
     });
 
@@ -360,7 +359,7 @@ export default function Staffs() {
                 )}
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner variant="staff" viewMode={viewMode} />
                 ) : hasNetworkError ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
                         <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>

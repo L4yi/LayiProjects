@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
+import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
 import productService from "../../services/productService";
 
@@ -143,8 +144,8 @@ export default function CustomerCategoryProducts() {
                 </div>
 
                 {isLoading ? (
-                    <div style={{ padding: "40px", textAlign: "center", color: "#718096" }}>
-                        Loading products from database...
+                    <div className="mt-16">
+                        <PageSkeleton variant="product-grid" />
                     </div>
                 ) : (
                     <div className="customer-products-grid mt-16">

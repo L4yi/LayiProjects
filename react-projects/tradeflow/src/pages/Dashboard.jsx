@@ -84,7 +84,7 @@ export default function Dashboard() {
     return (
         <div className="dashboard-body">
             {isLoading ? (
-                <LoadingSpinner />
+                <LoadingSpinner variant="dashboard" />
             ) : (
                 <>
                     <div className="metric-cards-grid">

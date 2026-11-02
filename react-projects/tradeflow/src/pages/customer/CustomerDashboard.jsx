@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import CustomerUserBanner from "../../components/CustomerUserBanner";
 import CategoryCard from "../../components/CategoryCard";
 import ProductItemCard from "../../components/ProductItemCard";
+import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
 import productService from "../../services/productService";
 
@@ -84,9 +85,7 @@ export default function CustomerDashboard() {
 
                 {/* Categories Grid from backend */}
                 {isLoading ? (
-                    <div style={{ padding: "30px", textAlign: "center", color: "#718096" }}>
-                        Loading store categories...
-                    </div>
+                    <PageSkeleton variant="category-grid" />
                 ) : (
                     <div className="customer-categories-grid">
                         {categories.map((cat) => (
@@ -128,9 +127,7 @@ export default function CustomerDashboard() {
 
                 {/* Products Grid from backend */}
                 {isLoading ? (
-                    <div style={{ padding: "30px", textAlign: "center", color: "#718096" }}>
-                        Loading catalog products...
-                    </div>
+                    <PageSkeleton variant="product-grid" />
                 ) : (
                     <div className="customer-products-grid">
                         {products.map((prod) => (

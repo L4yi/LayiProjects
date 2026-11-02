@@ -29,8 +29,9 @@ export default function Products() {
             name: prod.product_name || prod.productName || "Untitled Product",
             price: Number(prod.product_price || prod.productPrice || prod.price || 0),
             inStock: Number(prod.quantity ?? prod.inStock ?? 0),
-            categoryId: prod.categories_id || prod.categoryId || "",
+            categoryId: String(prod.categories_id || prod.categoryId || ""),
             categoryName: prod.categories_name || prod.categoryName || "General Category",
+            statusId: String(prod.status_id || prod.statusId || ""),
             status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
             description: prod.description || "",
             image: prod.image || "",
@@ -70,8 +71,8 @@ export default function Products() {
     useEffect(() => {
         loadProducts();
         loadCategories();
-        // load statuses from backend
-        setupService.fetchAllStatus().then(res => {
+        // Load product statuses (Active, Inactive, Pending) from backend setup endpoint by ID
+        setupService.fetchAllStatus("1, 2, 3").then(res => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -196,8 +197,9 @@ export default function Products() {
     };
 
     const filteredProds = productsList.filter(p => {
-        const matchesCategory = !categoryFilter || p.categoryId === categoryFilter || p.categoryName === categoryFilter;
-        const matchesStatus = !statusFilter || (p.status || "").toLowerCase() === statusFilter.toLowerCase();
+        // Compare p.categoryId with categoryFilter, and p.statusId with statusFilter
+        const matchesCategory = !categoryFilter || String(p.categoryId) === String(categoryFilter);
+        const matchesStatus = !statusFilter || String(p.statusId) === String(statusFilter);
         const matchesSearch = !searchQuery ||
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -273,17 +275,9 @@ export default function Products() {
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
                                     <option value="">All Status</option>
-                                    {statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK"].includes(s.status_name.toUpperCase())).length > 0 ? (
-                                        statusesList.filter(s => ["ACTIVE", "INACTIVE", "PENDING", "OUT OF STOCK"].includes(s.status_name.toUpperCase())).map(s => (
-                                            <option key={s.status_id} value={s.status_name.toLowerCase()}>{s.status_name}</option>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="pending">Pending</option>
-                                        </>
-                                    )}
+                                    {statusesList.map(s => (
+                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
+                                    ))}
                                 </select>
                             </div>
                             <button
@@ -299,7 +293,7 @@ export default function Products() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner />
+                    <LoadingSpinner variant="table" columns={["SN", "Product Name", "ID", "Category", "Price (₦)", "Stock", "Status", "Action"]} />
                 ) : hasNetworkError ? (
                     <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
                         <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>

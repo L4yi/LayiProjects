@@ -16,9 +16,9 @@ export default function CategorySlideDrawer({
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load category statuses from backend setup endpoint
+    // Load category statuses from backend setup endpoint by ID
     useEffect(() => {
-        setupService.fetchAllStatus().then((res) => {
+        setupService.fetchAllStatus("1, 2, 3").then((res) => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(res.data);
             }
@@ -27,7 +27,11 @@ export default function CategorySlideDrawer({
 
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            setFormData({
+                ...initialData,
+                statusId: statusId || "1"
+            });
         }
     }, [initialData, isOpen]);
 
@@ -93,19 +97,19 @@ export default function CategorySlideDrawer({
                         <label className="drawer-label">Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.status || "ACTIVE").toUpperCase()}
+                            value={String(formData.statusId || "1")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: val,
-                                    statusId: matched?.status_id || statusesList[0]?.status_id || ""
+                                    statusId: val,
+                                    status: matched?.status_name || prev.status || "ACTIVE"
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["ACTIVE", "INACTIVE", "PENDING"].includes(s.status_name.toUpperCase())).map((s) => (
-                                <option key={s.status_id} value={s.status_name}>
+                            {statusesList.map((s) => (
+                                <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}
                                 </option>
                             ))}
