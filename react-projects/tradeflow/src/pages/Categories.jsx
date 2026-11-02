@@ -39,10 +39,12 @@ export default function Categories() {
                 }));
                 setCategoriesList(mapped);
             } else {
-                if (result?.success === false) {
+                setCategoriesList([]);
+                const msg = String(result?.message || "").toLowerCase();
+                const isRealNetworkError = msg.includes("failed to fetch") || msg.includes("network") || msg.includes("timeout") || msg.includes("server error");
+                if (isRealNetworkError) {
                     setHasNetworkError(true);
                 }
-                setCategoriesList([]);
             }
         } catch {
             setHasNetworkError(true);
@@ -169,7 +171,7 @@ export default function Categories() {
             setModalData({
                 type: "error",
                 title: "DELETE FAILED",
-                message: result?.message || "Unable to delete category from database."
+                message: result?.message || "Unable to delete category  ."
             });
             setShowSuccessModal(true);
         }

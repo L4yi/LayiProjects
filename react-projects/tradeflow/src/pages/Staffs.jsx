@@ -78,11 +78,13 @@ export default function Staffs() {
                 setAllStaffs(list);
                 setStaffsList(list);
             } else {
-                if (result?.success === false) {
-                    setHasNetworkError(true);
-                }
                 setAllStaffs([]);
                 setStaffsList([]);
+                const msg = String(result?.message || "").toLowerCase();
+                const isRealNetworkError = msg.includes("failed to fetch") || msg.includes("network") || msg.includes("timeout") || msg.includes("server error");
+                if (isRealNetworkError) {
+                    setHasNetworkError(true);
+                }
             }
         } catch (error) {
             console.error("Failed to load staff:", error);

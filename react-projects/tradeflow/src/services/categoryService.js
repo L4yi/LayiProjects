@@ -69,11 +69,24 @@ export const categoryService = {
     async fetchAllCategories() {
         try {
             const response = await api.post("admin/categories/fetch-all-category.php", new FormData());
-            return normalizeResponse(response.data, "Categories fetched successfully.");
+            const resData = response.data;
+            if (resData?.success === true && Array.isArray(resData?.data)) {
+                return resData;
+            }
+            const msg = String(resData?.message || "").toUpperCase();
+            if (msg.includes("NO CATEGOR") || msg.includes("NOT FOUND") || msg.includes("EMPTY")) {
+                return {
+                    success: true,
+                    data: [],
+                    message: resData?.message || "No categories found."
+                };
+            }
+            return normalizeResponse(resData, "Categories fetched successfully.");
         } catch (error) {
             return {
                 success: false,
-                message: getCategoryErrorMessage(error, "Failed to fetch categories from server.")
+                message: getCategoryErrorMessage(error, "Failed to fetch categories from server."),
+                data: []
             };
         }
     },

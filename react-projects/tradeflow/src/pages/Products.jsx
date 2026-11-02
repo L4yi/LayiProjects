@@ -48,10 +48,12 @@ export default function Products() {
             if (res?.success && Array.isArray(res?.data)) {
                 setProductsList(mapProducts(res.data));
             } else {
-                if (res?.success === false) {
+                setProductsList([]);
+                const msg = String(res?.message || "").toLowerCase();
+                const isRealNetworkError = msg.includes("failed to fetch") || msg.includes("network") || msg.includes("timeout") || msg.includes("server error");
+                if (isRealNetworkError) {
                     setHasNetworkError(true);
                 }
-                setProductsList([]);
             }
         } catch {
             setHasNetworkError(true);

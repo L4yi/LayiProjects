@@ -54,7 +54,20 @@ export const productService = {
     async fetchAllProducts() {
         try {
             const response = await api.post("admin/product/fetch-all-products.php", new FormData());
-            return normalizeResponse(response.data, "Products fetched successfully.");
+            const resData = response.data;
+            if (resData?.success === true && Array.isArray(resData?.data)) {
+                return resData;
+            }
+            // If backend returns NO PRODUCTS FOUND or empty response from server
+            const msg = String(resData?.message || "").toUpperCase();
+            if (msg.includes("NO PRODUCT") || msg.includes("NOT FOUND") || msg.includes("EMPTY")) {
+                return {
+                    success: true,
+                    data: [],
+                    message: resData?.message || "No products found in database."
+                };
+            }
+            return normalizeResponse(resData, "Products fetched successfully.");
         } catch (error) {
             return {
                 success: false,

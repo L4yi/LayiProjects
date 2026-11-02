@@ -57,6 +57,14 @@ export const staffService = {
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return resData;
             }
+            const msg = String(resData?.message || "").toUpperCase();
+            if (msg.includes("NO STAFF") || msg.includes("NOT FOUND") || msg.includes("EMPTY")) {
+                return {
+                    success: true,
+                    data: [],
+                    message: resData?.message || "No staff found in database."
+                };
+            }
             return normalizeResponse(resData, "Staff fetched successfully");
         } catch (error) {
             return {
