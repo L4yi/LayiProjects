@@ -96,16 +96,16 @@ export default function Staffs() {
 
     useEffect(() => {
         loadStaffs();
-        // Fetch staff roles from backend setup endpoint for the role filter dropdown
+        // Fetch roles from backend setup endpoint for the role filter dropdown
         setupService.fetchAllRoles().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setRolesList(setupService.getStaffRoles(res.data));
+                setRolesList(res.data);
             }
         });
-        // Fetch account statuses from backend setup endpoint for the status filter dropdown
+        // Fetch statuses from backend setup endpoint for the status filter dropdown
         setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getAccountStatuses(res.data));
+                setStatusesList(res.data);
             }
         });
     }, []);
@@ -226,9 +226,10 @@ export default function Staffs() {
 
 
     const filteredStaffs = staffsList.filter((staff) => {
-        // Compare staff.roleId with filterRole, and staff.statusId with filterStatus
-        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole);
-        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus);
+        // Matches by roleId (from dropdown) or by role name
+        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole) || staff.role.toLowerCase().includes(filterRole.toLowerCase());
+        // Matches by statusId (from dropdown) or by status name
+        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus) || staff.status.toLowerCase() === filterStatus.toLowerCase();
         return matchesRole && matchesStatus;
     });
 
@@ -302,9 +303,10 @@ export default function Staffs() {
                                     onChange={(e) => setFilterRole(e.target.value)}
                                 >
                                     <option value="">All Roles</option>
-                                    {rolesList.map(r => (
+                                    {rolesList.filter(r => r.role_id !== "19").map(r => (
                                         <option key={r.role_id} value={r.role_id}>{r.role_name}</option>
                                     ))}
+                                 
                                 </select>
                             </div>
 
@@ -317,7 +319,8 @@ export default function Staffs() {
                                     onChange={(e) => setFilterStatus(e.target.value)}
                                 >
                                     <option value="">All Statuses</option>
-                                    {statusesList.map(s => (
+                                    {/* Render account statuses (ACTIVE / INACTIVE) from backend setup list */}
+                                    {statusesList.filter(s => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map(s => (
                                         <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                                     ))}
                                 </select>

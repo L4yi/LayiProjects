@@ -19,7 +19,7 @@ export default function StaffSlideDrawer({
     const [rolesList, setRolesList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load setup tables (titles, staff roles, and account statuses) directly from backend setup
+    // Load setup tables (titles, roles, and statuses) directly from the backend
     useEffect(() => {
         const loadSetup = async () => {
             const [tRes, rRes, sRes] = await Promise.all([
@@ -28,8 +28,8 @@ export default function StaffSlideDrawer({
                 setupService.fetchAllStatus()
             ]);
             if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
-            if (rRes.success && Array.isArray(rRes.data)) setRolesList(setupService.getStaffRoles(rRes.data));
-            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(setupService.getAccountStatuses(sRes.data));
+            if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
+            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
         };
         loadSetup();
     }, []);
@@ -37,13 +37,7 @@ export default function StaffSlideDrawer({
     // Synchronize form state when drawer opens or initialData changes
     useEffect(() => {
         if (initialData) {
-            const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "1");
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
-            setFormData({
-                ...initialData,
-                roleId: roleId || "1",
-                statusId: statusId || "1"
-            });
+            setFormData({ ...initialData });
         }
         setShowPassword(false);
     }, [initialData, isOpen]);
@@ -226,20 +220,20 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Role</label>
                         <select
                             className="drawer-input"
-                            value={formData.roleId || (rolesList.find(r => r.role_name === formData.role)?.role_id) || ""}
+                            value={formData.role || ""}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = rolesList.find((r) => String(r.role_id) === String(val) || r.role_name === val);
+                                const matched = rolesList.find((r) => r.role_name === val);
                                 setFormData((prev) => ({
                                     ...prev,
-                                    role: matched?.role_name || val,
-                                    roleId: matched?.role_id || val
+                                    role: val,
+                                    roleId: matched?.role_id || rolesList[0]?.role_id || ""
                                 }));
                             }}
                         >
-                            <option value="">Select Role</option>
-                            {rolesList.map((r) => (
-                                <option key={r.role_id} value={r.role_id}>
+                            {/* Filter out customer role (role_id 19) */}
+                            {rolesList.filter((r) => r.role_id !== "19" && !r.role_name.toLowerCase().includes("customer")).map((r) => (
+                                <option key={r.role_id} value={r.role_name}>
                                     {r.role_name}
                                 </option>
                             ))}
@@ -251,19 +245,20 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || (statusesList.find(s => s.status_name === formData.status)?.status_id) || "1")}
+                            value={String(formData.status || "ACTIVE").toUpperCase()}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: matched?.status_name || val,
-                                    statusId: matched?.status_id || val
+                                    status: val,
+                                    statusId: matched?.status_id || statusesList[0]?.status_id || ""
                                 }));
                             }}
                         >
-                            {statusesList.map((s) => (
-                                <option key={s.status_id} value={s.status_id}>
+                            {/* Only Active and Inactive for staff accounts */}
+                            {statusesList.filter((s) => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map((s) => (
+                                <option key={s.status_id} value={s.status_name}>
                                     {s.status_name}
                                 </option>
                             ))}
