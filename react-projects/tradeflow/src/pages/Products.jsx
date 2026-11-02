@@ -8,7 +8,7 @@ import setupService from "../services/setupService";
 export default function Products() {
     const [productsList, setProductsList] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [statusesList, setStatusesList] = useState(() => setupService.getProductStatuses(setupService.getCachedStatuses()));
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);

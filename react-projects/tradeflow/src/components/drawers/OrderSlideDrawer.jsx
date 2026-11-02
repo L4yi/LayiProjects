@@ -14,8 +14,8 @@ export default function OrderSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [paymentMethodsList, setPaymentMethodsList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [paymentMethodsList, setPaymentMethodsList] = useState(setupService.getCachedPaymentMethods());
+    const [statusesList, setStatusesList] = useState(() => setupService.getOrderStatuses(setupService.getCachedStatuses()));
 
     // Load payment methods and fulfillment statuses from backend setup
     useEffect(() => {
@@ -159,11 +159,19 @@ export default function OrderSlideDrawer({
                         <label className="drawer-label">Payment Method</label>
                         <select
                             className="drawer-input"
-                            value={formData.paymentMethod || "Bank Transfer"}
-                            onChange={(e) => handleChange("paymentMethod", e.target.value)}
+                            value={String(formData.paymentMethodId || (paymentMethodsList.find(pm => pm.payment_method_name === formData.paymentMethod)?.payment_method_id) || "2")}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const matched = paymentMethodsList.find(pm => String(pm.payment_method_id) === String(val));
+                                setFormData(prev => ({
+                                    ...prev,
+                                    paymentMethodId: val,
+                                    paymentMethod: matched?.payment_method_name || prev.paymentMethod
+                                }));
+                            }}
                         >
                             {paymentMethodsList.map((pm) => (
-                                <option key={pm.payment_method_id} value={pm.payment_method_name}>
+                                <option key={pm.payment_method_id} value={pm.payment_method_id}>
                                     {pm.payment_method_name}
                                 </option>
                             ))}

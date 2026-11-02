@@ -59,8 +59,8 @@ export default function Staffs() {
     const [drawerTitle, setDrawerTitle] = useState("Edit Staff Details");
     const [filterRole, setFilterRole] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
-    const [rolesList, setRolesList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
+    const [statusesList, setStatusesList] = useState(setupService.getCachedStatuses());
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [toastMsg, setToastMsg] = useState("");

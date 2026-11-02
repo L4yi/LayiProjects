@@ -15,7 +15,7 @@ export default function ProductSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState([]);
+    const [statusesList, setStatusesList] = useState(() => setupService.getProductStatuses(setupService.getCachedStatuses()));
 
     // Load product catalog and stock statuses from backend setup
     useEffect(() => {

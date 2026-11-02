@@ -14,9 +14,9 @@ export default function CustomerSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [titlesList, setTitlesList] = useState([]);
-    const [rolesList, setRolesList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
+    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
+    const [statusesList, setStatusesList] = useState(() => setupService.getAccountStatuses(setupService.getCachedStatuses()));
 
     // Load titles, full roles list (all 19), and account statuses from backend setup
     useEffect(() => {

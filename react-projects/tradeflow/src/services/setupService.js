@@ -26,6 +26,20 @@ let cachedRoles = null;
 let cachedPaymentMethods = null;
 
 export const setupService = {
+    // Synchronous cache getters for instant drawer rendering without flicker
+    getCachedTitles() {
+        return cachedTitles || [];
+    },
+    getCachedRoles() {
+        return cachedRoles || [];
+    },
+    getCachedStatuses() {
+        return cachedStatuses || [];
+    },
+    getCachedPaymentMethods() {
+        return cachedPaymentMethods || [];
+    },
+
     // Fetches all account and order statuses from backend (setup/fetch-all-status.php)
     async fetchAllStatus(statusIds) {
         if (!statusIds && cachedStatuses) {
@@ -50,7 +64,7 @@ export const setupService = {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Failed to load statuses.",
-                data: []
+                data: cachedStatuses || []
             };
         }
     },
@@ -72,7 +86,7 @@ export const setupService = {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Failed to load titles.",
-                data: []
+                data: cachedTitles || []
             };
         }
     },
@@ -101,7 +115,7 @@ export const setupService = {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Failed to load roles.",
-                data: []
+                data: cachedRoles || []
             };
         }
     },
@@ -122,7 +136,7 @@ export const setupService = {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Failed to load payment methods.",
-                data: []
+                data: cachedPaymentMethods || []
             };
         }
     },
@@ -136,17 +150,17 @@ export const setupService = {
         return statuses.filter(s => orderIds.includes(String(s.status_id)));
     },
 
-    // Product inventory & stock statuses (In Stock, Out of stock, Active, Inactive, Pending)
+    // Product inventory & stock statuses (In Stock, Out of stock, Active, Inactive) - Pending (3) removed
     getProductStatuses(list) {
         const statuses = list || cachedStatuses || [];
-        const prodIds = ["1", "2", "3", "6", "11"];
+        const prodIds = ["11", "6", "1", "2"];
         return statuses.filter(s => prodIds.includes(String(s.status_id)));
     },
 
-    // Category taxonomy statuses (Active, Inactive, Pending)
+    // Category taxonomy statuses (Active, Inactive) - Pending (3) removed
     getCategoryStatuses(list) {
         const statuses = list || cachedStatuses || [];
-        const catIds = ["1", "2", "3"];
+        const catIds = ["1", "2"];
         return statuses.filter(s => catIds.includes(String(s.status_id)));
     },
 
@@ -278,5 +292,13 @@ export const setupService = {
         return fallback;
     }
 };
+
+// Eagerly prime the setup cache in memory on module import
+if (typeof window !== "undefined") {
+    setupService.fetchAllTitles().catch(() => {});
+    setupService.fetchAllRoles().catch(() => {});
+    setupService.fetchAllStatus().catch(() => {});
+    setupService.fetchAllPaymentMethods().catch(() => {});
+}
 
 export default setupService;

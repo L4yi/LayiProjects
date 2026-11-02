@@ -6,7 +6,7 @@ import setupService from "../services/setupService";
 
 export default function Categories() {
     const [categoriesList, setCategoriesList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [statusesList, setStatusesList] = useState(() => setupService.getCategoryStatuses(setupService.getCachedStatuses()));
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);

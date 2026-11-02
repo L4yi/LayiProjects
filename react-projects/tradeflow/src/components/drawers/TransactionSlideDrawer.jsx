@@ -14,13 +14,19 @@ export default function TransactionSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState([]);
+    const [statusesList, setStatusesList] = useState(() => setupService.getTransactionStatuses(setupService.getCachedStatuses()));
+    const [paymentMethodsList, setPaymentMethodsList] = useState(setupService.getCachedPaymentMethods());
 
-    // Load payment transaction statuses from backend setup
+    // Load payment transaction statuses and payment methods from backend setup
     useEffect(() => {
         setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
                 setStatusesList(setupService.getTransactionStatuses(res.data));
+            }
+        });
+        setupService.fetchAllPaymentMethods().then((res) => {
+            if (res.success && Array.isArray(res.data)) {
+                setPaymentMethodsList(res.data);
             }
         });
     }, []);
@@ -112,13 +118,22 @@ export default function TransactionSlideDrawer({
                         <label className="drawer-label">Payment Channel</label>
                         <select
                             className="drawer-input"
-                            value={formData.paymentMethod || "Bank Transfer"}
-                            onChange={(e) => handleChange("paymentMethod", e.target.value)}
+                            value={String(formData.paymentMethodId || (paymentMethodsList.find(pm => pm.payment_method_name === formData.paymentMethod)?.payment_method_id) || "2")}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const matched = paymentMethodsList.find(pm => String(pm.payment_method_id) === String(val));
+                                setFormData(prev => ({
+                                    ...prev,
+                                    paymentMethodId: val,
+                                    paymentMethod: matched?.payment_method_name || prev.paymentMethod || "Bank Transfer"
+                                }));
+                            }}
                         >
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Card Payment">Card Payment</option>
-                            <option value="USSD">USSD</option>
-                            <option value="Cash">Cash</option>
+                            {paymentMethodsList.map((pm) => (
+                                <option key={pm.payment_method_id} value={pm.payment_method_id}>
+                                    {pm.payment_method_name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

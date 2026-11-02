@@ -15,9 +15,9 @@ export default function StaffSlideDrawer({
 }) {
     const [formData, setFormData] = useState({});
     const [showPassword, setShowPassword] = useState(false);
-    const [titlesList, setTitlesList] = useState([]);
-    const [rolesList, setRolesList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
+    const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
+    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
+    const [statusesList, setStatusesList] = useState(setupService.getCachedStatuses());
 
     // Load setup tables (titles, roles, and statuses) directly from the backend
     useEffect(() => {
@@ -37,7 +37,15 @@ export default function StaffSlideDrawer({
     // Synchronize form state when drawer opens or initialData changes
     useEffect(() => {
         if (initialData) {
-            setFormData({ ...initialData });
+            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId(initialData.title, "1");
+            const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "1");
+            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            setFormData({
+                ...initialData,
+                titleId: titleId || "1",
+                roleId: roleId || "1",
+                statusId: statusId || "1"
+            });
         }
         setShowPassword(false);
     }, [initialData, isOpen]);
@@ -75,19 +83,19 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Title</label>
                         <select
                             className="drawer-input"
-                            value={formData.title || "Mr"}
+                            value={String(formData.titleId || (titlesList.find(t => t.title_name === formData.title)?.title_id) || "1")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = titlesList.find((t) => t.title_name === val);
+                                const matched = titlesList.find((t) => String(t.title_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    title: val,
-                                    titleId: matched?.title_id || titlesList[0]?.title_id || ""
+                                    titleId: val,
+                                    title: matched?.title_name || prev.title || "Mr"
                                 }));
                             }}
                         >
                             {titlesList.map((t) => (
-                                <option key={t.title_id} value={t.title_name}>
+                                <option key={t.title_id} value={t.title_id}>
                                     {t.title_name}
                                 </option>
                             ))}
@@ -220,20 +228,20 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Role</label>
                         <select
                             className="drawer-input"
-                            value={formData.role || ""}
+                            value={String(formData.roleId || (rolesList.find(r => r.role_name === formData.role)?.role_id) || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = rolesList.find((r) => r.role_name === val);
+                                const matched = rolesList.find((r) => String(r.role_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    role: val,
-                                    roleId: matched?.role_id || rolesList[0]?.role_id || ""
+                                    roleId: val,
+                                    role: matched?.role_name || prev.role || ""
                                 }));
                             }}
                         >
-                            {/* Filter out customer role (role_id 19) */}
-                            {rolesList.filter((r) => r.role_id !== "19" && !r.role_name.toLowerCase().includes("customer")).map((r) => (
-                                <option key={r.role_id} value={r.role_name}>
+                            <option value="">Select Role</option>
+                            {rolesList.filter((r) => String(r.role_id) !== "19" && !r.role_name?.toLowerCase().includes("customer")).map((r) => (
+                                <option key={r.role_id} value={r.role_id}>
                                     {r.role_name}
                                 </option>
                             ))}
@@ -245,20 +253,19 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.status || "ACTIVE").toUpperCase()}
+                            value={String(formData.statusId || (statusesList.find(s => s.status_name.toUpperCase() === String(formData.status || "").toUpperCase())?.status_id) || "1")}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const matched = statusesList.find((s) => s.status_name.toUpperCase() === val.toUpperCase());
+                                const matched = statusesList.find((s) => String(s.status_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
-                                    status: val,
-                                    statusId: matched?.status_id || statusesList[0]?.status_id || ""
+                                    statusId: val,
+                                    status: matched?.status_name || (val === "2" ? "INACTIVE" : "ACTIVE")
                                 }));
                             }}
                         >
-                            {/* Only Active and Inactive for staff accounts */}
                             {statusesList.filter((s) => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map((s) => (
-                                <option key={s.status_id} value={s.status_name}>
+                                <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}
                                 </option>
                             ))}

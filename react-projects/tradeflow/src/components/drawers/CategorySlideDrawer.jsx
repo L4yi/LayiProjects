@@ -14,7 +14,7 @@ export default function CategorySlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState([]);
+    const [statusesList, setStatusesList] = useState(() => setupService.getCategoryStatuses(setupService.getCachedStatuses()));
 
     // Load category taxonomy statuses from backend setup
     useEffect(() => {
