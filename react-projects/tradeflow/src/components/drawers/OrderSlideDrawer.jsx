@@ -17,15 +17,17 @@ export default function OrderSlideDrawer({
     const [paymentMethodsList, setPaymentMethodsList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load payment methods and fulfillment statuses from backend setup endpoints by ID
+    // Load payment methods and fulfillment statuses from backend setup
     useEffect(() => {
         const loadSetup = async () => {
             const [pmRes, sRes] = await Promise.all([
                 setupService.fetchAllPaymentMethods(),
-                setupService.fetchAllStatus("3, 4, 5, 8, 9, 10")
+                setupService.fetchAllStatus()
             ]);
             if (pmRes.success && Array.isArray(pmRes.data)) setPaymentMethodsList(pmRes.data);
-            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
+            if (sRes.success && Array.isArray(sRes.data)) {
+                setStatusesList(setupService.getOrderStatuses(sRes.data));
+            }
         };
         loadSetup();
     }, []);
@@ -184,7 +186,7 @@ export default function OrderSlideDrawer({
                                 }));
                             }}
                         >
-                            {statusesList.filter(s => ["3", "4", "5", "8", "9", "10"].includes(String(s.status_id)) || ["PROCESSING", "SUCCESSFUL", "PAID", "FAILED", "PENDING", "DONE"].includes(s.status_name.toUpperCase())).map((s) => (
+                            {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                             ))}
                         </select>

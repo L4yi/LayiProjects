@@ -19,34 +19,26 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 // In-memory cache stores.
-// Caches responses by query key (e.g. "ALL" or filtered subset like "1,2") so
-// calling fetchAllStatus("1,2") does not overwrite or limit the full list for other pages/drawers.
-const statusCache = new Map();
-const roleCache = new Map();
+// Caches full lists of setup data in memory so the app only hits the server once per session.
 let cachedStatuses = null;
 let cachedTitles = null;
 let cachedRoles = null;
 let cachedPaymentMethods = null;
 
 export const setupService = {
-    // Fetches account and order statuses from backend (setup/fetch-all-status.php)
-    // Optional statusIds (e.g. "1, 2" or "3, 4, 5") filters the results directly on the backend.
+    // Fetches all account and order statuses from backend (setup/fetch-all-status.php)
     async fetchAllStatus(statusIds) {
-        const cacheKey = statusIds ? String(statusIds).replace(/\s+/g, "") : "ALL";
-        if (statusCache.has(cacheKey)) {
-            return { success: true, data: statusCache.get(cacheKey), message: "Statuses loaded from cache" };
+        if (!statusIds && cachedStatuses) {
+            return { success: true, data: cachedStatuses, message: "Statuses loaded from cache" };
         }
         try {
-            // PHP backend requires POST with FormData
             const formData = new FormData();
             if (statusIds) {
                 formData.append("statusIds", statusIds);
             }
             const response = await api.post("setup/fetch-all-status.php", formData);
-            const normalized = normalizeResponse(response.data, response.data.message || "STATUSES FETCHED SUCCESSFULLY");
+            const normalized = normalizeResponse(response.data, response.data?.message || "STATUSES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                statusCache.set(cacheKey, normalized.data);
-                // If fetching all statuses, save to global reference for synchronous helper lookups
                 if (!statusIds) {
                     cachedStatuses = normalized.data;
                 } else if (!cachedStatuses) {
@@ -64,7 +56,7 @@ export const setupService = {
     },
 
     // Fetches all titles from backend (setup/fetch-all-title.php)
-    // Returns list of titles like Mr, Mrs, Dr, Prof, Engr
+    // Returns: Mr, Mrs, Dr, Prof, Engr
     async fetchAllTitles() {
         if (cachedTitles) {
             return { success: true, data: cachedTitles, message: "Titles loaded from cache" };
@@ -73,7 +65,7 @@ export const setupService = {
             const response = await api.post("setup/fetch-all-title.php", new FormData());
             const normalized = normalizeResponse(response.data, "TITLES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedTitles = normalized.data; // save to cache
+                cachedTitles = normalized.data;
             }
             return normalized;
         } catch (error) {
@@ -85,12 +77,10 @@ export const setupService = {
         }
     },
 
-    // Fetches user roles from backend (setup/fetch-all-role.php)
-    // Optional roleIds (e.g. "1, 2, 3" or "19") filters the results directly on the backend.
+    // Fetches all 19 user roles from backend (setup/fetch-all-role.php)
     async fetchAllRoles(roleIds) {
-        const cacheKey = roleIds ? String(roleIds).replace(/\s+/g, "") : "ALL";
-        if (roleCache.has(cacheKey)) {
-            return { success: true, data: roleCache.get(cacheKey), message: "Roles loaded from cache" };
+        if (!roleIds && cachedRoles) {
+            return { success: true, data: cachedRoles, message: "Roles loaded from cache" };
         }
         try {
             const formData = new FormData();
@@ -98,10 +88,8 @@ export const setupService = {
                 formData.append("roleIds", roleIds);
             }
             const response = await api.post("setup/fetch-all-role.php", formData);
-            const normalized = normalizeResponse(response.data, response.data.message || "ROLES FETCHED SUCCESSFULLY");
+            const normalized = normalizeResponse(response.data, response.data?.message || "ROLES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                roleCache.set(cacheKey, normalized.data);
-                // If fetching all roles, save to global reference for synchronous helper lookups
                 if (!roleIds) {
                     cachedRoles = normalized.data;
                 } else if (!cachedRoles) {
@@ -119,7 +107,6 @@ export const setupService = {
     },
 
     // Fetches all payment methods from backend (setup/fetch-all-payment-method.php)
-    // Returns list of methods like Wallet, Bank Transfer, Cash
     async fetchAllPaymentMethods() {
         if (cachedPaymentMethods) {
             return { success: true, data: cachedPaymentMethods, message: "Payment methods loaded from cache" };
@@ -128,7 +115,7 @@ export const setupService = {
             const response = await api.post("setup/fetch-all-payment-method.php", new FormData());
             const normalized = normalizeResponse(response.data, "PAYMENT METHODS FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedPaymentMethods = normalized.data; // save to cache
+                cachedPaymentMethods = normalized.data;
             }
             return normalized;
         } catch (error) {
@@ -138,6 +125,54 @@ export const setupService = {
                 data: []
             };
         }
+    },
+
+    // --- Domain-Specific Filters for Roles & Statuses ---
+
+    // Order fulfillment & payment statuses (Processing, Successful, Paid, Failed, Done, Canceled, Reverse, Pending)
+    getOrderStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        const orderIds = ["3", "4", "5", "8", "9", "10", "12", "13"];
+        return statuses.filter(s => orderIds.includes(String(s.status_id)));
+    },
+
+    // Product inventory & stock statuses (In Stock, Out of stock, Active, Inactive, Pending)
+    getProductStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        const prodIds = ["1", "2", "3", "6", "11"];
+        return statuses.filter(s => prodIds.includes(String(s.status_id)));
+    },
+
+    // Category taxonomy statuses (Active, Inactive, Pending)
+    getCategoryStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        const catIds = ["1", "2", "3"];
+        return statuses.filter(s => catIds.includes(String(s.status_id)));
+    },
+
+    // User account statuses (Active, Inactive, Suspended, Pending)
+    getAccountStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        const accIds = ["1", "2", "7", "3"];
+        return statuses.filter(s => accIds.includes(String(s.status_id)));
+    },
+
+    // Transaction & payment statuses (Successful, Paid, Processing, Failed, Reverse, Active, Inactive, Pending)
+    getTransactionStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        const txnIds = ["5", "8", "4", "9", "13", "1", "2", "3"];
+        return statuses.filter(s => txnIds.includes(String(s.status_id)));
+    },
+
+    // Staff organizational roles (all roles 1-18, excluding customer #19)
+    getStaffRoles(list) {
+        const roles = list || cachedRoles || [];
+        return roles.filter(r => String(r.role_id) !== "19" && !r.role_name?.toLowerCase().includes("customer"));
+    },
+
+    // Customer tier roles (all 19 roles available from backend, with Customer #19 as primary)
+    getCustomerRoles(list) {
+        return list || cachedRoles || [];
     },
 
     // Look up a role id by its name from the backend roles list.

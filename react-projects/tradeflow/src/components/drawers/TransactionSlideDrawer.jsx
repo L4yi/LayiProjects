@@ -16,11 +16,11 @@ export default function TransactionSlideDrawer({
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load payment transaction statuses from backend setup endpoint by ID
+    // Load payment transaction statuses from backend setup
     useEffect(() => {
-        setupService.fetchAllStatus("1, 2, 4, 5").then((res) => {
+        setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getTransactionStatuses(res.data));
             }
         });
     }, []);

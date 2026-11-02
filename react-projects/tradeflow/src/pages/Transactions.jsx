@@ -28,10 +28,10 @@ export default function Transactions() {
 
     useEffect(() => {
         loadTransactions();
-        // Fetch transaction statuses from backend setup endpoint by ID
-        setupService.fetchAllStatus("1, 2, 4, 5").then(res => {
+        // Fetch transaction and payment statuses from backend setup
+        setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getTransactionStatuses(res.data));
             }
         });
     }, []);

@@ -17,11 +17,11 @@ export default function ProductSlideDrawer({
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load product statuses from backend setup endpoint by ID
+    // Load product catalog and stock statuses from backend setup
     useEffect(() => {
-        setupService.fetchAllStatus("1, 2, 3").then((res) => {
+        setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getProductStatuses(res.data));
             }
         });
     }, []);

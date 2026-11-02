@@ -19,17 +19,17 @@ export default function StaffSlideDrawer({
     const [rolesList, setRolesList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load setup tables (titles, roles, and statuses) directly from the backend by ID
+    // Load setup tables (titles, staff roles, and account statuses) directly from backend setup
     useEffect(() => {
         const loadSetup = async () => {
             const [tRes, rRes, sRes] = await Promise.all([
                 setupService.fetchAllTitles(),
-                setupService.fetchAllRoles("1, 2, 3"),
-                setupService.fetchAllStatus("1, 2")
+                setupService.fetchAllRoles(),
+                setupService.fetchAllStatus()
             ]);
             if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
-            if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
-            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
+            if (rRes.success && Array.isArray(rRes.data)) setRolesList(setupService.getStaffRoles(rRes.data));
+            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(setupService.getAccountStatuses(sRes.data));
         };
         loadSetup();
     }, []);
@@ -238,7 +238,7 @@ export default function StaffSlideDrawer({
                             }}
                         >
                             <option value="">Select Role</option>
-                            {rolesList.filter((r) => r.role_id !== "19" && !r.role_name.toLowerCase().includes("customer")).map((r) => (
+                            {rolesList.map((r) => (
                                 <option key={r.role_id} value={r.role_id}>
                                     {r.role_name}
                                 </option>
@@ -262,7 +262,7 @@ export default function StaffSlideDrawer({
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map((s) => (
+                            {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}
                                 </option>

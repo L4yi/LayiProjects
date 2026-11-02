@@ -16,11 +16,11 @@ export default function CategorySlideDrawer({
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load category statuses from backend setup endpoint by ID
+    // Load category taxonomy statuses from backend setup
     useEffect(() => {
-        setupService.fetchAllStatus("1, 2, 3").then((res) => {
+        setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getCategoryStatuses(res.data));
             }
         });
     }, []);

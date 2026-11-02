@@ -54,10 +54,10 @@ export default function Categories() {
 
     useEffect(() => {
         loadCategories();
-        // Load category statuses (Active, Inactive, Pending) from backend setup endpoint by ID
-        setupService.fetchAllStatus("1, 2, 3").then(res => {
+        // Load category taxonomy statuses from backend setup
+        setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getCategoryStatuses(res.data));
             }
         });
     }, []);

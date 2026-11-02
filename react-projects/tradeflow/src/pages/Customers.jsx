@@ -38,10 +38,10 @@ export default function Customers() {
 
     useEffect(() => {
         loadCustomers();
-        // Load customer statuses (Active, Inactive, Pending) from backend setup endpoint by ID
-        setupService.fetchAllStatus("1, 2, 3").then(res => {
+        // Load customer account statuses from backend setup
+        setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getAccountStatuses(res.data));
             }
         });
     }, []);

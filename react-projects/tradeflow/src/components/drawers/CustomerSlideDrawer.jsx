@@ -14,28 +14,35 @@ export default function CustomerSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
+    const [titlesList, setTitlesList] = useState([]);
     const [rolesList, setRolesList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
 
-    // Load customer roles and statuses from the backend setup endpoints by ID
+    // Load titles, full roles list (all 19), and account statuses from backend setup
     useEffect(() => {
         const loadSetup = async () => {
-            const [rRes, sRes] = await Promise.all([
-                setupService.fetchAllRoles("19"),
-                setupService.fetchAllStatus("1, 2, 3")
+            const [tRes, rRes, sRes] = await Promise.all([
+                setupService.fetchAllTitles(),
+                setupService.fetchAllRoles(),
+                setupService.fetchAllStatus()
             ]);
+            if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
             if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
-            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
+            if (sRes.success && Array.isArray(sRes.data)) {
+                setStatusesList(setupService.getAccountStatuses(sRes.data));
+            }
         };
         loadSetup();
     }, []);
 
     useEffect(() => {
         if (initialData) {
+            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId(initialData.title, "1");
             const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "19");
             const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
             setFormData({
                 ...initialData,
+                titleId: titleId || "1",
                 roleId: roleId || "19",
                 statusId: statusId || "1"
             });
@@ -70,6 +77,30 @@ export default function CustomerSlideDrawer({
                     <span>Customer Details</span>
                 </div>
                 <div className="card-form-grid">
+                    {/* Title */}
+                    <div className="form-group-item full-width">
+                        <label className="drawer-label">Title</label>
+                        <select
+                            className="drawer-input"
+                            value={String(formData.titleId || "1")}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const matched = titlesList.find((t) => String(t.title_id) === String(val));
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    titleId: val,
+                                    title: matched?.title_name || prev.title || "Mr"
+                                }));
+                            }}
+                        >
+                            {titlesList.map((t) => (
+                                <option key={t.title_id} value={t.title_id}>
+                                    {t.title_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Full Name */}
                     <div className="form-group-item full-width">
                         <label className="drawer-label">Full Name *</label>

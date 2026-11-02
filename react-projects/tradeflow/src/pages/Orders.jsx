@@ -40,10 +40,10 @@ export default function Orders() {
 
     useEffect(() => {
         loadOrders();
-        // Load order statuses from backend setup endpoint by ID
-        setupService.fetchAllStatus("3, 4, 5, 7, 8, 9, 10, 12").then(res => {
+        // Load order fulfillment & payment statuses from backend setup
+        setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getOrderStatuses(res.data));
             }
         });
     }, []);

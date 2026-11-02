@@ -71,10 +71,10 @@ export default function Products() {
     useEffect(() => {
         loadProducts();
         loadCategories();
-        // Load product statuses (Active, Inactive, Pending) from backend setup endpoint by ID
-        setupService.fetchAllStatus("1, 2, 3").then(res => {
+        // Load product inventory and catalog statuses from backend setup
+        setupService.fetchAllStatus().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(res.data);
+                setStatusesList(setupService.getProductStatuses(res.data));
             }
         });
     }, []);
