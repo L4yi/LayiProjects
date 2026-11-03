@@ -69,17 +69,25 @@ export const setupService = {
         }
     },
 
-    // Fetches all titles from backend (setup/fetch-all-title.php)
-    // Returns: Mr, Mrs, Dr, Prof, Engr
-    async fetchAllTitles() {
-        if (cachedTitles) {
+    // Fetches titles from backend (setup/fetch-all-title.php)
+    // Supports optional titleIds filter (e.g. "1, 2") or fetches all: Mr, Mrs, Dr, Prof, Engr
+    async fetchAllTitles(titleIds) {
+        if (!titleIds && cachedTitles) {
             return { success: true, data: cachedTitles, message: "Titles loaded from cache" };
         }
         try {
-            const response = await api.post("setup/fetch-all-title.php", new FormData());
+            const formData = new FormData();
+            if (titleIds) {
+                formData.append("titleIds", titleIds);
+            }
+            const response = await api.post("setup/fetch-all-title.php", formData);
             const normalized = normalizeResponse(response.data, "TITLES FETCHED SUCCESSFULLY");
             if (normalized.success && Array.isArray(normalized.data)) {
-                cachedTitles = normalized.data;
+                if (!titleIds) {
+                    cachedTitles = normalized.data;
+                } else if (!cachedTitles) {
+                    cachedTitles = normalized.data;
+                }
             }
             return normalized;
         } catch (error) {
