@@ -48,20 +48,7 @@ export default function BaseDrawerShell({
 
                 {/* Optional error banner */}
                 {errorMessage && (
-                    <div
-                        style={{
-                            margin: "12px 20px 0",
-                            background: "#fee2e2",
-                            border: "1px solid #f87171",
-                            color: "#991b1b",
-                            padding: "10px 14px",
-                            borderRadius: "8px",
-                            fontSize: "0.88rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                        }}
-                    >
+                    <div className="drawer-error-alert">
                         <i className="bi bi-exclamation-triangle-fill"></i>
                         <span>{errorMessage}</span>
                     </div>
@@ -82,13 +69,12 @@ export default function BaseDrawerShell({
                         </button>
                         <button
                             type="submit"
-                            className="btn-drawer-save"
+                            className={`btn-drawer-save ${isSaving ? "is-saving" : ""}`}
                             disabled={isSaving}
-                            style={{ opacity: isSaving ? 0.75 : 1, cursor: isSaving ? "not-allowed" : "pointer" }}
                         >
                             {isSaving ? (
                                 <span>
-                                    <i className="bi bi-arrow-repeat spin" style={{ marginRight: "6px" }}></i>
+                                    <i className="bi bi-arrow-repeat spin drawer-spin-icon"></i>
                                     Saving...
                                 </span>
                             ) : (

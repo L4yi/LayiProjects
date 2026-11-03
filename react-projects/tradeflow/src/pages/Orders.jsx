@@ -255,7 +255,7 @@ export default function Orders() {
                         title="Order Processing"
                         subtitle="Customer fulfillment pipelines and delivery logs"
                         isEmpty={filteredOrders.length === 0}
-                        emptyMessage="No customer orders recorded yet in database."
+                        emptyMessage="No customer orders recorded yet."
                     >
                         <table className="solara-data-table">
                             <thead>
@@ -276,7 +276,7 @@ export default function Orders() {
                                         <td className="col-order-id">{order.code || order.id}</td>
                                         <td>
                                             <strong>{order.customerName || "Customer"}</strong>
-                                            {order.phone && <div style={{ fontSize: "0.78rem", color: "#64748b" }}>{order.phone}</div>}
+                                            {order.phone && <div className="table-cell-ellipsis-sub">{order.phone}</div>}
                                         </td>
                                         <td>
                                             <div className="order-product-cell">
@@ -285,7 +285,7 @@ export default function Orders() {
                                             </div>
                                         </td>
                                         <td>
-                                            <span style={{ fontWeight: 600, color: "#0f172a" }}>
+                                            <span className="order-amount-text">
                                                 ₦ {Number(order.price || order.amount || 0).toLocaleString()}
                                             </span>
                                         </td>
@@ -307,7 +307,7 @@ export default function Orders() {
                                                 <button
                                                     type="button"
                                                     className="btn-edit"
-                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleDeleteOrder(order)}
                                                     title="Delete Order"
                                                 >

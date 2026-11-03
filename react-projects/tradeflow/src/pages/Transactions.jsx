@@ -161,7 +161,7 @@ export default function Transactions() {
                         title="Transaction History"
                         subtitle="Verified customer checkouts, gateway references, and amounts"
                         isEmpty={filteredTxns.length === 0}
-                        emptyMessage="Transaction API endpoint is not yet available on the backend. Records will appear once deployed."
+                        emptyMessage="Transaction History unavailable rn"
                     >
                         <table className="solara-data-table">
                             <thead>

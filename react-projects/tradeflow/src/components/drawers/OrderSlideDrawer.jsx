@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import BaseDrawerShell from "./BaseDrawerShell";
 import setupService from "../../services/setupService";
+import customerService from "../../services/customerService";
+import productService from "../../services/productService";
 
-// Slide drawer specifically for managing or updating an order.
+// Slide drawer specifically for managing or creating an order.
 export default function OrderSlideDrawer({
     isOpen,
     onClose,
@@ -14,22 +16,27 @@ export default function OrderSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [paymentMethodsList, setPaymentMethodsList] = useState(setupService.getCachedPaymentMethods());
     const [statusesList, setStatusesList] = useState(() => setupService.getOrderStatuses(setupService.getCachedStatuses()));
+    const [customersList, setCustomersList] = useState([]);
+    const [productsList, setProductsList] = useState([]);
 
-    // Load payment methods and fulfillment statuses from backend setup
+    // Load setup data, customers, and products from backend
     useEffect(() => {
-        const loadSetup = async () => {
-            const [pmRes, sRes] = await Promise.all([
-                setupService.fetchAllPaymentMethods(),
-                setupService.fetchAllStatus()
-            ]);
-            if (pmRes.success && Array.isArray(pmRes.data)) setPaymentMethodsList(pmRes.data);
+        setupService.fetchAllStatus().then((sRes) => {
             if (sRes.success && Array.isArray(sRes.data)) {
                 setStatusesList(setupService.getOrderStatuses(sRes.data));
             }
-        };
-        loadSetup();
+        });
+        customerService.fetchAllCustomers().then((cRes) => {
+            if (cRes.success && Array.isArray(cRes.data)) {
+                setCustomersList(cRes.data);
+            }
+        });
+        productService.fetchAllProducts().then((pRes) => {
+            if (pRes.success && Array.isArray(pRes.data)) {
+                setProductsList(pRes.data);
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -44,6 +51,30 @@ export default function OrderSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleCustomerSelect = (customerId) => {
+        const found = customersList.find((c) => String(c.id || c.customerId) === String(customerId));
+        setFormData((prev) => ({
+            ...prev,
+            customerId,
+            customer_id: customerId,
+            customerName: found?.name || found?.fullName || prev.customerName,
+            name: found?.name || found?.fullName || prev.name
+        }));
+    };
+
+    const handleProductSelect = (productId) => {
+        const found = productsList.find((p) => String(p.id || p.productId || p.product_id) === String(productId));
+        const price = found?.price || found?.productPrice || found?.product_price || 0;
+        setFormData((prev) => ({
+            ...prev,
+            productId,
+            product_id: productId,
+            productName: found?.name || found?.productName || found?.product_name || prev.productName,
+            price,
+            amount: price
+        }));
     };
 
     const handleSubmit = (e) => {
@@ -63,127 +94,64 @@ export default function OrderSlideDrawer({
             errorMessage={errorMessage}
             onSubmit={handleSubmit}
         >
-            {/* Card 1: Order & Customer Information */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-receipt text-primary-icon"></i>
-                    <span>Order & Customer</span>
+            <div className="drawer-flat-form">
+                {/* Customer Selection */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Customer</label>
+                    <select
+                        className="drawer-input"
+                        value={String(formData.customerId || formData.customer_id || "")}
+                        onChange={(e) => handleCustomerSelect(e.target.value)}
+                    >
+                        <option value="">Select Customer</option>
+                        {customersList.map((cust) => (
+                            <option key={cust.id || cust.customerId} value={cust.id || cust.customerId}>
+                                {cust.name || cust.fullName || `${cust.firstName || ""} ${cust.lastName || ""}`.trim() || cust.email} (ID: {cust.id || cust.customerId})
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className="card-form-grid">
-                    {/* Order ID */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Order ID *</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="e.g. #ORD-9830"
-                            value={formData.code || formData.id || ""}
-                            onChange={(e) => {
-                                handleChange("code", e.target.value);
-                                handleChange("id", e.target.value);
-                            }}
-                            required
-                        />
-                    </div>
 
-                    {/* Customer Name */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Customer Name *</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="e.g. Sophia Martinez"
-                            value={formData.name || formData.customerName || ""}
-                            onChange={(e) => {
-                                handleChange("name", e.target.value);
-                                handleChange("customerName", e.target.value);
-                            }}
-                            required
-                        />
-                    </div>
-
-                    {/* Delivery Address */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Delivery Address</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="e.g. Panseke, Abeokuta"
-                            value={formData.address || ""}
-                            onChange={(e) => handleChange("address", e.target.value)}
-                        />
-                    </div>
+                {/* Product Selection */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Product</label>
+                    <select
+                        className="drawer-input"
+                        value={String(formData.productId || formData.product_id || "")}
+                        onChange={(e) => handleProductSelect(e.target.value)}
+                    >
+                        <option value="">Select Product</option>
+                        {productsList.map((prod) => (
+                            <option key={prod.id || prod.productId || prod.product_id} value={prod.id || prod.productId || prod.product_id}>
+                                {prod.name || prod.productName || prod.product_name} - ₦{Number(prod.price || prod.productPrice || 0).toLocaleString()} (ID: {prod.id || prod.productId || prod.product_id})
+                            </option>
+                        ))}
+                    </select>
                 </div>
-            </div>
 
-            {/* Card 2: Fulfillment & Payment */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-cart-check text-primary-icon"></i>
-                    <span>Fulfillment & Payment</span>
-                </div>
-                <div className="card-form-grid">
-                    {/* Items Summary */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Items Summary</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="e.g. Apple iPhone 13 Pro Max (256GB)"
-                            value={formData.notes || formData.productName || ""}
-                            onChange={(e) => {
-                                handleChange("notes", e.target.value);
-                                handleChange("productName", e.target.value);
-                            }}
-                        />
-                    </div>
-
-                    {/* Total Amount */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Total Amount (₦) *</label>
+                {/* Amount / Price Display */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Order Amount (₦)</label>
                         <input
                             type="number"
                             className="drawer-input"
-                            placeholder="e.g. 850000"
+                            placeholder="Auto-calculated from product"
                             value={formData.price || formData.amount || ""}
                             onChange={(e) => {
-                                handleChange("price", Number(e.target.value) || 0);
-                                handleChange("amount", Number(e.target.value) || 0);
+                                const val = Number(e.target.value) || 0;
+                                handleChange("price", val);
+                                handleChange("amount", val);
                             }}
-                            required
                         />
                     </div>
 
-                    {/* Payment Method */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Payment Method</label>
-                        <select
-                            className="drawer-input"
-                            value={String(formData.paymentMethodId || (paymentMethodsList.find(pm => pm.payment_method_name === formData.paymentMethod)?.payment_method_id) || "2")}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                const matched = paymentMethodsList.find(pm => String(pm.payment_method_id) === String(val));
-                                setFormData(prev => ({
-                                    ...prev,
-                                    paymentMethodId: val,
-                                    paymentMethod: matched?.payment_method_name || prev.paymentMethod
-                                }));
-                            }}
-                        >
-                            {paymentMethodsList.map((pm) => (
-                                <option key={pm.payment_method_id} value={pm.payment_method_id}>
-                                    {pm.payment_method_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     {/* Order Status */}
-                    <div className="form-group-item full-width">
+                    <div className="drawer-form-group">
                         <label className="drawer-label">Order Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || (statusesList.find(s => s.status_name === formData.status)?.status_id) || "")}
+                            value={String(formData.statusId || (statusesList.find((s) => s.status_name === formData.status)?.status_id) || "4")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
@@ -195,10 +163,24 @@ export default function OrderSlideDrawer({
                             }}
                         >
                             {statusesList.map((s) => (
-                                <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
+                                <option key={s.status_id} value={s.status_id}>
+                                    {s.status_name}
+                                </option>
                             ))}
                         </select>
                     </div>
+                </div>
+
+                {/* Delivery Notes / Address */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Delivery Address / Notes</label>
+                    <input
+                        type="text"
+                        className="drawer-input"
+                        placeholder="e.g. Panseke, Abeokuta"
+                        value={formData.address || ""}
+                        onChange={(e) => handleChange("address", e.target.value)}
+                    />
                 </div>
             </div>
         </BaseDrawerShell>

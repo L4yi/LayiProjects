@@ -14,7 +14,6 @@ export default function StaffSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [showPassword, setShowPassword] = useState(false);
     const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
     const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
     const [statusesList, setStatusesList] = useState(setupService.getCachedStatuses());
@@ -37,17 +36,16 @@ export default function StaffSlideDrawer({
     // Synchronize form state when drawer opens or initialData changes
     useEffect(() => {
         if (initialData) {
-            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId(initialData.title, "1");
+            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId();
             const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "1");
             const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
             setFormData({
                 ...initialData,
-                titleId: titleId || "1",
-                roleId: roleId || "1",
-                statusId: statusId || "1"
+                titleId: titleId || "",
+                roleId: roleId || "",
+                statusId: statusId || ""
             });
         }
-        setShowPassword(false);
     }, [initialData, isOpen]);
 
     const handleChange = (field, value) => {
@@ -71,40 +69,36 @@ export default function StaffSlideDrawer({
             errorMessage={errorMessage}
             onSubmit={handleSubmit}
         >
-            {/* Card 1: Basic Information */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-person-vcard text-primary-icon"></i>
-                    <span>Staff Basic Info</span>
+            <div className="drawer-flat-form">
+                {/* Title */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Title</label>
+                    <select
+                        className="drawer-input"
+                        value={formData.titleId || ""}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const matched = titlesList.find((t) => String(t.title_id) === String(val));
+                            setFormData((prev) => ({
+                                ...prev,
+                                titleId: val,
+                                title: matched?.title_name || ""
+                            }));
+                        }}
+                    >
+                        <option value="">Select Here</option>
+                        {titlesList.map((t) => (
+                            <option key={t.title_id} value={t.title_id}>
+                                {t.title_name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className="card-form-grid">
-                    {/* Title */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Title</label>
-                        <select
-                            className="drawer-input"
-                            value={String(formData.titleId || (titlesList.find(t => t.title_name === formData.title)?.title_id) || "1")}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                const matched = titlesList.find((t) => String(t.title_id) === String(val));
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    titleId: val,
-                                    title: matched?.title_name || prev.title || "Mr"
-                                }));
-                            }}
-                        >
-                            {titlesList.map((t) => (
-                                <option key={t.title_id} value={t.title_id}>
-                                    {t.title_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
 
-                    {/* First Name */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">First Name *</label>
+                {/* First Name & Last Name */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">First Name</label>
                         <input
                             type="text"
                             className="drawer-input"
@@ -114,13 +108,11 @@ export default function StaffSlideDrawer({
                                 handleChange("firstName", e.target.value);
                                 handleChange("name", `${e.target.value} ${formData.lastName || ""}`.trim());
                             }}
-                            required
                         />
                     </div>
 
-                    {/* Last Name */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Last Name *</label>
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Last Name</label>
                         <input
                             type="text"
                             className="drawer-input"
@@ -130,13 +122,14 @@ export default function StaffSlideDrawer({
                                 handleChange("lastName", e.target.value);
                                 handleChange("name", `${formData.firstName || ""} ${e.target.value}`.trim());
                             }}
-                            required
                         />
                     </div>
+                </div>
 
-                    {/* Email */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Email Address *</label>
+                {/* Email & Contact Number */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Email Address</label>
                         <input
                             type="email"
                             className="drawer-input"
@@ -146,13 +139,11 @@ export default function StaffSlideDrawer({
                                 handleChange("email", e.target.value);
                                 handleChange("emailAddress", e.target.value);
                             }}
-                            required
                         />
                     </div>
 
-                    {/* Phone Number */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Contact Number *</label>
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Contact Number</label>
                         <input
                             type="text"
                             className="drawer-input"
@@ -162,73 +153,29 @@ export default function StaffSlideDrawer({
                                 handleChange("phone", e.target.value);
                                 handleChange("phoneNumber", e.target.value);
                             }}
-                            required
                         />
                     </div>
-
-                    {/* Address */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Address</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="Enter address"
-                            value={formData.address || ""}
-                            onChange={(e) => handleChange("address", e.target.value)}
-                        />
-                    </div>
-
-                    {/* Initial Password (only shown when creating a new staff account) */}
-                    {!formData.staffId && !formData.id && (
-                        <div className="form-group-item full-width">
-                            <label className="drawer-label">Initial Password</label>
-                            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    className="drawer-input"
-                                    placeholder="Default: Password123!"
-                                    value={formData.password || ""}
-                                    onChange={(e) => handleChange("password", e.target.value)}
-                                    style={{ paddingRight: "42px", width: "100%" }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: "absolute",
-                                        right: "12px",
-                                        background: "transparent",
-                                        border: "none",
-                                        color: "#718096",
-                                        cursor: "pointer",
-                                        padding: 0,
-                                        fontSize: "1.1rem",
-                                        display: "flex",
-                                        alignItems: "center"
-                                    }}
-                                    title={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
-            </div>
 
-            {/* Card 2: Administrative Role & Status Details */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-shield-check text-primary-icon"></i>
-                    <span>Administrative & Status Details</span>
+                {/* Address */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Address</label>
+                    <input
+                        type="text"
+                        className="drawer-input"
+                        placeholder="Enter address"
+                        value={formData.address || ""}
+                        onChange={(e) => handleChange("address", e.target.value)}
+                    />
                 </div>
-                <div className="card-form-grid">
-                    {/* Role */}
-                    <div className="form-group-item">
+
+                {/* Role & Account Status */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
                         <label className="drawer-label">Role</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.roleId || (rolesList.find(r => r.role_name === formData.role)?.role_id) || "")}
+                            value={String(formData.roleId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = rolesList.find((r) => String(r.role_id) === String(val));
@@ -239,8 +186,8 @@ export default function StaffSlideDrawer({
                                 }));
                             }}
                         >
-                            <option value="">Select Role</option>
-                            {rolesList.filter((r) => String(r.role_id) !== "19" && !r.role_name?.toLowerCase().includes("customer")).map((r) => (
+                            <option value="">Select Here</option>
+                            {rolesList.map((r) => (
                                 <option key={r.role_id} value={r.role_id}>
                                     {r.role_name}
                                 </option>
@@ -248,12 +195,11 @@ export default function StaffSlideDrawer({
                         </select>
                     </div>
 
-                    {/* Status */}
-                    <div className="form-group-item">
+                    <div className="drawer-form-group">
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || (statusesList.find(s => s.status_name.toUpperCase() === String(formData.status || "").toUpperCase())?.status_id) || "1")}
+                            value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = statusesList.find((s) => String(s.status_id) === String(val));
@@ -264,7 +210,8 @@ export default function StaffSlideDrawer({
                                 }));
                             }}
                         >
-                            {statusesList.filter((s) => ["1", "2"].includes(String(s.status_id)) || ["ACTIVE", "INACTIVE"].includes(s.status_name.toUpperCase())).map((s) => (
+                            <option value="">Select Here</option>
+                            {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}
                                 </option>

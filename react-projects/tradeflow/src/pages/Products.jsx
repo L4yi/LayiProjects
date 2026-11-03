@@ -220,12 +220,11 @@ export default function Products() {
                     countSubtitle={`${filteredProds.length} items cataloged`}
                     actions={
                         <>
-                            <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
-                                <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
+                            <div className="table-filter-search-wrap">
+                                <i className="bi bi-search table-filter-search-icon"></i>
                                 <input
                                     type="text"
-                                    className="filter-dropdown-select"
-                                    style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
+                                    className="filter-dropdown-select table-filter-search-input"
                                     placeholder="Search products..."
                                     value={searchQuery}
                                     onChange={(e) => handleSearchChange(e.target.value)}
@@ -234,16 +233,7 @@ export default function Products() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchChange("")}
-                                        style={{
-                                            position: "absolute",
-                                            right: "10px",
-                                            background: "transparent",
-                                            border: "none",
-                                            color: "#a0aec0",
-                                            cursor: "pointer",
-                                            padding: 0,
-                                            fontSize: "0.95rem"
-                                        }}
+                                        className="table-filter-clear-btn"
                                         title="Clear search"
                                     >
                                         <i className="bi bi-x-circle-fill"></i>
@@ -297,17 +287,16 @@ export default function Products() {
                 {isLoading ? (
                     <LoadingSpinner variant="table" columns={["SN", "Product Name", "ID", "Category", "Price (₦)", "Stock", "Status", "Action"]} />
                 ) : hasNetworkError ? (
-                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>
-                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>Network / Connection Issue</h3>
-                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Network / Connection Issue</h3>
+                        <p className="connection-error-text">
                             Unable to load products from the server. Please check your internet connection and try again.
                         </p>
                         <button
                             type="button"
                             className="btn-add-entity"
                             onClick={loadProducts}
-                            style={{ display: "inline-flex" }}
                         >
                             <i className="bi bi-arrow-clockwise"></i> Retry Connection
                         </button>
@@ -317,7 +306,7 @@ export default function Products() {
                         title="Product Catalog"
                         subtitle="Live inventory records and stock statuses"
                         isEmpty={filteredProds.length === 0}
-                        emptyMessage="No products cataloged yet in database."
+                        emptyMessage="No products cataloged yet."
                     >
                         <table className="solara-data-table">
                             <thead>
@@ -342,19 +331,18 @@ export default function Products() {
                                                     <img
                                                         src={prod.image}
                                                         alt={prod.name}
-                                                        className="prod-tbl-thumb"
-                                                        style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", maxWidth: "44px", maxHeight: "44px", objectFit: "contain", borderRadius: "6px" }}
+                                                        className="table-product-thumb"
                                                         onError={(e) => { e.target.style.display = "none"; }}
                                                     />
                                                 ) : (
-                                                    <div style={{ width: "44px", height: "44px", minWidth: "44px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                                                    <div className="table-product-thumb-placeholder">
                                                         <i className="bi bi-box"></i>
                                                     </div>
                                                 )}
                                                 <div className="prod-tbl-info">
                                                     <span className="prod-tbl-title">{prod.name}</span>
                                                     {prod.description && (
-                                                        <span className="prod-tbl-sub" style={{ maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                                                        <span className="prod-tbl-sub table-cell-ellipsis-sub">
                                                             {prod.description}
                                                         </span>
                                                     )}

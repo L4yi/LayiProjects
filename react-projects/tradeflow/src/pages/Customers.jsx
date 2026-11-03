@@ -261,7 +261,7 @@ export default function Customers() {
                         title="Customer Accounts"
                         subtitle="Registered platform user profiles"
                         isEmpty={filteredCustomers.length === 0}
-                        emptyMessage="No customer accounts registered in database."
+                        emptyMessage="No customer accounts   ."
                     >
                         <table className="solara-data-table">
                             <thead>
@@ -316,7 +316,7 @@ export default function Customers() {
                                                 <button
                                                     type="button"
                                                     className="btn-edit"
-                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleDeleteCustomer(cust)}
                                                     title="Delete Customer"
                                                 >

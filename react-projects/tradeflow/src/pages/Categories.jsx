@@ -198,12 +198,11 @@ export default function Categories() {
                     countSubtitle={`${displayCats.length} categories available`}
                     actions={
                         <>
-                            <div className="filter-select-wrap" style={{ position: "relative", minWidth: "220px", display: "flex", alignItems: "center" }}>
-                                <i className="bi bi-search" style={{ position: "absolute", left: "12px", color: "#718096", pointerEvents: "none" }}></i>
+                            <div className="table-filter-search-wrap">
+                                <i className="bi bi-search table-filter-search-icon"></i>
                                 <input
                                     type="text"
-                                    className="filter-dropdown-select"
-                                    style={{ paddingLeft: "34px", paddingRight: searchQuery ? "30px" : "12px", width: "100%", height: "38px" }}
+                                    className="filter-dropdown-select table-filter-search-input"
                                     placeholder="Search categories..."
                                     value={searchQuery}
                                     onChange={(e) => handleSearchChange(e.target.value)}
@@ -212,16 +211,7 @@ export default function Categories() {
                                     <button
                                         type="button"
                                         onClick={() => handleSearchChange("")}
-                                        style={{
-                                            position: "absolute",
-                                            right: "10px",
-                                            background: "transparent",
-                                            border: "none",
-                                            color: "#a0aec0",
-                                            cursor: "pointer",
-                                            padding: 0,
-                                            fontSize: "0.95rem"
-                                        }}
+                                        className="table-filter-clear-btn"
                                         title="Clear search"
                                     >
                                         <i className="bi bi-x-circle-fill"></i>
@@ -258,17 +248,16 @@ export default function Categories() {
                 {isLoading ? (
                     <LoadingSpinner variant="table" columns={["SN", "Category Name", "Code", "Description", "Scope / Models", "Status", "Action"]} />
                 ) : hasNetworkError ? (
-                    <div style={{ textAlign: "center", padding: "60px 20px", background: "#ffffff", borderRadius: "12px", border: "1px dashed #feb2b2", margin: "20px 0" }}>
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2.8rem", color: "#e53e3e", display: "block", marginBottom: "12px" }}></i>
-                        <h3 style={{ color: "#2d3748", marginBottom: "8px", fontSize: "1.2rem" }}>Network / Connection Issue</h3>
-                        <p style={{ color: "#718096", fontSize: "0.9rem", maxWidth: "420px", margin: "0 auto 20px" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Network / Connection Issue</h3>
+                        <p className="connection-error-text">
                             Unable to load categories from the server. Please check your internet connection and try again.
                         </p>
                         <button
                             type="button"
                             className="btn-add-entity"
                             onClick={loadCategories}
-                            style={{ display: "inline-flex" }}
                         >
                             <i className="bi bi-arrow-clockwise"></i> Retry Connection
                         </button>
@@ -278,7 +267,7 @@ export default function Categories() {
                         title="Category Catalog"
                         subtitle="Active and archived categories in the catalog"
                         isEmpty={displayCats.length === 0}
-                        emptyMessage="No categories match the selected criteria."
+                        emptyMessage="No categories available."
                     >
                         <table className="solara-data-table">
                             <thead>
@@ -302,7 +291,7 @@ export default function Categories() {
                                                 <div>
                                                     <span className="cat-title">{cat.name}</span>
                                                     {cat.description && (
-                                                        <div style={{ fontSize: "0.78rem", color: "#718096", maxWidth: "340px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                        <div className="table-cell-ellipsis-sub">
                                                             {cat.description}
                                                         </div>
                                                     )}
@@ -335,8 +324,7 @@ export default function Categories() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-edit"
-                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleDeleteCategory(cat)}
                                                     title="Delete Category"
                                                 >

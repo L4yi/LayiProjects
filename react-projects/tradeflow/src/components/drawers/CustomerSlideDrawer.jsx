@@ -40,8 +40,12 @@ export default function CustomerSlideDrawer({
             const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId(initialData.title, "1");
             const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "19");
             const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            const firstName = initialData.firstName || initialData.first_name || initialData.name?.split(" ")[0] || "";
+            const lastName = initialData.lastName || initialData.last_name || initialData.name?.split(" ").slice(1).join(" ") || "";
             setFormData({
                 ...initialData,
+                firstName,
+                lastName,
                 titleId: titleId || "1",
                 roleId: roleId || "19",
                 statusId: statusId || "1"
@@ -70,82 +74,68 @@ export default function CustomerSlideDrawer({
             errorMessage={errorMessage}
             onSubmit={handleSubmit}
         >
-            {/* Card 1: Customer Contact & Delivery Info */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-person-vcard text-primary-icon"></i>
-                    <span>Customer Details</span>
+            <div className="drawer-flat-form">
+                {/* Title */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Title</label>
+                    <select
+                        className="drawer-input"
+                        value={String(formData.titleId || "1")}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const matched = titlesList.find((t) => String(t.title_id) === String(val));
+                            setFormData((prev) => ({
+                                ...prev,
+                                titleId: val,
+                                title: matched?.title_name || prev.title || "Mr"
+                            }));
+                        }}
+                    >
+                        {titlesList.map((t) => (
+                            <option key={t.title_id} value={t.title_id}>
+                                {t.title_name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className="card-form-grid">
-                    {/* Title */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Title</label>
-                        <select
-                            className="drawer-input"
-                            value={String(formData.titleId || "1")}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                const matched = titlesList.find((t) => String(t.title_id) === String(val));
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    titleId: val,
-                                    title: matched?.title_name || prev.title || "Mr"
-                                }));
-                            }}
-                        >
-                            {titlesList.map((t) => (
-                                <option key={t.title_id} value={t.title_id}>
-                                    {t.title_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
 
-                    {/* Full Name */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Full Name *</label>
+                {/* First Name & Last Name */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">First Name</label>
                         <input
                             type="text"
                             className="drawer-input"
-                            placeholder="e.g. Alexander Wright"
-                            value={formData.name || ""}
+                            placeholder="e.g. Alexander"
+                            value={formData.firstName || ""}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const parts = val.trim().split(/\s+/);
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    name: val,
-                                    firstName: parts[0] || "",
-                                    lastName: parts.slice(1).join(" ") || ""
-                                }));
+                                handleChange("firstName", val);
+                                handleChange("name", `${val} ${formData.lastName || ""}`.trim());
                             }}
-                            required
                         />
                     </div>
 
-                    {/* Customer ID */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Customer ID</label>
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Last Name</label>
                         <input
                             type="text"
                             className="drawer-input"
-                            placeholder="Auto-generated on save"
-                            value={formData.id || formData.customerId || ""}
+                            placeholder="e.g. Wright"
+                            value={formData.lastName || ""}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    id: val,
-                                    customerId: val
-                                }));
+                                handleChange("lastName", val);
+                                handleChange("name", `${formData.firstName || ""} ${val}`.trim());
                             }}
-                            readOnly={Boolean(formData.id || formData.customerId)}
                         />
                     </div>
+                </div>
 
-                    {/* Phone Number */}
-                    <div className="form-group-item">
-                        <label className="drawer-label">Phone Number *</label>
+                {/* Phone & Email */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Contact Number</label>
                         <input
                             type="text"
                             className="drawer-input"
@@ -155,13 +145,11 @@ export default function CustomerSlideDrawer({
                                 handleChange("phone", e.target.value);
                                 handleChange("phoneNumber", e.target.value);
                             }}
-                            required
                         />
                     </div>
 
-                    {/* Email */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Email Address *</label>
+                    <div className="drawer-form-group">
+                        <label className="drawer-label">Email Address</label>
                         <input
                             type="email"
                             className="drawer-input"
@@ -171,33 +159,25 @@ export default function CustomerSlideDrawer({
                                 handleChange("email", e.target.value);
                                 handleChange("emailAddress", e.target.value);
                             }}
-                            required
-                        />
-                    </div>
-
-                    {/* Delivery Address */}
-                    <div className="form-group-item full-width">
-                        <label className="drawer-label">Delivery Address</label>
-                        <input
-                            type="text"
-                            className="drawer-input"
-                            placeholder="e.g. Ibara, Abeokuta, Ogun State"
-                            value={formData.address || ""}
-                            onChange={(e) => handleChange("address", e.target.value)}
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* Card 2: Membership & Account Status */}
-            <div className="drawer-form-card">
-                <div className="card-header-bar">
-                    <i className="bi bi-shield-check text-primary-icon"></i>
-                    <span>Membership & Status</span>
+                {/* Delivery Address */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Delivery Address</label>
+                    <input
+                        type="text"
+                        className="drawer-input"
+                        placeholder="e.g. Ibara, Abeokuta, Ogun State"
+                        value={formData.address || ""}
+                        onChange={(e) => handleChange("address", e.target.value)}
+                    />
                 </div>
-                <div className="card-form-grid">
-                    {/* Role / Tier */}
-                    <div className="form-group-item">
+
+                {/* Customer Role & Status */}
+                <div className="drawer-form-row">
+                    <div className="drawer-form-group">
                         <label className="drawer-label">Customer Tier / Role</label>
                         <select
                             className="drawer-input"
@@ -224,8 +204,7 @@ export default function CustomerSlideDrawer({
                         </select>
                     </div>
 
-                    {/* Status */}
-                    <div className="form-group-item">
+                    <div className="drawer-form-group">
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
