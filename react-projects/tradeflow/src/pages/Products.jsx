@@ -119,17 +119,17 @@ export default function Products() {
     };
 
     const handleOpenAdd = () => {
-        const defaultCat = categories[0];
         setSelectedProd({
             productId: "",
             name: "",
             productName: "",
             code: "",
-            categoryId: defaultCat?.categories_id || defaultCat?.categoryId || "",
-            categoryName: defaultCat?.categories_name || defaultCat?.categoryName || "",
+            categoryId: "",
+            categoryName: "",
             brand: "",
             subtitle: "",
-            status: "ACTIVE",
+            status: "",
+            statusId: "",
             price: "",
             productPrice: "",
             inStock: "",

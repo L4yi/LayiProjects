@@ -15,6 +15,7 @@ export default function Orders() {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Order");
     const [statusFilter, setStatusFilter] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
@@ -62,11 +63,11 @@ export default function Orders() {
             customerName: "",
             productId: "",
             productName: "",
-            price: 0,
-            amount: 0,
-            paymentMethod: "Bank Transfer",
-            status: "Processing",
-            statusId: setupService.getStatusId("Processing"),
+            price: "",
+            amount: "",
+            paymentMethod: "",
+            status: "",
+            statusId: "",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
@@ -175,9 +176,16 @@ export default function Orders() {
     };
 
     const filteredOrders = ordersList.filter((o) => {
-        // Compare o.statusId with statusFilter
         const matchesStatus = !statusFilter || String(o.statusId) === String(statusFilter);
-        return matchesStatus;
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch = !q ||
+            (o.customer && o.customer.toLowerCase().includes(q)) ||
+            (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+            (o.product && o.product.toLowerCase().includes(q)) ||
+            (o.productName && o.productName.toLowerCase().includes(q)) ||
+            (o.code && o.code.toLowerCase().includes(q)) ||
+            (o.id && String(o.id).toLowerCase().includes(q));
+        return matchesStatus && matchesSearch;
     });
 
     return (
@@ -191,6 +199,27 @@ export default function Orders() {
                     countSubtitle={`${filteredOrders.length} customer order${filteredOrders.length === 1 ? "" : "s"}`}
                     actions={
                         <>
+                            <div className="filter-select-wrap table-filter-search-wrap">
+                                <i className="bi bi-search table-filter-search-icon"></i>
+                                <input
+                                    type="text"
+                                    className="table-filter-search-input"
+                                    placeholder="Search orders..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="table-filter-clear-btn"
+                                        title="Clear search"
+                                    >
+                                        <i className="bi bi-x-circle-fill"></i>
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="filter-select-wrap">
                                 <i className="bi bi-funnel"></i>
                                 <select
@@ -219,33 +248,16 @@ export default function Orders() {
                 {isLoading ? (
                     <LoadingSpinner variant="table" columns={["SN", "Order ID", "Customer Name", "Items / Product", "Price / Amount", "Payment Method", "Status", "Action"]} />
                 ) : hasNetworkError ? (
-                    <div
-                        style={{
-                            margin: "24px 0",
-                            padding: "24px",
-                            background: "#fff1f2",
-                            border: "1px solid #fecdd3",
-                            borderRadius: "12px",
-                            textAlign: "center"
-                        }}
-                    >
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
-                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
-                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Connection Error</h3>
+                        <p className="connection-error-text">
                             Unable to connect to orders endpoint. Please check your network.
                         </p>
                         <button
                             type="button"
                             onClick={loadOrders}
-                            style={{
-                                padding: "8px 18px",
-                                background: "#10b981",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                            }}
+                            className="btn-retry-network"
                         >
                             Retry Connection
                         </button>

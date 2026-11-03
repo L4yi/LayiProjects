@@ -12,6 +12,7 @@ export default function Transactions() {
     const [selectedTxn, setSelectedTxn] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Transaction Receipt");
     const [statusFilter, setStatusFilter] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [statusesList, setStatusesList] = useState([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
@@ -72,7 +73,9 @@ export default function Transactions() {
             name: "Audit Export",
             code: "#EXP-2026",
             role: "Financial Report",
-            status: "ACTIVE",
+            status: "",
+            statusId: "",
+            paymentMethodId: "",
             notes: "Exporting all filtered transaction logs..."
         });
         setDrawerTitle("Export Transaction Logs");
@@ -80,9 +83,15 @@ export default function Transactions() {
     };
 
     const filteredTxns = transactionsList.filter((t) => {
-        // Compare t.statusId with statusFilter
         const matchesStatus = !statusFilter || String(t.statusId || "") === String(statusFilter);
-        return matchesStatus;
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch = !q ||
+            (t.customer && t.customer.toLowerCase().includes(q)) ||
+            (t.customerName && t.customerName.toLowerCase().includes(q)) ||
+            (t.code && t.code.toLowerCase().includes(q)) ||
+            (t.id && String(t.id).toLowerCase().includes(q)) ||
+            (t.paymentMethod && t.paymentMethod.toLowerCase().includes(q));
+        return matchesStatus && matchesSearch;
     });
 
     return (
@@ -96,6 +105,27 @@ export default function Transactions() {
                     countSubtitle={filteredTxns.length > 0 ? `${filteredTxns.length} recorded payment logs` : "Backend API integration pending"}
                     actions={
                         <>
+                            <div className="filter-select-wrap table-filter-search-wrap">
+                                <i className="bi bi-search table-filter-search-icon"></i>
+                                <input
+                                    type="text"
+                                    className="table-filter-search-input"
+                                    placeholder="Search transactions..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="table-filter-clear-btn"
+                                        title="Clear search"
+                                    >
+                                        <i className="bi bi-x-circle-fill"></i>
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="filter-select-wrap">
                                 <i className="bi bi-funnel"></i>
                                 <select
@@ -125,33 +155,16 @@ export default function Transactions() {
                 {isLoading ? (
                     <LoadingSpinner variant="table" columns={["SN", "Customer Name", "Customer ID", "Order Date", "Payment Method", "Amount (₦)", "Status", "Action"]} />
                 ) : hasNetworkError ? (
-                    <div
-                        style={{
-                            margin: "24px 0",
-                            padding: "24px",
-                            background: "#fff1f2",
-                            border: "1px solid #fecdd3",
-                            borderRadius: "12px",
-                            textAlign: "center"
-                        }}
-                    >
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
-                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
-                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Connection Error</h3>
+                        <p className="connection-error-text">
                             Unable to connect to transactions endpoint. Please check your network.
                         </p>
                         <button
                             type="button"
                             onClick={loadTransactions}
-                            style={{
-                                padding: "8px 18px",
-                                background: "#10b981",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                            }}
+                            className="btn-retry-network"
                         >
                             Retry Connection
                         </button>

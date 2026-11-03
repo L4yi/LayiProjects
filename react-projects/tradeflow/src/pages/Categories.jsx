@@ -112,7 +112,8 @@ export default function Categories() {
             categoryName: "",
             code: "",
             icon: "bi bi-tag",
-            status: "ACTIVE",
+            status: "",
+            statusId: "",
             description: "",
             itemCount: "Catalog Item"
         });

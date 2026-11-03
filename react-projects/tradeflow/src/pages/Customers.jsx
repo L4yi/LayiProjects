@@ -13,6 +13,7 @@ export default function Customers() {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Customer");
     const [statusFilter, setStatusFilter] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
@@ -56,7 +57,8 @@ export default function Customers() {
         setSelectedCustomer({
             id: "",
             customerId: "",
-            titleId: setupService.getTitleId(),
+            titleId: "",
+            title: "",
             firstName: "",
             lastName: "",
             name: "",
@@ -64,10 +66,10 @@ export default function Customers() {
             emailAddress: "",
             phone: "",
             phoneNumber: "",
-            role: "Customer",
-            roleId: setupService.getRoleId("Customer"),
-            status: "ACTIVE",
-            statusId: setupService.getStatusId("Active"),
+            role: "",
+            roleId: "",
+            status: "",
+            statusId: "",
             address: ""
         });
         setDrawerTitle("Add New Customer Account");
@@ -181,9 +183,15 @@ export default function Customers() {
     };
 
     const filteredCustomers = customersList.filter((cust) => {
-        // Compare cust.statusId with statusFilter
         const matchesStatus = !statusFilter || String(cust.statusId) === String(statusFilter);
-        return matchesStatus;
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch = !q ||
+            (cust.name && cust.name.toLowerCase().includes(q)) ||
+            (cust.email && cust.email.toLowerCase().includes(q)) ||
+            (cust.phone && cust.phone.toLowerCase().includes(q)) ||
+            (cust.id && String(cust.id).toLowerCase().includes(q)) ||
+            (cust.customerId && String(cust.customerId).toLowerCase().includes(q));
+        return matchesStatus && matchesSearch;
     });
 
     return (
@@ -197,6 +205,27 @@ export default function Customers() {
                     countSubtitle={`${filteredCustomers.length} registered customer${filteredCustomers.length === 1 ? "" : "s"}`}
                     actions={
                         <>
+                            <div className="filter-select-wrap table-filter-search-wrap">
+                                <i className="bi bi-search table-filter-search-icon"></i>
+                                <input
+                                    type="text"
+                                    className="table-filter-search-input"
+                                    placeholder="Search customers..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="table-filter-clear-btn"
+                                        title="Clear search"
+                                    >
+                                        <i className="bi bi-x-circle-fill"></i>
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="filter-select-wrap">
                                 <i className="bi bi-funnel"></i>
                                 <select
@@ -225,33 +254,16 @@ export default function Customers() {
                 {isLoading ? (
                     <LoadingSpinner variant="table" columns={["SN", "Customer Name", "Customer ID", "Email Address", "Contact Phone", "Status", "Action"]} />
                 ) : hasNetworkError ? (
-                    <div
-                        style={{
-                            margin: "24px 0",
-                            padding: "24px",
-                            background: "#fff1f2",
-                            border: "1px solid #fecdd3",
-                            borderRadius: "12px",
-                            textAlign: "center"
-                        }}
-                    >
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
-                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
-                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Connection Error</h3>
+                        <p className="connection-error-text">
                             Unable to connect to the customers endpoint. Please check your network.
                         </p>
                         <button
                             type="button"
                             onClick={loadCustomers}
-                            style={{
-                                padding: "8px 18px",
-                                background: "#10b981",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                            }}
+                            className="btn-retry-network"
                         >
                             Retry Connection
                         </button>

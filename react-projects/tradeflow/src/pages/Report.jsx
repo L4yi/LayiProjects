@@ -214,33 +214,16 @@ export default function Report() {
                 {isLoading ? (
                     <LoadingSpinner variant="report" />
                 ) : hasNetworkError ? (
-                    <div
-                        style={{
-                            margin: "24px 0",
-                            padding: "24px",
-                            background: "#fff1f2",
-                            border: "1px solid #fecdd3",
-                            borderRadius: "12px",
-                            textAlign: "center"
-                        }}
-                    >
-                        <i className="bi bi-wifi-off" style={{ fontSize: "2rem", color: "#e11d48", display: "block", marginBottom: "8px" }}></i>
-                        <h3 style={{ margin: "0 0 6px", color: "#9f1239" }}>Connection Error</h3>
-                        <p style={{ margin: "0 0 16px", color: "#881337", fontSize: "0.9rem" }}>
+                    <div className="connection-error-box">
+                        <i className="bi bi-wifi-off connection-error-icon"></i>
+                        <h3 className="connection-error-title">Connection Error</h3>
+                        <p className="connection-error-text">
                             Unable to aggregate analytics reports. Please check your network.
                         </p>
                         <button
                             type="button"
                             onClick={loadReportsData}
-                            style={{
-                                padding: "8px 18px",
-                                background: "#10b981",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "6px",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                            }}
+                            className="btn-retry-network"
                         >
                             Retry Connection
                         </button>

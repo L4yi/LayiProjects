@@ -41,7 +41,8 @@ export default function OrderSlideDrawer({
 
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const isEdit = Boolean(initialData.id || initialData.orderId || initialData.code);
+            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
                 statusId: statusId || ""

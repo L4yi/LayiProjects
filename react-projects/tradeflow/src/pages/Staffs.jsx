@@ -166,15 +166,15 @@ export default function Staffs() {
     const handleOpenAdd = () => {
         setSelectedStaff({
             title: "",
-            titleId: setupService.getTitleId(),
+            titleId: "",
             name: "",
             firstName: "",
             lastName: "",
             role: "",
-            roleId: setupService.getRoleId(),
+            roleId: "",
             roleCategory: "",
             status: "",
-            statusId: setupService.getStatusId(),
+            statusId: "",
             phone: "",
             phoneNumber: "",
             email: "",

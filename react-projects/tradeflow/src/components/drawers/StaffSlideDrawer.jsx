@@ -36,9 +36,16 @@ export default function StaffSlideDrawer({
     // Synchronize form state when drawer opens or initialData changes
     useEffect(() => {
         if (initialData) {
-            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId();
-            const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "1");
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+            const isEdit = Boolean(initialData.staffId || initialData.id);
+            const titleId = initialData.titleId
+                ? String(initialData.titleId)
+                : (isEdit && initialData.title ? setupService.getTitleId(initialData.title) : "");
+            const roleId = initialData.roleId
+                ? String(initialData.roleId)
+                : (isEdit && initialData.role ? setupService.getRoleId(initialData.role) : "");
+            const statusId = initialData.statusId
+                ? String(initialData.statusId)
+                : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
                 titleId: titleId || "",

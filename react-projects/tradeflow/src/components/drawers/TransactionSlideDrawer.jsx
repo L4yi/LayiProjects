@@ -33,10 +33,13 @@ export default function TransactionSlideDrawer({
 
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const isEdit = Boolean(initialData.id || initialData.code);
+            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const paymentMethodId = initialData.paymentMethodId ? String(initialData.paymentMethodId) : (isEdit && initialData.paymentMethod ? setupService.getPaymentMethodId(initialData.paymentMethod) : "");
             setFormData({
                 ...initialData,
-                statusId: statusId || ""
+                statusId: statusId || "",
+                paymentMethodId: paymentMethodId || ""
             });
         } else {
             setFormData({

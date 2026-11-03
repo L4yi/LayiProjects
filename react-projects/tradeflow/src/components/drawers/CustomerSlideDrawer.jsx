@@ -37,11 +37,12 @@ export default function CustomerSlideDrawer({
 
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            const titleId = initialData.titleId ? String(initialData.titleId) : (initialData.title ? setupService.getTitleId(initialData.title) : "");
-            const roleId = initialData.roleId ? String(initialData.roleId) : (initialData.role ? setupService.getRoleId(initialData.role) : "");
-            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
-            const firstName = initialData.firstName || initialData.first_name || initialData.name?.split(" ")[0] || "";
-            const lastName = initialData.lastName || initialData.last_name || initialData.name?.split(" ").slice(1).join(" ") || "";
+            const isEdit = Boolean(initialData.id || initialData.customerId);
+            const titleId = initialData.titleId ? String(initialData.titleId) : (isEdit && initialData.title ? setupService.getTitleId(initialData.title) : "");
+            const roleId = initialData.roleId ? String(initialData.roleId) : (isEdit && initialData.role ? setupService.getRoleId(initialData.role) : "");
+            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const firstName = initialData.firstName || initialData.first_name || (initialData.name ? initialData.name.split(" ")[0] : "");
+            const lastName = initialData.lastName || initialData.last_name || (initialData.name ? initialData.name.split(" ").slice(1).join(" ") : "");
             setFormData({
                 ...initialData,
                 firstName,

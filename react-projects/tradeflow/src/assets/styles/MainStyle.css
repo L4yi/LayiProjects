@@ -4504,6 +4504,8 @@ select.drawer-input {
     border: 1px solid #e2e8f0;
 }
 
+.table-filter-search-wrap,
+.module-header-bar .header-right .table-filter-search-wrap,
 .module-header-bar .header-right .filter-select-wrap.table-filter-search-wrap,
 .filter-select-wrap.table-filter-search-wrap {
     position: relative;
@@ -4519,6 +4521,10 @@ select.drawer-input {
     transition: all 0.2s ease;
 }
 
+.table-filter-search-wrap:hover,
+.table-filter-search-wrap:focus-within,
+.module-header-bar .header-right .table-filter-search-wrap:hover,
+.module-header-bar .header-right .table-filter-search-wrap:focus-within,
 .module-header-bar .header-right .filter-select-wrap.table-filter-search-wrap:hover,
 .module-header-bar .header-right .filter-select-wrap.table-filter-search-wrap:focus-within,
 .filter-select-wrap.table-filter-search-wrap:hover,
@@ -4527,6 +4533,8 @@ select.drawer-input {
     background-color: #f8fafc;
 }
 
+.table-filter-search-wrap i.table-filter-search-icon,
+.table-filter-search-wrap i,
 .filter-select-wrap.table-filter-search-wrap i.table-filter-search-icon,
 .filter-select-wrap.table-filter-search-wrap i {
     color: var(--text-muted, #718096);
@@ -4537,12 +4545,16 @@ select.drawer-input {
     align-items: center;
 }
 
+.table-filter-search-wrap input.table-filter-search-input,
+.filter-select-wrap.table-filter-search-wrap input.table-filter-search-input,
+input.table-filter-search-input,
 .table-filter-search-input {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     background: transparent !important;
-    border: none !important;
+    border: 0 !important;
+    border-style: none !important;
     outline: none !important;
     box-shadow: none !important;
     font-family: sub-title-font, inherit;
@@ -4553,6 +4565,13 @@ select.drawer-input {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+}
+
+.table-filter-search-wrap input.table-filter-search-input:focus,
+.table-filter-search-input:focus {
+    outline: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
 .table-filter-search-input::placeholder {
@@ -4606,6 +4625,23 @@ select.drawer-input {
     max-width: 420px;
     margin: 0 auto 20px;
     line-height: 1.5;
+}
+
+.btn-retry-network {
+    padding: 8px 20px;
+    background-color: var(--primary-color, #143526);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-retry-network:hover {
+    background-color: var(--primary-hover, #0e271c);
 }
 
 .table-empty-state-box {

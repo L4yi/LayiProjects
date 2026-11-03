@@ -28,7 +28,8 @@ export default function ProductSlideDrawer({
 
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const isEdit = Boolean(initialData.id || initialData.productId);
+            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
             const categoryId = initialData.categoryId ? String(initialData.categoryId) : (initialData.categories_id ? String(initialData.categories_id) : "");
             setFormData({
                 ...initialData,
