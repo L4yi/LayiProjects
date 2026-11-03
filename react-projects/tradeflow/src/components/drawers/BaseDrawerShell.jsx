@@ -54,11 +54,13 @@ export default function BaseDrawerShell({
                     </div>
                 )}
 
-                {/* Scrollable form body */}
-                <form className="drawer-body-scroll" onSubmit={onSubmit}>
-                    {children}
+                {/* Form container with scrollable body and docked bottom footer */}
+                <form className="drawer-main-form" onSubmit={onSubmit}>
+                    <div className="drawer-body-scroll">
+                        {children}
+                    </div>
 
-                    {/* Bottom action buttons */}
+                    {/* Bottom docked action buttons */}
                     <div className="drawer-footer-actions">
                         <button
                             type="button"

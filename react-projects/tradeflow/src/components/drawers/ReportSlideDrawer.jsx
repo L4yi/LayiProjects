@@ -72,9 +72,10 @@ export default function ReportSlideDrawer({
                         <label className="drawer-label">Audit Category</label>
                         <select
                             className="drawer-input"
-                            value={formData.role || "Financial Audit"}
+                            value={formData.role || ""}
                             onChange={(e) => handleChange("role", e.target.value)}
                         >
+                            <option value="">Select Here</option>
                             <option value="Financial Audit">Financial Audit</option>
                             <option value="Inventory Valuation">Inventory Valuation</option>
                             <option value="Operational Audit">Operational Audit</option>
@@ -89,9 +90,10 @@ export default function ReportSlideDrawer({
                         <label className="drawer-label">Export Format</label>
                         <select
                             className="drawer-input"
-                            value={formData.format || "PDF Document (.pdf)"}
+                            value={formData.format || ""}
                             onChange={(e) => handleChange("format", e.target.value)}
                         >
+                            <option value="">Select Here</option>
                             <option value="PDF Document (.pdf)">PDF Document (.pdf)</option>
                             <option value="Excel Spreadsheet (.xlsx)">Excel Spreadsheet (.xlsx)</option>
                             <option value="CSV Spreadsheet (.csv)">CSV Spreadsheet (.csv)</option>
@@ -102,9 +104,10 @@ export default function ReportSlideDrawer({
                         <label className="drawer-label">Status</label>
                         <select
                             className="drawer-input"
-                            value={formData.status || "ACTIVE"}
+                            value={formData.status || ""}
                             onChange={(e) => handleChange("status", e.target.value)}
                         >
+                            <option value="">Select Here</option>
                             <option value="ACTIVE">ACTIVE</option>
                             <option value="SCHEDULED">SCHEDULED</option>
                             <option value="ARCHIVED">ARCHIVED</option>

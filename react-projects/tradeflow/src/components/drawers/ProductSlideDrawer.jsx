@@ -27,13 +27,18 @@ export default function ProductSlideDrawer({
     }, []);
 
     useEffect(() => {
-        if (initialData) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+        if (initialData && Object.keys(initialData).length > 0) {
+            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
             const categoryId = initialData.categoryId ? String(initialData.categoryId) : (initialData.categories_id ? String(initialData.categories_id) : "");
             setFormData({
                 ...initialData,
-                statusId: statusId || "1",
+                statusId: statusId || "",
                 categoryId: categoryId || ""
+            });
+        } else {
+            setFormData({
+                statusId: "",
+                categoryId: ""
             });
         }
     }, [initialData, isOpen]);
@@ -94,7 +99,7 @@ export default function ProductSlideDrawer({
                                 }
                             }}
                         >
-                            <option value="">Select Category</option>
+                            <option value="">Select Here</option>
                             {(categoriesList || []).map((cat) => (
                                 <option
                                     key={cat.categories_id || cat.categoryId || cat.id}
@@ -110,7 +115,7 @@ export default function ProductSlideDrawer({
                         <label className="drawer-label">Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || (statusesList.find(s => s.status_name === formData.status)?.status_id) || "1")}
+                            value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
@@ -121,6 +126,7 @@ export default function ProductSlideDrawer({
                                 }));
                             }}
                         >
+                            <option value="">Select Here</option>
                             {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
                             ))}

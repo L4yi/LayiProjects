@@ -244,11 +244,11 @@ export default function Staffs() {
                     countSubtitle={`${filteredStaffs.length} members registered`}
                     actions={
                         <>
-                            <div className="table-filter-search-wrap">
+                            <div className="filter-select-wrap table-filter-search-wrap">
                                 <i className="bi bi-search table-filter-search-icon"></i>
                                 <input
                                     type="text"
-                                    className="filter-dropdown-select table-filter-search-input"
+                                    className="table-filter-search-input"
                                     placeholder="Search staff..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}

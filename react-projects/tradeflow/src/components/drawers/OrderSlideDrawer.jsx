@@ -40,11 +40,19 @@ export default function OrderSlideDrawer({
     }, []);
 
     useEffect(() => {
-        if (initialData) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "4");
+        if (initialData && Object.keys(initialData).length > 0) {
+            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
-                statusId: statusId || "4"
+                statusId: statusId || ""
+            });
+        } else {
+            setFormData({
+                customerId: "",
+                productId: "",
+                statusId: "",
+                price: "",
+                amount: ""
             });
         }
     }, [initialData, isOpen]);
@@ -103,7 +111,7 @@ export default function OrderSlideDrawer({
                         value={String(formData.customerId || formData.customer_id || "")}
                         onChange={(e) => handleCustomerSelect(e.target.value)}
                     >
-                        <option value="">Select Customer</option>
+                        <option value="">Select Here</option>
                         {customersList.map((cust) => (
                             <option key={cust.id || cust.customerId} value={cust.id || cust.customerId}>
                                 {cust.name || cust.fullName || `${cust.firstName || ""} ${cust.lastName || ""}`.trim() || cust.email} (ID: {cust.id || cust.customerId})
@@ -120,7 +128,7 @@ export default function OrderSlideDrawer({
                         value={String(formData.productId || formData.product_id || "")}
                         onChange={(e) => handleProductSelect(e.target.value)}
                     >
-                        <option value="">Select Product</option>
+                        <option value="">Select Here</option>
                         {productsList.map((prod) => (
                             <option key={prod.id || prod.productId || prod.product_id} value={prod.id || prod.productId || prod.product_id}>
                                 {prod.name || prod.productName || prod.product_name} - ₦{Number(prod.price || prod.productPrice || 0).toLocaleString()} (ID: {prod.id || prod.productId || prod.product_id})
@@ -151,7 +159,7 @@ export default function OrderSlideDrawer({
                         <label className="drawer-label">Order Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || (statusesList.find((s) => s.status_name === formData.status)?.status_id) || "4")}
+                            value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = statusesList.find((s) => String(s.status_id) === String(val) || s.status_name.toUpperCase() === val.toUpperCase());
@@ -162,6 +170,7 @@ export default function OrderSlideDrawer({
                                 }));
                             }}
                         >
+                            <option value="">Select Here</option>
                             {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}

@@ -36,19 +36,27 @@ export default function CustomerSlideDrawer({
     }, []);
 
     useEffect(() => {
-        if (initialData) {
-            const titleId = initialData.titleId ? String(initialData.titleId) : setupService.getTitleId(initialData.title, "1");
-            const roleId = initialData.roleId ? String(initialData.roleId) : setupService.getRoleId(initialData.role, "19");
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+        if (initialData && Object.keys(initialData).length > 0) {
+            const titleId = initialData.titleId ? String(initialData.titleId) : (initialData.title ? setupService.getTitleId(initialData.title) : "");
+            const roleId = initialData.roleId ? String(initialData.roleId) : (initialData.role ? setupService.getRoleId(initialData.role) : "");
+            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
             const firstName = initialData.firstName || initialData.first_name || initialData.name?.split(" ")[0] || "";
             const lastName = initialData.lastName || initialData.last_name || initialData.name?.split(" ").slice(1).join(" ") || "";
             setFormData({
                 ...initialData,
                 firstName,
                 lastName,
-                titleId: titleId || "1",
-                roleId: roleId || "19",
-                statusId: statusId || "1"
+                titleId: titleId || "",
+                roleId: roleId || "",
+                statusId: statusId || ""
+            });
+        } else {
+            setFormData({
+                firstName: "",
+                lastName: "",
+                titleId: "",
+                roleId: "",
+                statusId: ""
             });
         }
     }, [initialData, isOpen]);
@@ -80,17 +88,18 @@ export default function CustomerSlideDrawer({
                     <label className="drawer-label">Title</label>
                     <select
                         className="drawer-input"
-                        value={String(formData.titleId || "1")}
+                        value={String(formData.titleId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
                             const matched = titlesList.find((t) => String(t.title_id) === String(val));
                             setFormData((prev) => ({
                                 ...prev,
                                 titleId: val,
-                                title: matched?.title_name || prev.title || "Mr"
+                                title: matched?.title_name || prev.title || ""
                             }));
                         }}
                     >
+                        <option value="">Select Here</option>
                         {titlesList.map((t) => (
                             <option key={t.title_id} value={t.title_id}>
                                 {t.title_name}
@@ -181,26 +190,23 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Customer Tier / Role</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.roleId || "19")}
+                            value={String(formData.roleId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = rolesList.find((r) => String(r.role_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
                                     roleId: val,
-                                    role: matched?.role_name || prev.role || "Customer"
+                                    role: matched?.role_name || prev.role || ""
                                 }));
                             }}
                         >
-                            {rolesList.length > 0 ? (
-                                rolesList.map((r) => (
-                                    <option key={r.role_id} value={r.role_id}>
-                                        {r.role_name}
-                                    </option>
-                                ))
-                            ) : (
-                                <option value="19">Customer</option>
-                            )}
+                            <option value="">Select Here</option>
+                            {rolesList.map((r) => (
+                                <option key={r.role_id} value={r.role_id}>
+                                    {r.role_name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -208,17 +214,18 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Account Status</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.statusId || "1")}
+                            value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = statusesList.find((s) => String(s.status_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
                                     statusId: val,
-                                    status: matched?.status_name || prev.status || "ACTIVE"
+                                    status: matched?.status_name || prev.status || ""
                                 }));
                             }}
                         >
+                            <option value="">Select Here</option>
                             {statusesList.map((s) => (
                                 <option key={s.status_id} value={s.status_id}>
                                     {s.status_name}

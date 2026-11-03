@@ -26,11 +26,15 @@ export default function CategorySlideDrawer({
     }, []);
 
     useEffect(() => {
-        if (initialData) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+        if (initialData && Object.keys(initialData).length > 0) {
+            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
-                statusId: statusId || "1"
+                statusId: statusId || ""
+            });
+        } else {
+            setFormData({
+                statusId: ""
             });
         }
     }, [initialData, isOpen]);
@@ -77,17 +81,18 @@ export default function CategorySlideDrawer({
                     <label className="drawer-label">Status</label>
                     <select
                         className="drawer-input"
-                        value={String(formData.statusId || "1")}
+                        value={String(formData.statusId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
                             const matched = statusesList.find((s) => String(s.status_id) === String(val));
                             setFormData((prev) => ({
                                 ...prev,
                                 statusId: val,
-                                status: matched?.status_name || prev.status || "ACTIVE"
+                                status: matched?.status_name || prev.status || ""
                             }));
                         }}
                     >
+                        <option value="">Select Here</option>
                         {statusesList.map((s) => (
                             <option key={s.status_id} value={s.status_id}>
                                 {s.status_name}

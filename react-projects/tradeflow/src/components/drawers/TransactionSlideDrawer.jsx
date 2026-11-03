@@ -32,11 +32,22 @@ export default function TransactionSlideDrawer({
     }, []);
 
     useEffect(() => {
-        if (initialData) {
-            const statusId = initialData.statusId ? String(initialData.statusId) : setupService.getStatusId(initialData.status, "1");
+        if (initialData && Object.keys(initialData).length > 0) {
+            const statusId = initialData.statusId ? String(initialData.statusId) : (initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
-                statusId: statusId || "1"
+                statusId: statusId || ""
+            });
+        } else {
+            setFormData({
+                code: "",
+                id: "",
+                name: "",
+                customerName: "",
+                amount: "",
+                paymentMethodId: "",
+                statusId: "",
+                notes: ""
             });
         }
     }, [initialData, isOpen]);
@@ -111,17 +122,18 @@ export default function TransactionSlideDrawer({
                         <label className="drawer-label">Payment Channel</label>
                         <select
                             className="drawer-input"
-                            value={String(formData.paymentMethodId || (paymentMethodsList.find((pm) => pm.payment_method_name === formData.paymentMethod)?.payment_method_id) || "2")}
+                            value={String(formData.paymentMethodId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 const matched = paymentMethodsList.find((pm) => String(pm.payment_method_id) === String(val));
                                 setFormData((prev) => ({
                                     ...prev,
                                     paymentMethodId: val,
-                                    paymentMethod: matched?.payment_method_name || prev.paymentMethod || "Bank Transfer"
+                                    paymentMethod: matched?.payment_method_name || prev.paymentMethod || ""
                                 }));
                             }}
                         >
+                            <option value="">Select Here</option>
                             {paymentMethodsList.map((pm) => (
                                 <option key={pm.payment_method_id} value={pm.payment_method_id}>
                                     {pm.payment_method_name}
@@ -136,26 +148,23 @@ export default function TransactionSlideDrawer({
                     <label className="drawer-label">Payment Status</label>
                     <select
                         className="drawer-input"
-                        value={String(formData.statusId || "1")}
+                        value={String(formData.statusId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
                             const matched = statusesList.find((s) => String(s.status_id) === String(val));
                             setFormData((prev) => ({
                                 ...prev,
                                 statusId: val,
-                                status: matched?.status_name || prev.status || "ACTIVE"
+                                status: matched?.status_name || prev.status || ""
                             }));
                         }}
                     >
-                        {statusesList.length > 0 ? (
-                            statusesList.map((s) => (
-                                <option key={s.status_id} value={s.status_id}>
-                                    {s.status_name}
-                                </option>
-                            ))
-                        ) : (
-                            <option value="1">ACTIVE</option>
-                        )}
+                        <option value="">Select Here</option>
+                        {statusesList.map((s) => (
+                            <option key={s.status_id} value={s.status_id}>
+                                {s.status_name}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
