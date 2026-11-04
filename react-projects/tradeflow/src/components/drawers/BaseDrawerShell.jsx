@@ -55,7 +55,7 @@ export default function BaseDrawerShell({
                 )}
 
                 {/* Form container with scrollable body and docked bottom footer */}
-                <form className="drawer-main-form" onSubmit={onSubmit}>
+                <form className="drawer-main-form" noValidate onSubmit={onSubmit}>
                     <div className="drawer-body-scroll">
                         {children}
                     </div>

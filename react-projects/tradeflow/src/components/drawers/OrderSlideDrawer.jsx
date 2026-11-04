@@ -19,6 +19,8 @@ export default function OrderSlideDrawer({
     const [statusesList, setStatusesList] = useState(() => setupService.getOrderStatuses(setupService.getCachedStatuses()));
     const [customersList, setCustomersList] = useState([]);
     const [productsList, setProductsList] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
     // Load setup data, customers, and products from backend
     useEffect(() => {
@@ -60,6 +62,10 @@ export default function OrderSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleCustomerSelect = (customerId) => {
@@ -71,6 +77,8 @@ export default function OrderSlideDrawer({
             customerName: found?.name || found?.fullName || prev.customerName,
             name: found?.name || found?.fullName || prev.name
         }));
+        if (errors.customerId) setErrors((prev) => ({ ...prev, customerId: false }));
+        if (localError) setLocalError("");
     };
 
     const handleProductSelect = (productId) => {
@@ -84,10 +92,25 @@ export default function OrderSlideDrawer({
             price,
             amount: price
         }));
+        if (errors.productId) setErrors((prev) => ({ ...prev, productId: false }));
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        if (!formData.customerId && !formData.customer_id) newErrors.customerId = true;
+        if (!formData.productId && !formData.product_id) newErrors.productId = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select a Customer, Product, and Status marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -100,7 +123,7 @@ export default function OrderSlideDrawer({
             icon="bi bi-receipt"
             entityType="Order"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -108,7 +131,7 @@ export default function OrderSlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Customer</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.customerId ? "is-invalid" : ""}`}
                         value={String(formData.customerId || formData.customer_id || "")}
                         onChange={(e) => handleCustomerSelect(e.target.value)}
                     >
@@ -125,7 +148,7 @@ export default function OrderSlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Product</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.productId ? "is-invalid" : ""}`}
                         value={String(formData.productId || formData.product_id || "")}
                         onChange={(e) => handleProductSelect(e.target.value)}
                     >
@@ -143,12 +166,13 @@ export default function OrderSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Order Amount (₦)</label>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             className="drawer-input"
                             placeholder="Auto-calculated from product"
                             value={formData.price || formData.amount || ""}
                             onChange={(e) => {
-                                const val = Number(e.target.value) || 0;
+                                const val = e.target.value.replace(/[^0-9.]/g, "");
                                 handleChange("price", val);
                                 handleChange("amount", val);
                             }}
@@ -159,7 +183,7 @@ export default function OrderSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Order Status</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                             value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -169,6 +193,8 @@ export default function OrderSlideDrawer({
                                     status: matched?.status_name || val,
                                     statusId: matched?.status_id || val
                                 }));
+                                if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>

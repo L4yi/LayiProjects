@@ -165,6 +165,15 @@ export const setupService = {
         return statuses.filter(s => prodIds.includes(String(s.status_id)));
     },
 
+    // General Active / Inactive statuses (ACTIVE #1, INACTIVE #2)
+    getActiveInactiveStatuses(list) {
+        const statuses = list || cachedStatuses || [];
+        return statuses.filter(s =>
+            ["1", "2"].includes(String(s.status_id)) ||
+            ["active", "inactive"].includes(String(s.status_name || "").toLowerCase())
+        );
+    },
+
     // Category taxonomy statuses (Active, Inactive) - Pending (3) removed
     getCategoryStatuses(list) {
         const statuses = list || cachedStatuses || [];
@@ -172,10 +181,10 @@ export const setupService = {
         return statuses.filter(s => catIds.includes(String(s.status_id)));
     },
 
-    // User account statuses (Active, Inactive, Suspended, Pending)
+    // User account statuses (Active, Inactive) - strictly restricted to active and inactive
     getAccountStatuses(list) {
         const statuses = list || cachedStatuses || [];
-        const accIds = ["1", "2", "7", "3"];
+        const accIds = ["1", "2"];
         return statuses.filter(s => accIds.includes(String(s.status_id)));
     },
 
@@ -192,9 +201,13 @@ export const setupService = {
         return roles.filter(r => String(r.role_id) !== "19" && !r.role_name?.toLowerCase().includes("customer"));
     },
 
-    // Customer tier roles (all 19 roles available from backend, with Customer #19 as primary)
+    // Customer tier roles strictly restricted to Customer role only
     getCustomerRoles(list) {
-        return list || cachedRoles || [];
+        const roles = list || cachedRoles || [];
+        return roles.filter(r =>
+            String(r.role_id) === "19" ||
+            String(r.role_name || "").toLowerCase() === "customer"
+        );
     },
 
     // Look up a role id by its name from the backend roles list.

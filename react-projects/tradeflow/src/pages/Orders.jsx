@@ -10,8 +10,10 @@ export default function Orders() {
     const [ordersList, setOrdersList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerError, setDrawerError] = useState("");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Order");
     const [statusFilter, setStatusFilter] = useState("");
@@ -52,6 +54,7 @@ export default function Orders() {
     const handleOpenEdit = (order) => {
         setSelectedOrder({ ...order });
         setDrawerTitle(`Order Details - ${order.code || order.id}`);
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
@@ -71,12 +74,13 @@ export default function Orders() {
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
     const handleSaveOrder = async (orderData) => {
-        setDrawerOpen(false);
-        setIsLoading(true);
+        setIsSaving(true);
+        setDrawerError("");
 
         const isUpdate = Boolean(selectedOrder && (selectedOrder.id || selectedOrder.orderId || selectedOrder.code));
         const orderId = selectedOrder?.id || selectedOrder?.orderId || selectedOrder?.code || orderData.id || orderData.orderId || orderData.code;
@@ -86,13 +90,8 @@ export default function Orders() {
         const statusId = orderData.statusId || setupService.getStatusId(orderData.status);
 
         if (!customerId || !productId) {
-            setModalData({
-                type: "warning",
-                title: "REQUIRED FIELDS MISSING",
-                message: "Both Customer ID and Product ID are required to record an order."
-            });
-            setShowSuccessModal(true);
-            setIsLoading(false);
+            setIsSaving(false);
+            setDrawerError("Both Customer and Product are required to record an order.");
             return;
         }
 
@@ -113,7 +112,10 @@ export default function Orders() {
                 });
             }
 
+            setIsSaving(false);
+
             if (res.success) {
+                setDrawerOpen(false);
                 await loadOrders();
                 setModalData({
                     type: "success",
@@ -122,22 +124,11 @@ export default function Orders() {
                 });
                 setShowSuccessModal(true);
             } else {
-                setModalData({
-                    type: "error",
-                    title: isUpdate ? "ORDER UPDATE FAILED" : "ORDER CREATION FAILED",
-                    message: res.message || "Failed to submit order."
-                });
-                setShowSuccessModal(true);
+                setDrawerError(res.message || "Failed to submit order.");
             }
         } catch (err) {
-            setModalData({
-                type: "error",
-                title: "NETWORK ERROR",
-                message: "Unable to reach server. Please check your network connection."
-            });
-            setShowSuccessModal(true);
-        } finally {
-            setIsLoading(false);
+            setIsSaving(false);
+            setDrawerError("Unable to reach server. Please check your network connection.");
         }
     };
 
@@ -343,6 +334,8 @@ export default function Orders() {
                 icon="bi bi-cart-check-fill"
                 entityType="Order"
                 initialData={selectedOrder || {}}
+                isSaving={isSaving}
+                errorMessage={drawerError}
                 onSave={handleSaveOrder}
             />
 

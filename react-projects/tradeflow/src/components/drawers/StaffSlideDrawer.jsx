@@ -16,7 +16,9 @@ export default function StaffSlideDrawer({
     const [formData, setFormData] = useState({});
     const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
     const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
-    const [statusesList, setStatusesList] = useState(setupService.getCachedStatuses());
+    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
     // Load setup tables (titles, roles, and statuses) directly from the backend
     useEffect(() => {
@@ -28,7 +30,7 @@ export default function StaffSlideDrawer({
             ]);
             if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
             if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
-            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(sRes.data);
+            if (sRes.success && Array.isArray(sRes.data)) setStatusesList(setupService.getActiveInactiveStatuses(sRes.data));
         };
         loadSetup();
     }, []);
@@ -57,10 +59,37 @@ export default function StaffSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        if (!formData.titleId) newErrors.titleId = true;
+        if (!formData.firstName && !formData.name?.split(" ")[0]) newErrors.firstName = true;
+        if (!formData.lastName) newErrors.lastName = true;
+
+        const emailVal = (formData.email || formData.emailAddress || "").trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailVal || !emailRegex.test(emailVal)) newErrors.email = true;
+
+        const phoneVal = (formData.phone || formData.phoneNumber || "").trim();
+        if (!phoneVal) newErrors.phone = true;
+
+        if (!formData.roleId) newErrors.roleId = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select options and fill in all required fields marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -73,7 +102,7 @@ export default function StaffSlideDrawer({
             icon="bi bi-person-badge"
             entityType="Staff Member"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -81,7 +110,7 @@ export default function StaffSlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Title</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.titleId ? "is-invalid" : ""}`}
                         value={formData.titleId || ""}
                         onChange={(e) => {
                             const val = e.target.value;
@@ -91,6 +120,8 @@ export default function StaffSlideDrawer({
                                 titleId: val,
                                 title: matched?.title_name || ""
                             }));
+                            if (errors.titleId) setErrors((prev) => ({ ...prev, titleId: false }));
+                            if (localError) setLocalError("");
                         }}
                     >
                         <option value="">Select Here</option>
@@ -108,7 +139,7 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">First Name</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.firstName ? "is-invalid" : ""}`}
                             placeholder="Enter first name"
                             value={formData.firstName || formData.name?.split(" ")[0] || ""}
                             onChange={(e) => {
@@ -122,7 +153,7 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Last Name</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.lastName ? "is-invalid" : ""}`}
                             placeholder="Enter last name"
                             value={formData.lastName || ""}
                             onChange={(e) => {
@@ -138,8 +169,9 @@ export default function StaffSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Email Address</label>
                         <input
-                            type="email"
-                            className="drawer-input"
+                            type="text"
+                            inputMode="email"
+                            className={`drawer-input ${errors.email ? "is-invalid" : ""}`}
                             placeholder="email@tradeflow.com"
                             value={formData.email || formData.emailAddress || ""}
                             onChange={(e) => {
@@ -153,7 +185,7 @@ export default function StaffSlideDrawer({
                         <label className="drawer-label">Contact Number</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.phone ? "is-invalid" : ""}`}
                             placeholder="080 1234 5678"
                             value={formData.phone || formData.phoneNumber || ""}
                             onChange={(e) => {
@@ -181,7 +213,7 @@ export default function StaffSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Role</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.roleId ? "is-invalid" : ""}`}
                             value={String(formData.roleId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -191,6 +223,8 @@ export default function StaffSlideDrawer({
                                     roleId: val,
                                     role: matched?.role_name || prev.role || ""
                                 }));
+                                if (errors.roleId) setErrors((prev) => ({ ...prev, roleId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>
@@ -205,7 +239,7 @@ export default function StaffSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Account Status</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                             value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -215,6 +249,8 @@ export default function StaffSlideDrawer({
                                     statusId: val,
                                     status: matched?.status_name || (val === "2" ? "INACTIVE" : "ACTIVE")
                                 }));
+                                if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>

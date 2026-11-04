@@ -15,13 +15,15 @@ export default function ProductSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState(() => setupService.getProductStatuses(setupService.getCachedStatuses()));
+    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
-    // Load product catalog and stock statuses from backend setup
+    // Load product statuses (strictly active/inactive) from backend setup
     useEffect(() => {
         setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getProductStatuses(res.data));
+                setStatusesList(setupService.getActiveInactiveStatuses(res.data));
             }
         });
     }, []);
@@ -46,10 +48,38 @@ export default function ProductSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        const nameVal = (formData.productName || formData.name || "").trim();
+        if (!nameVal) newErrors.productName = true;
+        if (!formData.categoryId) newErrors.categoryId = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        const priceVal = formData.productPrice ?? formData.price;
+        if (priceVal === undefined || priceVal === null || String(priceVal).trim() === "" || Number(priceVal) <= 0) {
+            newErrors.price = true;
+        }
+
+        const qtyVal = formData.quantity ?? formData.inStock;
+        if (qtyVal === undefined || qtyVal === null || String(qtyVal).trim() === "") {
+            newErrors.quantity = true;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select options and fill in all required fields marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -62,7 +92,7 @@ export default function ProductSlideDrawer({
             icon="bi bi-box-seam"
             entityType="Product"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -71,7 +101,7 @@ export default function ProductSlideDrawer({
                     <label className="drawer-label">Product Name</label>
                     <input
                         type="text"
-                        className="drawer-input"
+                        className={`drawer-input ${errors.productName ? "is-invalid" : ""}`}
                         placeholder="e.g. Apple iPhone 15 Pro Max"
                         value={formData.productName || formData.name || ""}
                         onChange={(e) => {
@@ -86,7 +116,7 @@ export default function ProductSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Category</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.categoryId ? "is-invalid" : ""}`}
                             value={formData.categoryId || formData.categories_id || ""}
                             onChange={(e) => {
                                 const catId = e.target.value;
@@ -98,6 +128,8 @@ export default function ProductSlideDrawer({
                                 if (selectedCat) {
                                     handleChange("categoryName", selectedCat.categories_name || selectedCat.categoryName || selectedCat.name);
                                 }
+                                if (errors.categoryId) setErrors((prev) => ({ ...prev, categoryId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>
@@ -115,7 +147,7 @@ export default function ProductSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Status</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                             value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -125,6 +157,8 @@ export default function ProductSlideDrawer({
                                     status: matched?.status_name || val,
                                     statusId: matched?.status_id || val
                                 }));
+                                if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>
@@ -140,14 +174,15 @@ export default function ProductSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Price (₦)</label>
                         <input
-                            type="number"
-                            className="drawer-input"
+                            type="text"
+                            inputMode="numeric"
+                            className={`drawer-input ${errors.price ? "is-invalid" : ""}`}
                             placeholder="e.g. 850000"
                             value={formData.productPrice ?? formData.price ?? ""}
                             onChange={(e) => {
-                                const p = Number(e.target.value) || 0;
-                                handleChange("price", p);
-                                handleChange("productPrice", p);
+                                const sanitized = e.target.value.replace(/[^0-9.]/g, "");
+                                handleChange("price", sanitized);
+                                handleChange("productPrice", sanitized);
                             }}
                         />
                     </div>
@@ -155,14 +190,15 @@ export default function ProductSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Stock Quantity</label>
                         <input
-                            type="number"
-                            className="drawer-input"
+                            type="text"
+                            inputMode="numeric"
+                            className={`drawer-input ${errors.quantity ? "is-invalid" : ""}`}
                             placeholder="e.g. 24"
                             value={formData.quantity ?? formData.inStock ?? ""}
                             onChange={(e) => {
-                                const q = Number(e.target.value) || 0;
-                                handleChange("quantity", q);
-                                handleChange("inStock", q);
+                                const sanitized = e.target.value.replace(/[^0-9]/g, "");
+                                handleChange("quantity", sanitized);
+                                handleChange("inStock", sanitized);
                             }}
                         />
                     </div>

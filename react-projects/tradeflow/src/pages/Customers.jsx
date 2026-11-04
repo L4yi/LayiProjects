@@ -8,8 +8,10 @@ export default function Customers() {
     const [customersList, setCustomersList] = useState([]);
     const [statusesList, setStatusesList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerError, setDrawerError] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Customer");
     const [statusFilter, setStatusFilter] = useState("");
@@ -50,6 +52,7 @@ export default function Customers() {
     const handleOpenEdit = (customer) => {
         setSelectedCustomer({ ...customer });
         setDrawerTitle(`Edit Customer - ${customer.name}`);
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
@@ -73,6 +76,7 @@ export default function Customers() {
             address: ""
         });
         setDrawerTitle("Add New Customer Account");
+        setDrawerError("");
         setDrawerOpen(true);
     };
 
@@ -89,8 +93,8 @@ export default function Customers() {
         const statusId = formData.statusId || setupService.getStatusId(formData.status || "Active");
         const roleId = formData.roleId || setupService.getRoleId(formData.role || "Customer");
 
-        setDrawerOpen(false);
-        setIsLoading(true);
+        setIsSaving(true);
+        setDrawerError("");
 
         try {
             let res;
@@ -119,7 +123,10 @@ export default function Customers() {
                 });
             }
 
+            setIsSaving(false);
+
             if (res.success) {
+                setDrawerOpen(false);
                 await loadCustomers();
                 setModalData({
                     type: "success",
@@ -128,22 +135,11 @@ export default function Customers() {
                 });
                 setShowSuccessModal(true);
             } else {
-                setModalData({
-                    type: "error",
-                    title: "OPERATION FAILED",
-                    message: res.message || "Failed to save customer account."
-                });
-                setShowSuccessModal(true);
+                setDrawerError(res.message || "Failed to save customer account.");
             }
         } catch (err) {
-            setModalData({
-                type: "error",
-                title: "NETWORK ERROR",
-                message: "Unable to reach server. Please check your network connection."
-            });
-            setShowSuccessModal(true);
-        } finally {
-            setIsLoading(false);
+            setIsSaving(false);
+            setDrawerError("Unable to reach server. Please check your network connection.");
         }
     };
 
@@ -352,6 +348,8 @@ export default function Customers() {
                 icon="bi bi-people-fill"
                 entityType="Customer"
                 initialData={selectedCustomer || {}}
+                isSaving={isSaving}
+                errorMessage={drawerError}
                 onSave={handleSaveCustomer}
             />
 

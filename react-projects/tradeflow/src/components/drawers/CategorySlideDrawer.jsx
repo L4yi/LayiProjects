@@ -14,13 +14,15 @@ export default function CategorySlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState(() => setupService.getCategoryStatuses(setupService.getCachedStatuses()));
+    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
-    // Load category taxonomy statuses from backend setup
+    // Load category taxonomy statuses (strictly active/inactive) from backend setup
     useEffect(() => {
         setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getCategoryStatuses(res.data));
+                setStatusesList(setupService.getActiveInactiveStatuses(res.data));
             }
         });
     }, []);
@@ -42,10 +44,27 @@ export default function CategorySlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        const catName = (formData.name || formData.categoryName || "").trim();
+        if (!catName) newErrors.name = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select a status and enter a category name marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -58,7 +77,7 @@ export default function CategorySlideDrawer({
             icon="bi bi-tags"
             entityType="Category"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -67,7 +86,7 @@ export default function CategorySlideDrawer({
                     <label className="drawer-label">Category Name</label>
                     <input
                         type="text"
-                        className="drawer-input"
+                        className={`drawer-input ${errors.name ? "is-invalid" : ""}`}
                         placeholder="e.g. Mobile Devices & Phones"
                         value={formData.name || formData.categoryName || ""}
                         onChange={(e) => {
@@ -81,7 +100,7 @@ export default function CategorySlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Status</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                         value={String(formData.statusId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
@@ -91,6 +110,8 @@ export default function CategorySlideDrawer({
                                 statusId: val,
                                 status: matched?.status_name || prev.status || ""
                             }));
+                            if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                            if (localError) setLocalError("");
                         }}
                     >
                         <option value="">Select Here</option>

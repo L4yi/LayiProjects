@@ -15,10 +15,12 @@ export default function CustomerSlideDrawer({
 }) {
     const [formData, setFormData] = useState({});
     const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
-    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
-    const [statusesList, setStatusesList] = useState(() => setupService.getAccountStatuses(setupService.getCachedStatuses()));
+    const [rolesList, setRolesList] = useState(() => setupService.getCustomerRoles(setupService.getCachedRoles()));
+    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
-    // Load titles, full roles list (all 19), and account statuses from backend setup
+    // Load titles, Customer role, and account statuses (active/inactive) from backend setup
     useEffect(() => {
         const loadSetup = async () => {
             const [tRes, rRes, sRes] = await Promise.all([
@@ -27,9 +29,11 @@ export default function CustomerSlideDrawer({
                 setupService.fetchAllStatus()
             ]);
             if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
-            if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
+            if (rRes.success && Array.isArray(rRes.data)) {
+                setRolesList(setupService.getCustomerRoles(rRes.data));
+            }
             if (sRes.success && Array.isArray(sRes.data)) {
-                setStatusesList(setupService.getAccountStatuses(sRes.data));
+                setStatusesList(setupService.getActiveInactiveStatuses(sRes.data));
             }
         };
         loadSetup();
@@ -64,10 +68,37 @@ export default function CustomerSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        if (!formData.titleId) newErrors.titleId = true;
+        if (!formData.firstName && !formData.name?.split(" ")[0]) newErrors.firstName = true;
+        if (!formData.lastName) newErrors.lastName = true;
+
+        const emailVal = (formData.email || formData.emailAddress || "").trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailVal || !emailRegex.test(emailVal)) newErrors.email = true;
+
+        const phoneVal = (formData.phone || formData.phoneNumber || "").trim();
+        if (!phoneVal) newErrors.phone = true;
+
+        if (!formData.roleId) newErrors.roleId = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select options and fill in all required fields marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -80,7 +111,7 @@ export default function CustomerSlideDrawer({
             icon="bi bi-people"
             entityType="Customer Account"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -88,7 +119,7 @@ export default function CustomerSlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Title</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.titleId ? "is-invalid" : ""}`}
                         value={String(formData.titleId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
@@ -98,6 +129,8 @@ export default function CustomerSlideDrawer({
                                 titleId: val,
                                 title: matched?.title_name || prev.title || ""
                             }));
+                            if (errors.titleId) setErrors((prev) => ({ ...prev, titleId: false }));
+                            if (localError) setLocalError("");
                         }}
                     >
                         <option value="">Select Here</option>
@@ -115,7 +148,7 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">First Name</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.firstName ? "is-invalid" : ""}`}
                             placeholder="e.g. Alexander"
                             value={formData.firstName || ""}
                             onChange={(e) => {
@@ -130,7 +163,7 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Last Name</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.lastName ? "is-invalid" : ""}`}
                             placeholder="e.g. Wright"
                             value={formData.lastName || ""}
                             onChange={(e) => {
@@ -148,7 +181,7 @@ export default function CustomerSlideDrawer({
                         <label className="drawer-label">Contact Number</label>
                         <input
                             type="text"
-                            className="drawer-input"
+                            className={`drawer-input ${errors.phone ? "is-invalid" : ""}`}
                             placeholder="080 1234 5678"
                             value={formData.phone || formData.phoneNumber || ""}
                             onChange={(e) => {
@@ -161,8 +194,9 @@ export default function CustomerSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Email Address</label>
                         <input
-                            type="email"
-                            className="drawer-input"
+                            type="text"
+                            inputMode="email"
+                            className={`drawer-input ${errors.email ? "is-invalid" : ""}`}
                             placeholder="customer@example.com"
                             value={formData.email || formData.emailAddress || ""}
                             onChange={(e) => {
@@ -190,7 +224,7 @@ export default function CustomerSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Customer Tier / Role</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.roleId ? "is-invalid" : ""}`}
                             value={String(formData.roleId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -200,6 +234,8 @@ export default function CustomerSlideDrawer({
                                     roleId: val,
                                     role: matched?.role_name || prev.role || ""
                                 }));
+                                if (errors.roleId) setErrors((prev) => ({ ...prev, roleId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>
@@ -214,7 +250,7 @@ export default function CustomerSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Account Status</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                             value={String(formData.statusId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -224,6 +260,8 @@ export default function CustomerSlideDrawer({
                                     statusId: val,
                                     status: matched?.status_name || prev.status || ""
                                 }));
+                                if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>

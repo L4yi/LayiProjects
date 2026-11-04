@@ -14,14 +14,16 @@ export default function TransactionSlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState(() => setupService.getTransactionStatuses(setupService.getCachedStatuses()));
+    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
     const [paymentMethodsList, setPaymentMethodsList] = useState(setupService.getCachedPaymentMethods());
+    const [errors, setErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
-    // Load payment transaction statuses and payment methods from backend setup
+    // Load payment transaction statuses (active/inactive) and payment methods from backend setup
     useEffect(() => {
         setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getTransactionStatuses(res.data));
+                setStatusesList(setupService.getActiveInactiveStatuses(res.data));
             }
         });
         setupService.fetchAllPaymentMethods().then((res) => {
@@ -57,10 +59,30 @@ export default function TransactionSlideDrawer({
 
     const handleChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+            setErrors((prev) => ({ ...prev, [field]: false }));
+        }
+        if (localError) setLocalError("");
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const newErrors = {};
+        const amt = formData.amount;
+        if (amt === undefined || amt === null || String(amt).trim() === "" || Number(amt) <= 0) {
+            newErrors.amount = true;
+        }
+        if (!formData.paymentMethodId) newErrors.paymentMethodId = true;
+        if (!formData.statusId) newErrors.statusId = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setLocalError("Please select options and fill in all required fields marked in red.");
+            return;
+        }
+
+        setErrors({});
+        setLocalError("");
         if (onSave) onSave(formData);
     };
 
@@ -73,7 +95,7 @@ export default function TransactionSlideDrawer({
             icon="bi bi-credit-card"
             entityType="Transaction"
             isSaving={isSaving}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
@@ -113,18 +135,22 @@ export default function TransactionSlideDrawer({
                     <div className="drawer-form-group">
                         <label className="drawer-label">Amount (₦)</label>
                         <input
-                            type="number"
-                            className="drawer-input"
+                            type="text"
+                            inputMode="numeric"
+                            className={`drawer-input ${errors.amount ? "is-invalid" : ""}`}
                             placeholder="e.g. 65000"
                             value={formData.amount || ""}
-                            onChange={(e) => handleChange("amount", Number(e.target.value) || 0)}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9.]/g, "");
+                                handleChange("amount", val);
+                            }}
                         />
                     </div>
 
                     <div className="drawer-form-group">
                         <label className="drawer-label">Payment Channel</label>
                         <select
-                            className="drawer-input"
+                            className={`drawer-input ${errors.paymentMethodId ? "is-invalid" : ""}`}
                             value={String(formData.paymentMethodId || "")}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -134,6 +160,8 @@ export default function TransactionSlideDrawer({
                                     paymentMethodId: val,
                                     paymentMethod: matched?.payment_method_name || prev.paymentMethod || ""
                                 }));
+                                if (errors.paymentMethodId) setErrors((prev) => ({ ...prev, paymentMethodId: false }));
+                                if (localError) setLocalError("");
                             }}
                         >
                             <option value="">Select Here</option>
@@ -150,7 +178,7 @@ export default function TransactionSlideDrawer({
                 <div className="drawer-form-group">
                     <label className="drawer-label">Payment Status</label>
                     <select
-                        className="drawer-input"
+                        className={`drawer-input ${errors.statusId ? "is-invalid" : ""}`}
                         value={String(formData.statusId || "")}
                         onChange={(e) => {
                             const val = e.target.value;
@@ -160,6 +188,8 @@ export default function TransactionSlideDrawer({
                                 statusId: val,
                                 status: matched?.status_name || prev.status || ""
                             }));
+                            if (errors.statusId) setErrors((prev) => ({ ...prev, statusId: false }));
+                            if (localError) setLocalError("");
                         }}
                     >
                         <option value="">Select Here</option>

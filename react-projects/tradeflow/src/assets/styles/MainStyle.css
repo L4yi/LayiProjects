@@ -4381,6 +4381,31 @@ html, body {
     box-shadow: 0 0 0 3px rgba(20, 53, 38, 0.1);
 }
 
+.drawer-input.is-invalid,
+.drawer-textarea.is-invalid,
+select.drawer-input.is-invalid {
+    border-color: #e53e3e !important;
+    background-color: #fffaf0 !important;
+    box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.12) !important;
+}
+
+.drawer-input.is-invalid:focus,
+.drawer-textarea.is-invalid:focus,
+select.drawer-input.is-invalid:focus {
+    border-color: #e53e3e !important;
+    box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.22) !important;
+}
+
+/* Remove up/down spinner counters from all numeric inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+input[type="number"] {
+    -moz-appearance: textfield !important;
+}
+
 select.drawer-input {
     appearance: none;
     -webkit-appearance: none;
