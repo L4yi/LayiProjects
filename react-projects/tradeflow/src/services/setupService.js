@@ -204,10 +204,13 @@ export const setupService = {
     // Customer tier roles strictly restricted to Customer role only
     getCustomerRoles(list) {
         const roles = list || cachedRoles || [];
-        return roles.filter(r =>
+        const found = roles.filter(r =>
             String(r.role_id) === "19" ||
             String(r.role_name || "").toLowerCase() === "customer"
         );
+        if (found.length > 0) return found;
+        // Fallback: If backend role setup table does not include a dedicated Customer role, supply the canonical Customer role #19
+        return [{ role_id: "19", role_name: "Customer" }];
     },
 
     // Look up a role id by its name from the backend roles list.
@@ -217,6 +220,7 @@ export const setupService = {
         if (!roleName) return fallback || cachedRoles?.[0]?.role_id || "";
         // If it's already an ID like "2" or 2, just return it as a string
         if (!isNaN(roleName)) return String(roleName);
+        if (String(roleName).toLowerCase() === "customer") return "19";
         if (cachedRoles && cachedRoles.length > 0) {
             const found = cachedRoles.find(
                 (r) => (r.role_name || "").toLowerCase() === String(roleName).toLowerCase()
@@ -229,6 +233,7 @@ export const setupService = {
     // Look up a role name using its id from the backend roles list
     getRoleName(roleId, fallback = "") {
         if (!roleId) return fallback;
+        if (String(roleId) === "19") return "Customer";
         if (cachedRoles && cachedRoles.length > 0) {
             const found = cachedRoles.find(
                 (r) => String(r.role_id) === String(roleId)
