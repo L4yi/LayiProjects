@@ -7,9 +7,29 @@ export default function CustomerSignIn() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const validateForm = () => {
+        const newErrors = {};
+        const trimmedEmail = email.trim();
+        if (!trimmedEmail) {
+            newErrors.email = "Email address is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+            newErrors.email = "Please enter a valid email address.";
+        }
+
+        if (!password) {
+            newErrors.password = "Password is required.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSignIn = (e) => {
         e.preventDefault();
+        if (!validateForm()) return;
+
         const existing = setSessionUser();
 
         let displayName = existing.name;
@@ -60,19 +80,27 @@ export default function CustomerSignIn() {
                                     </p>
                                 </div>
 
-                                <form onSubmit={handleSignIn} className="input-container">
+                                <form onSubmit={handleSignIn} className="input-container" noValidate>
                                     <div className="input-wrapper">
                                         <label htmlFor="customerEmail">E-mail Address</label>
                                         <input
-                                            type="email"
-                                            className="text-field"
+                                            type="text"
+                                            inputMode="email"
+                                            className={`text-field ${errors.email ? "is-invalid" : ""}`}
                                             id="customerEmail"
                                             placeholder="customer@example.com"
                                             value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                                            }}
                                             autoComplete="email"
-                                            required
                                         />
+                                        {errors.email && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.email}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="input-wrapper">
@@ -80,13 +108,15 @@ export default function CustomerSignIn() {
                                         <div className="password-input-group">
                                             <input
                                                 type={showPassword ? "text" : "password"}
-                                                className="text-field"
+                                                className={`text-field ${errors.password ? "is-invalid" : ""}`}
                                                 id="customerPassword"
                                                 placeholder="@#*%"
                                                 value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                onChange={(e) => {
+                                                    setPassword(e.target.value);
+                                                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                                                }}
                                                 autoComplete="current-password"
-                                                required
                                             />
                                             <button
                                                 type="button"
@@ -97,6 +127,11 @@ export default function CustomerSignIn() {
                                                 <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
                                             </button>
                                         </div>
+                                        {errors.password && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.password}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="form-options">

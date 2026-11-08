@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
+import { WISHLIST_ITEMS } from "../../data/storeData";
 
 export default function CustomerCart() {
     const [cartItems, setCartItems] = useState(getCartItems());
+    const [wishlistItems, setWishlistItems] = useState(WISHLIST_ITEMS || []);
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState([]);
 
@@ -210,12 +212,12 @@ export default function CustomerCart() {
                         {/* Wishlist Section */}
                         <div className="cart-wishlist-card-box">
                             <div className="wishlist-header">
-                                <h3 className="wishlist-title">Wishlist ({WISHLIST_ITEMS.length})</h3>
+                                <h3 className="wishlist-title">Wishlist ({wishlistItems.length})</h3>
                                 <Link to="/customer/categories" className="link-see-all">See All &gt;</Link>
                             </div>
 
                             <div className="wishlist-grid">
-                                {WISHLIST_ITEMS.map((wItem) => (
+                                {wishlistItems.map((wItem) => (
                                     <div key={wItem.id} className="wishlist-product-card">
                                         <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
                                         <div className="wishlist-img-box">

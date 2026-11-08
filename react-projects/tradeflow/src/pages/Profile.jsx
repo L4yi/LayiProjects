@@ -5,6 +5,7 @@ import { getSessionUser, setSessionUser } from "../utils/session";
 export default function Profile() {
     const [user, setUser] = useState(getSessionUser());
     const [savedNotice, setSavedNotice] = useState(false);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         const handleSessionUpdate = () => {
@@ -14,8 +15,28 @@ export default function Profile() {
         return () => window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
     }, []);
 
+    const validateForm = () => {
+        const newErrors = {};
+        if (!user.name?.trim()) {
+            newErrors.name = "Full name is required.";
+        }
+        const trimmedEmail = (user.email || "").trim();
+        if (!trimmedEmail) {
+            newErrors.email = "Email address is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+            newErrors.email = "Please enter a valid email address.";
+        }
+        if (!user.phone?.trim()) {
+            newErrors.phone = "Phone number is required.";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSave = (e) => {
         e.preventDefault();
+        if (!validateForm()) return;
+
         const updated = setSessionUser({
             name: user.name,
             email: user.email,
@@ -104,39 +125,62 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        <form onSubmit={handleSave} className="profile-edit-form">
+                        <form onSubmit={handleSave} className="profile-edit-form" noValidate>
                             <div className="form-fields-grid">
                                 <div className="form-group-box">
                                     <label className="field-label">Full Name</label>
                                     <input
                                         type="text"
-                                        className="form-control-field"
+                                        className={`form-control-field ${errors.name ? "is-invalid" : ""}`}
                                         value={user.name || ""}
-                                        onChange={(e) => setUser({ ...user, name: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setUser({ ...user, name: e.target.value });
+                                            if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                                        }}
                                     />
+                                    {errors.name && (
+                                        <span className="inline-error">
+                                            <i className="bi bi-exclamation-circle"></i> {errors.name}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="form-group-box">
                                     <label className="field-label">Email Address</label>
                                     <input
-                                        type="email"
-                                        className="form-control-field"
+                                        type="text"
+                                        inputMode="email"
+                                        className={`form-control-field ${errors.email ? "is-invalid" : ""}`}
                                         value={user.email || ""}
-                                        onChange={(e) => setUser({ ...user, email: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setUser({ ...user, email: e.target.value });
+                                            if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                                        }}
                                     />
+                                    {errors.email && (
+                                        <span className="inline-error">
+                                            <i className="bi bi-exclamation-circle"></i> {errors.email}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="form-group-box">
                                     <label className="field-label">Phone Number</label>
                                     <input
                                         type="text"
-                                        className="form-control-field"
+                                        inputMode="tel"
+                                        className={`form-control-field ${errors.phone ? "is-invalid" : ""}`}
                                         value={user.phone || ""}
-                                        onChange={(e) => setUser({ ...user, phone: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setUser({ ...user, phone: e.target.value });
+                                            if (errors.phone) setErrors((prev) => ({ ...prev, phone: "" }));
+                                        }}
                                     />
+                                    {errors.phone && (
+                                        <span className="inline-error">
+                                            <i className="bi bi-exclamation-circle"></i> {errors.phone}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="form-group-box">

@@ -9,13 +9,43 @@ export default function CustomerSignUp() {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!fullName.trim()) {
+            newErrors.fullName = "Full name is required.";
+        }
+
+        const trimmedEmail = email.trim();
+        if (!trimmedEmail) {
+            newErrors.email = "Email address is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+            newErrors.email = "Please enter a valid email address.";
+        }
+
+        if (!phone.trim()) {
+            newErrors.phone = "Phone number is required.";
+        }
+
+        if (!password) {
+            newErrors.password = "Password is required.";
+        } else if (password.length < 4) {
+            newErrors.password = "Password must be at least 4 characters.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSignUp = (e) => {
         e.preventDefault();
+        if (!validateForm()) return;
+
         setSessionUser({
-            name: fullName || "New Customer",
-            email: email || "customer@example.com",
-            phone: phone || "+234 800 000 0000",
+            name: fullName.trim() || "New Customer",
+            email: email.trim() || "customer@example.com",
+            phone: phone.trim() || "+234 800 000 0000",
             role: "Customer Member",
             department: "Retail Commerce & Shopping",
             lastLogin: "Just now"
@@ -53,47 +83,70 @@ export default function CustomerSignUp() {
                                     </p>
                                 </div>
 
-                                <form onSubmit={handleSignUp} className="input-container">
+                                <form onSubmit={handleSignUp} className="input-container" noValidate>
                                     <div className="input-wrapper">
                                         <label htmlFor="customerFullName">Full Name</label>
                                         <input
                                             type="text"
-                                            className="text-field"
+                                            className={`text-field ${errors.fullName ? "is-invalid" : ""}`}
                                             id="customerFullName"
                                             placeholder="e.g. Layi Olawale"
                                             value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
+                                            onChange={(e) => {
+                                                setFullName(e.target.value);
+                                                if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: "" }));
+                                            }}
                                             autoComplete="name"
-                                            required
                                         />
+                                        {errors.fullName && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.fullName}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="input-wrapper">
                                         <label htmlFor="customerEmail">E-mail Address</label>
                                         <input
-                                            type="email"
-                                            className="text-field"
+                                            type="text"
+                                            inputMode="email"
+                                            className={`text-field ${errors.email ? "is-invalid" : ""}`}
                                             id="customerEmail"
                                             placeholder="customer@example.com"
                                             value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                                            }}
                                             autoComplete="email"
-                                            required
                                         />
+                                        {errors.email && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.email}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="input-wrapper">
                                         <label htmlFor="customerPhone">Phone Number</label>
                                         <input
-                                            type="tel"
-                                            className="text-field"
+                                            type="text"
+                                            inputMode="tel"
+                                            className={`text-field ${errors.phone ? "is-invalid" : ""}`}
                                             id="customerPhone"
                                             placeholder="+234 801 234 5678"
                                             value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
+                                            onChange={(e) => {
+                                                setPhone(e.target.value);
+                                                if (errors.phone) setErrors((prev) => ({ ...prev, phone: "" }));
+                                            }}
                                             autoComplete="tel"
-                                            required
                                         />
+                                        {errors.phone && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.phone}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="input-wrapper">
@@ -101,13 +154,15 @@ export default function CustomerSignUp() {
                                         <div className="password-input-group">
                                             <input
                                                 type={showPassword ? "text" : "password"}
-                                                className="text-field"
+                                                className={`text-field ${errors.password ? "is-invalid" : ""}`}
                                                 id="customerPassword"
                                                 placeholder="Create strong password"
                                                 value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                onChange={(e) => {
+                                                    setPassword(e.target.value);
+                                                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                                                }}
                                                 autoComplete="new-password"
-                                                required
                                             />
                                             <button
                                                 type="button"
@@ -118,6 +173,11 @@ export default function CustomerSignUp() {
                                                 <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
                                             </button>
                                         </div>
+                                        {errors.password && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.password}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="form-options">

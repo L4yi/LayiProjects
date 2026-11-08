@@ -5762,6 +5762,27 @@ input.table-filter-search-input,
     box-shadow: 0 0 0 3px rgba(20, 53, 38, 0.1);
 }
 
+.form-control-field.is-invalid {
+    border-color: var(--danger-color, #ef4444) !important;
+    background-color: #fff8f8 !important;
+}
+
+.form-control-field.is-invalid:focus {
+    border-color: var(--danger-color, #ef4444) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.profile-edit-form .inline-error {
+    color: var(--danger-color, #ef4444);
+    font-size: 12px;
+    font-family: sub-title-font;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
 .profile-form-footer {
     margin-top: 24px;
     display: flex;
