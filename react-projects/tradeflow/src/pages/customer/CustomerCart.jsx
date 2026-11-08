@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
-import { WISHLIST_ITEMS } from "../../data/storeData";
+import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
 
 export default function CustomerCart() {
     const [cartItems, setCartItems] = useState(getCartItems());
-    const [wishlistItems, setWishlistItems] = useState(WISHLIST_ITEMS || []);
+    const [wishlistItems, setWishlistItems] = useState(getWishlistItems());
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState([]);
 
-    // Fetch suggested products live from database
+    // Fetch live products directly from backend
     useEffect(() => {
         productService.fetchAllProducts().then(res => {
             if (res.success && Array.isArray(res.data)) {
@@ -33,6 +33,14 @@ export default function CustomerCart() {
         return () => window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
     }, []);
 
+    useEffect(() => {
+        const handleWishlistUpdate = (e) => {
+            setWishlistItems(e.detail || getWishlistItems());
+        };
+        window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+        return () => window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+    }, []);
+
     const updateQuantity = (id, delta) => {
         updateCartQuantity(id, delta);
     };
@@ -45,8 +53,8 @@ export default function CustomerCart() {
         addToCart({
             id: wItem.id,
             name: wItem.name,
-            categoryId: "accessories",
-            categoryName: "Accessories",
+            categoryId: wItem.categoryId || "catalog",
+            categoryName: wItem.categoryName || "Catalog",
             variation: "Standard Retail Edition",
             price: wItem.price,
             oldPrice: wItem.oldPrice,
@@ -54,6 +62,7 @@ export default function CustomerCart() {
             image: wItem.image,
             express: true
         }, 1);
+        removeFromWishlist(wItem.id);
     };
 
     const subtotal = getCartSubtotal();
@@ -107,12 +116,15 @@ export default function CustomerCart() {
                             {cartItems.length === 0 ? (
                                 <div className="cart-empty-state">
                                     <div className="empty-cart-icon">
-                                        <i className="bi bi-cart-x"></i>
+                                        <i className="bi bi-bag-x"></i>
                                     </div>
-                                    <h3>Your cart is empty!</h3>
-                                    <p>Browse our verified categories and discover great deals.</p>
+                                    <h3 className="empty-cart-title">Your cart is empty!</h3>
+                                    <p className="empty-cart-desc">
+                                        Explore our verified catalog to discover high-quality products, great deals, and verified inventory.
+                                    </p>
                                     <Link to="/customer/categories" className="btn-start-shopping">
-                                        Start Shopping
+                                        <i className="bi bi-bag-plus"></i>
+                                        <span>Start Shopping</span>
                                     </Link>
                                 </div>
                             ) : (
@@ -122,7 +134,11 @@ export default function CustomerCart() {
                                     
                                             <div className="cart-item-img-wrap">
                                                 <Link to={`/customer/product/${item.id}`}>
-                                                    <img src={item.image} alt={item.name} className="cart-prod-img" />
+                                                    {item.image ? (
+                                                        <img src={item.image} alt={item.name} className="cart-prod-img" />
+                                                    ) : (
+                                                        <i className="bi bi-box-seam cart-fallback-icon"></i>
+                                                    )}
                                                 </Link>
                                             </div>
 
@@ -212,50 +228,92 @@ export default function CustomerCart() {
                         {/* Wishlist Section */}
                         <div className="cart-wishlist-card-box">
                             <div className="wishlist-header">
-                                <h3 className="wishlist-title">Wishlist ({wishlistItems.length})</h3>
-                                <Link to="/customer/categories" className="link-see-all">See All &gt;</Link>
+                                <h3 className="wishlist-title">
+                                    <i className="bi bi-heart-fill me-2 text-emerald"></i>
+                                    Wishlist ({wishlistItems.length})
+                                </h3>
+                                <Link to="/customer/categories" className="link-see-all">
+                                    See All &gt;
+                                </Link>
                             </div>
 
-                            <div className="wishlist-grid">
-                                {wishlistItems.map((wItem) => (
-                                    <div key={wItem.id} className="wishlist-product-card">
-                                        <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
-                                        <div className="wishlist-img-box">
-                                            <img src={wItem.image} alt={wItem.name} />
+                            {wishlistItems.length > 0 ? (
+                                <div className="wishlist-grid">
+                                    {wishlistItems.map((wItem) => (
+                                        <div key={wItem.id} className="wishlist-product-card">
+                                            {wItem.discountPercent > 0 && (
+                                                <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
+                                            )}
+                                            <div className="wishlist-img-box">
+                                                {wItem.image ? (
+                                                    <img src={wItem.image} alt={wItem.name} />
+                                                ) : (
+                                                    <i className="bi bi-box-seam wishlist-fallback-icon"></i>
+                                                )}
+                                            </div>
+                                            <h5 className="wishlist-item-title">{wItem.name}</h5>
+                                            <div className="wishlist-price-row">
+                                                <span className="w-price-main">₦ {Number(wItem.price || 0).toLocaleString()}</span>
+                                                {wItem.oldPrice && (
+                                                    <span className="w-price-old">₦ {Number(wItem.oldPrice || 0).toLocaleString()}</span>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn-wishlist-add-cart"
+                                                onClick={() => addWishlistItemToCart(wItem)}
+                                            >
+                                                <i className="bi bi-cart-plus me-1"></i> Add to cart
+                                            </button>
                                         </div>
-                                        <h5 className="wishlist-item-title">{wItem.name}</h5>
-                                        <div className="wishlist-price-row">
-                                            <span className="w-price-main">₦ {wItem.price.toLocaleString()}</span>
-                                            <span className="w-price-old">₦ {wItem.oldPrice.toLocaleString()}</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="btn-wishlist-add-cart"
-                                            onClick={() => addWishlistItemToCart(wItem)}
-                                        >
-                                            Add to cart
-                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="wishlist-empty-inline">
+                                    <div className="wishlist-empty-icon-wrap">
+                                        <i className="bi bi-heart"></i>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="wishlist-empty-text-wrap">
+                                        <h4 className="wishlist-empty-heading">Your wishlist is empty</h4>
+                                        <p className="wishlist-empty-sub">
+                                            Save your favorite verified products from the catalog to easily revisit and purchase them anytime.
+                                        </p>
+                                    </div>
+                                    <Link to="/customer/categories" className="btn-wishlist-browse">
+                                        <i className="bi bi-grid"></i>
+                                        <span>Browse Catalog</span>
+                                    </Link>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Recently Viewed Section */}
-                        <div className="cart-recently-viewed-box">
-                            <div className="wishlist-header">
-                                <h3 className="wishlist-title">Recently Viewed</h3>
-                                <Link to="/customer/categories" className="link-see-all">See All &gt;</Link>
+                        {/* Suggested Products Section (from live backend) */}
+                        {suggestedProducts.length > 0 && (
+                            <div className="cart-recently-viewed-box">
+                                <div className="wishlist-header">
+                                    <h3 className="wishlist-title">
+                                        <i className="bi bi-stars me-2 text-emerald"></i>
+                                        Recommended from Catalog
+                                    </h3>
+                                    <Link to="/customer/categories" className="link-see-all">See All &gt;</Link>
+                                </div>
+                                <div className="recently-viewed-grid">
+                                    {suggestedProducts.slice(0, 4).map((p) => (
+                                        <Link key={p.id} to={`/customer/product/${p.id}`} className="recent-prod-mini-card">
+                                            {p.image ? (
+                                                <img src={p.image} alt={p.name} />
+                                            ) : (
+                                                <div className="recent-mini-fallback">
+                                                    <i className="bi bi-box-seam"></i>
+                                                </div>
+                                            )}
+                                            <span className="recent-mini-title">{p.name}</span>
+                                            <span className="recent-mini-price">₦ {Number(p.price || 0).toLocaleString()}</span>
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="recently-viewed-grid">
-                                {suggestedProducts.slice(0, 4).map((p) => (
-                                    <Link key={p.id} to={`/customer/product/${p.id}`} className="recent-prod-mini-card">
-                                        <img src={p.image} alt={p.name} />
-                                        <span className="recent-mini-title">{p.name}</span>
-                                        <span className="recent-mini-price">₦ {p.price.toLocaleString()}</span>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Right Column: Cart Summary Box */}

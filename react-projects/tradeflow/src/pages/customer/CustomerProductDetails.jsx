@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import productService from "../../services/productService";
 import { addToCart } from "../../utils/cart";
+import { addToWishlist, removeFromWishlist, isInWishlist } from "../../utils/wishlist";
 
 export default function CustomerProductDetails() {
     const { productId } = useParams();
@@ -11,6 +12,7 @@ export default function CustomerProductDetails() {
     const [selectedImgIndex, setSelectedImgIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [addedNotice, setAddedNotice] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     // Fetch product details live from backend
     useEffect(() => {
@@ -42,6 +44,7 @@ export default function CustomerProductDetails() {
                                 "7-day return and exchange guarantee"
                             ]
                         });
+                        setIsSaved(isInWishlist(found.product_id || found.productId || found.id));
                     }
                 }
             } catch (err) {
@@ -96,6 +99,17 @@ export default function CustomerProductDetails() {
         }, 500);
     };
 
+    const handleToggleWishlist = () => {
+        if (!product) return;
+        if (isSaved) {
+            removeFromWishlist(product.id);
+            setIsSaved(false);
+        } else {
+            addToWishlist(product);
+            setIsSaved(true);
+        }
+    };
+
     return (
         <div className="customer-product-details-container">
             {/* Breadcrumb Navigation */}
@@ -132,8 +146,13 @@ export default function CustomerProductDetails() {
                                 <i className="bi bi-box-seam" style={{ fontSize: "3rem" }}></i>
                             </div>
                         )}
-                        <button type="button" className="btn-wishlist-heart" title="Save to Wishlist">
-                            <i className="bi bi-heart"></i>
+                        <button
+                            type="button"
+                            className={`btn-wishlist-heart ${isSaved ? "active" : ""}`}
+                            title={isSaved ? "Remove from Wishlist" : "Save to Wishlist"}
+                            onClick={handleToggleWishlist}
+                        >
+                            <i className={`bi bi-heart${isSaved ? "-fill text-danger" : ""}`}></i>
                         </button>
                     </div>
 
