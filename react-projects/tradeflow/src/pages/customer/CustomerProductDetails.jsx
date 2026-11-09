@@ -13,6 +13,8 @@ export default function CustomerProductDetails() {
     const [quantity, setQuantity] = useState(1);
     const [addedNotice, setAddedNotice] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [imgFailed, setImgFailed] = useState(false);
+    const [activeTab, setActiveTab] = useState("overview");
 
     // Fetch product details live from backend
     useEffect(() => {
@@ -95,12 +97,9 @@ export default function CustomerProductDetails() {
         );
     }
 
-    const galleryImages = [
-        product.image,
-        product.image,
-        product.image,
-        product.image
-    ].filter(Boolean);
+    const galleryImages = Array.isArray(product.images) && product.images.length > 0
+        ? product.images.filter(Boolean)
+        : [product.image].filter(Boolean);
 
     const handleAddToCart = () => {
         addToCart(product, quantity);
@@ -146,15 +145,16 @@ export default function CustomerProductDetails() {
                 {/* Left Side: Interactive Image Gallery */}
                 <div className="product-gallery-side">
                     <div className="main-image-viewport">
-                        {galleryImages[selectedImgIndex] ? (
+                        {galleryImages[selectedImgIndex] && !imgFailed ? (
                             <img
                                 src={galleryImages[selectedImgIndex]}
                                 alt={product.name}
                                 className="active-display-img"
+                                onError={() => setImgFailed(true)}
                             />
                         ) : (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", color: "#94a3b8" }}>
-                                <i className="bi bi-box-seam" style={{ fontSize: "3rem" }}></i>
+                            <div className="main-viewport-placeholder">
+                                <i className="bi bi-box-seam"></i>
                             </div>
                         )}
                         <button
@@ -167,14 +167,17 @@ export default function CustomerProductDetails() {
                         </button>
                     </div>
 
-                    {galleryImages.length > 1 && (
+                    {galleryImages.length > 1 && new Set(galleryImages).size > 1 && (
                         <div className="thumbnail-strip">
                             {galleryImages.map((img, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
-                                    className={`thumb-btn ${selectedImgIndex === idx ? "active-thumb" : ""}`}
-                                    onClick={() => setSelectedImgIndex(idx)}
+                                    className={`thumb-button ${selectedImgIndex === idx ? "selected active-thumb" : ""}`}
+                                    onClick={() => {
+                                        setSelectedImgIndex(idx);
+                                        setImgFailed(false);
+                                    }}
                                 >
                                     <img src={img} alt={`View ${idx + 1}`} />
                                 </button>
@@ -207,21 +210,31 @@ export default function CustomerProductDetails() {
                         {product.oldPrice && (
                             <span className="old-strikethrough-price">₦ {product.oldPrice.toLocaleString()}</span>
                         )}
+                        {product.oldPrice && product.oldPrice > product.price && (
+                            <span className="discount-pill">
+                                -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% OFF
+                            </span>
+                        )}
                     </div>
 
                     <div className="stock-availability-bar">
-                        <i className="bi bi-check-circle-fill green-icon"></i>
-                        <span>In Stock ({product.stockCount} units available in warehouse)</span>
+                        <span className="stock-status-pill in-stock">
+                            <span className="pulse-dot"></span>
+                            In Stock
+                        </span>
+                        <span className="stock-qty-text">({product.stockCount} units available in warehouse)</span>
                     </div>
 
                     <p className="product-description-snippet">{product.description}</p>
 
                     <div className="product-highlights-box">
-                        <h4>Key Specifications:</h4>
+                        <h4>Key Specifications</h4>
                         <ul>
                             {product.highlights.map((h, idx) => (
                                 <li key={idx}>
-                                    <i className="bi bi-check2"></i>
+                                    <span className="spec-check-badge">
+                                        <i className="bi bi-check-lg"></i>
+                                    </span>
                                     <span>{h}</span>
                                 </li>
                             ))}
@@ -235,15 +248,17 @@ export default function CustomerProductDetails() {
                                 type="button"
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                 disabled={quantity <= 1}
+                                aria-label="Decrease quantity"
                             >
-                                -
+                                <i className="bi bi-dash"></i>
                             </button>
                             <span>{quantity}</span>
                             <button
                                 type="button"
                                 onClick={() => setQuantity(quantity + 1)}
+                                aria-label="Increase quantity"
                             >
-                                +
+                                <i className="bi bi-plus"></i>
                             </button>
                         </div>
 
@@ -255,40 +270,235 @@ export default function CustomerProductDetails() {
                             <i className="bi bi-cart-plus-fill"></i>
                             <span>Add to Cart</span>
                         </button>
-
-                        <button
-                            type="button"
-                            className="btn-buy-now-accent"
-                            onClick={handleAddToCart}
-                        >
-                            Buy Now
-                        </button>
                     </div>
 
                     {/* Trust Badges */}
                     <div className="trust-badges-bar">
                         <div className="trust-badge-item">
-                            <i className="bi bi-shield-check"></i>
-                            <div>
+                            <div className="trust-icon-box">
+                                <i className="bi bi-shield-check"></i>
+                            </div>
+                            <div className="trust-badge-text">
                                 <strong>Authentic Product</strong>
                                 <p>100% genuine guaranteed</p>
                             </div>
                         </div>
                         <div className="trust-badge-item">
-                            <i className="bi bi-truck"></i>
-                            <div>
+                            <div className="trust-icon-box">
+                                <i className="bi bi-truck"></i>
+                            </div>
+                            <div className="trust-badge-text">
                                 <strong>Fast Dispatch</strong>
                                 <p>Dispatches within 24 hours</p>
                             </div>
                         </div>
                         <div className="trust-badge-item">
-                            <i className="bi bi-arrow-repeat"></i>
-                            <div>
+                            <div className="trust-icon-box">
+                                <i className="bi bi-arrow-repeat"></i>
+                            </div>
+                            <div className="trust-badge-text">
                                 <strong>Easy Returns</strong>
                                 <p>7-day hassle-free returns</p>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Additional Details & Specifications Card */}
+            <div className="product-details-tabs-card">
+                <div className="product-tabs-header">
+                    <button
+                        type="button"
+                        className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
+                        onClick={() => setActiveTab("overview")}
+                    >
+                        <i className="bi bi-file-text"></i>
+                        <span>Overview & Details</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`tab-btn ${activeTab === "specifications" ? "active" : ""}`}
+                        onClick={() => setActiveTab("specifications")}
+                    >
+                        <i className="bi bi-sliders"></i>
+                        <span>Specifications</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`tab-btn ${activeTab === "delivery" ? "active" : ""}`}
+                        onClick={() => setActiveTab("delivery")}
+                    >
+                        <i className="bi bi-truck"></i>
+                        <span>Delivery & Returns</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`tab-btn ${activeTab === "reviews" ? "active" : ""}`}
+                        onClick={() => setActiveTab("reviews")}
+                    >
+                        <i className="bi bi-star"></i>
+                        <span>Reviews ({product.reviewCount})</span>
+                    </button>
+                </div>
+
+                <div className="product-tab-content">
+                    {activeTab === "overview" && (
+                        <div className="tab-pane-fade">
+                            <h3 className="tab-section-heading">Product Overview</h3>
+                            <p className="tab-lead-description">{product.description}</p>
+                            <div className="overview-spec-grid">
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">Product Name</span>
+                                    <span className="spec-val">{product.name}</span>
+                                </div>
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">Category</span>
+                                    <span className="spec-val">{product.categoryName}</span>
+                                </div>
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">SKU Code</span>
+                                    <span className="spec-val font-mono">{product.sku}</span>
+                                </div>
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">Stock Status</span>
+                                    <span className="spec-val text-success font-semibold">Available in Warehouse ({product.stockCount} units)</span>
+                                </div>
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">Condition</span>
+                                    <span className="spec-val">100% Brand New, Sealed Packaging</span>
+                                </div>
+                                <div className="overview-spec-item">
+                                    <span className="spec-label">Warranty</span>
+                                    <span className="spec-val">1-Year Official Manufacturer Warranty</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "specifications" && (
+                        <div className="tab-pane-fade">
+                            <h3 className="tab-section-heading">Key Specifications</h3>
+                            <div className="specs-features-grid">
+                                {product.highlights.map((h, idx) => (
+                                    <div key={idx} className="spec-feature-card">
+                                        <span className="spec-check-badge">
+                                            <i className="bi bi-check-lg"></i>
+                                        </span>
+                                        <span>{h}</span>
+                                    </div>
+                                ))}
+                                <div className="spec-feature-card">
+                                    <span className="spec-check-badge">
+                                        <i className="bi bi-shield-check"></i>
+                                    </span>
+                                    <span>TradeFlow 100% Buyer Protection & Authentic Guarantee</span>
+                                </div>
+                                <div className="spec-feature-card">
+                                    <span className="spec-check-badge">
+                                        <i className="bi bi-lightning-charge"></i>
+                                    </span>
+                                    <span>Verified warehouse inventory & same-day order processing</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "delivery" && (
+                        <div className="tab-pane-fade">
+                            <h3 className="tab-section-heading">Shipping, Delivery & Returns</h3>
+                            <div className="delivery-perks-grid">
+                                <div className="delivery-perk-card">
+                                    <div className="perk-icon-circle">
+                                        <i className="bi bi-geo-alt-fill"></i>
+                                    </div>
+                                    <h4>Doorstep Nationwide Delivery</h4>
+                                    <p>We deliver across all 36 states and the FCT within 2 to 5 business days.</p>
+                                </div>
+                                <div className="delivery-perk-card">
+                                    <div className="perk-icon-circle">
+                                        <i className="bi bi-box-seam-fill"></i>
+                                    </div>
+                                    <h4>Secure Packaging</h4>
+                                    <p>Items are protected in tamper-evident, sealed packaging.</p>
+                                </div>
+                                <div className="delivery-perk-card">
+                                    <div className="perk-icon-circle">
+                                        <i className="bi bi-arrow-repeat"></i>
+                                    </div>
+                                    <h4>Hassle-Free 7-Day Returns</h4>
+                                    <p>Return defective or mismatched items within 7 days for a replacement or full refund.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "reviews" && (
+                        <div className="tab-pane-fade">
+                            <div className="reviews-summary-bar">
+                                <div className="rating-big-number">
+                                    <span>5.0</span>
+                                    <div className="star-rating">
+                                        {[...Array(5)].map((_, i) => (
+                                            <i key={i} className="bi bi-star-fill filled"></i>
+                                        ))}
+                                    </div>
+                                    <p>Based on {product.reviewCount} verified purchases</p>
+                                </div>
+                                <div className="rating-progress-list">
+                                    <div className="rate-row">
+                                        <span>5 stars</span>
+                                        <div className="rate-bar-track"><div className="rate-bar-fill w-100"></div></div>
+                                        <span>100%</span>
+                                    </div>
+                                    <div className="rate-row">
+                                        <span>4 stars</span>
+                                        <div className="rate-bar-track"><div className="rate-bar-fill w-0"></div></div>
+                                        <span>0%</span>
+                                    </div>
+                                    <div className="rate-row">
+                                        <span>3 stars</span>
+                                        <div className="rate-bar-track"><div className="rate-bar-fill w-0"></div></div>
+                                        <span>0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="customer-review-items">
+                                <div className="review-comment-card">
+                                    <div className="review-author-row">
+                                        <span className="author-avatar"><i className="bi bi-person-fill"></i></span>
+                                        <div className="author-meta">
+                                            <strong>Chinedu O.</strong>
+                                            <span className="verified-badge"><i className="bi bi-patch-check-fill"></i> Verified Buyer</span>
+                                        </div>
+                                        <span className="review-date">2 days ago</span>
+                                    </div>
+                                    <div className="star-rating">
+                                        {[...Array(5)].map((_, i) => (
+                                            <i key={i} className="bi bi-star-fill filled"></i>
+                                        ))}
+                                    </div>
+                                    <p className="review-text">Excellent product! Arrived in pristine condition exactly as described. TradeFlow delivered within 24 hours.</p>
+                                </div>
+                                <div className="review-comment-card">
+                                    <div className="review-author-row">
+                                        <span className="author-avatar"><i className="bi bi-person-fill"></i></span>
+                                        <div className="author-meta">
+                                            <strong>Amina M.</strong>
+                                            <span className="verified-badge"><i className="bi bi-patch-check-fill"></i> Verified Buyer</span>
+                                        </div>
+                                        <span className="review-date">1 week ago</span>
+                                    </div>
+                                    <div className="star-rating">
+                                        {[...Array(5)].map((_, i) => (
+                                            <i key={i} className="bi bi-star-fill filled"></i>
+                                        ))}
+                                    </div>
+                                    <p className="review-text">Super fast delivery and authentic item. Very pleased with this purchase, works seamlessly.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
