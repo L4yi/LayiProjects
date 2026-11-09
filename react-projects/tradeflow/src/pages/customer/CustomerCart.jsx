@@ -1,8 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import productService, { resolveProductImage } from "../../services/productService";
+import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
+
+function CartThumb({ src, alt }) {
+    const [failed, setFailed] = useState(false);
+    useEffect(() => {
+        setFailed(false);
+    }, [src]);
+
+    if (src && !failed) {
+        return (
+            <img
+                src={src}
+                alt={alt}
+                className="cart-prod-img"
+                onError={() => setFailed(true)}
+            />
+        );
+    }
+    return (
+        <div className="cart-item-placeholder">
+            <i className="bi bi-box-seam"></i>
+        </div>
+    );
+}
+
+function WishlistThumb({ src, alt }) {
+    const [failed, setFailed] = useState(false);
+    useEffect(() => {
+        setFailed(false);
+    }, [src]);
+
+    if (src && !failed) {
+        return (
+            <img
+                src={src}
+                alt={alt}
+                onError={() => setFailed(true)}
+            />
+        );
+    }
+    return (
+        <div className="wishlist-img-placeholder">
+            <i className="bi bi-box-seam"></i>
+        </div>
+    );
+}
 
 export default function CustomerCart() {
     const [cartItems, setCartItems] = useState(getCartItems());
@@ -19,7 +64,7 @@ export default function CustomerCart() {
                     name: p.product_name || p.name || 'Product',
                     price: Number(p.product_price || p.price || 0),
                     oldPrice: Number(p.product_price || p.price || 0) * 1.15,
-                    image: p.image || p.imageUrl || p.product_image || p.productImage || p.image_url || resolveProductImage(p.product_name, p.categories_name)
+                    image: p.image || p.imageUrl || p.product_image || p.productImage || p.image_url || ""
                 })));
             } else {
                 setSuggestedProducts([
@@ -28,7 +73,7 @@ export default function CustomerCart() {
                         name: "Samsung Galaxy A15",
                         price: 185000,
                         oldPrice: 212750,
-                        image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+                        image: ""
                     }
                 ]);
             }
@@ -39,7 +84,7 @@ export default function CustomerCart() {
                     name: "Samsung Galaxy A15",
                     price: 185000,
                     oldPrice: 212750,
-                    image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+                    image: ""
                 }
             ]);
         });
@@ -154,15 +199,7 @@ export default function CustomerCart() {
                                     
                                             <div className="cart-item-img-wrap">
                                                 <Link to={`/customer/product/${item.id}`}>
-                                                    <img
-                                                        src={item.image || resolveProductImage(item.name, item.categoryName)}
-                                                        alt={item.name}
-                                                        className="cart-prod-img"
-                                                        onError={(e) => {
-                                                            const fallback = resolveProductImage(item.name, item.categoryName);
-                                                            if (e.target.src !== fallback) e.target.src = fallback;
-                                                        }}
-                                                    />
+                                                    <CartThumb src={item.image} alt={item.name} />
                                                 </Link>
                                             </div>
 
@@ -269,14 +306,7 @@ export default function CustomerCart() {
                                                 <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
                                             )}
                                             <div className="wishlist-img-box">
-                                                <img
-                                                    src={wItem.image || resolveProductImage(wItem.name, wItem.categoryName)}
-                                                    alt={wItem.name}
-                                                    onError={(e) => {
-                                                        const fallback = resolveProductImage(wItem.name, wItem.categoryName);
-                                                        if (e.target.src !== fallback) e.target.src = fallback;
-                                                    }}
-                                                />
+                                                <WishlistThumb src={wItem.image} alt={wItem.name} />
                                             </div>
                                             <h5 className="wishlist-item-title">{wItem.name}</h5>
                                             <div className="wishlist-price-row">

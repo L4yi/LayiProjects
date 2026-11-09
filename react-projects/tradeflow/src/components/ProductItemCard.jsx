@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { resolveProductImage } from "../services/productService";
 
 export default function ProductItemCard({
     id = "prd-01",
@@ -14,25 +13,32 @@ export default function ProductItemCard({
     reviewsCount = 12,
     badge = ""
 }) {
+    const [imgFailed, setImgFailed] = useState(false);
     const displayName = title || name || "Product Name";
-    const resolvedImg = image || resolveProductImage(displayName, subtitle);
+
+    useEffect(() => {
+        setImgFailed(false);
+    }, [image]);
+
+    const hasValidImage = Boolean(image && !imgFailed);
 
     return (
         <div className="customer-product-card">
             {badge && <span className="product-badge-flag">{badge}</span>}
             <div className="product-card-img-wrap">
                 <Link to={`/customer/product/${id}`}>
-                    <img
-                        src={resolvedImg}
-                        alt={displayName}
-                        className="product-card-thumb"
-                        onError={(e) => {
-                            const fallback = resolveProductImage(displayName, subtitle);
-                            if (e.target.src !== fallback) {
-                                e.target.src = fallback;
-                            }
-                        }}
-                    />
+                    {hasValidImage ? (
+                        <img
+                            src={image}
+                            alt={displayName}
+                            className="product-card-thumb"
+                            onError={() => setImgFailed(true)}
+                        />
+                    ) : (
+                        <div className="product-card-thumb-placeholder">
+                            <i className="bi bi-box-seam"></i>
+                        </div>
+                    )}
                 </Link>
             </div>
 

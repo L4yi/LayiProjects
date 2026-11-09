@@ -1,9 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { ProductSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
-import productService, { resolveProductImage } from "../services/productService";
+import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 import setupService from "../services/setupService";
+
+function ProductTableThumb({ src, alt }) {
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        setFailed(false);
+    }, [src]);
+
+    if (src && !failed) {
+        return (
+            <img
+                src={src}
+                alt={alt}
+                className="table-product-thumb"
+                onError={() => setFailed(true)}
+            />
+        );
+    }
+    return (
+        <div className="table-product-thumb-placeholder">
+            <i className="bi bi-box-seam"></i>
+        </div>
+    );
+}
 
 export default function Products() {
     const [productsList, setProductsList] = useState([]);
@@ -38,7 +62,7 @@ export default function Products() {
                 status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
                 description: prod.description || "",
                 rawImage: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || "",
-                image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || resolveProductImage(prodName, catName),
+                image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || "",
                 createdAt: prod.created_at,
                 updatedAt: prod.updated_at
             };
@@ -336,15 +360,7 @@ export default function Products() {
                                         <td className="col-sn">{idx + 1}</td>
                                         <td className="col-prod-name">
                                             <div className="product-table-cell">
-                                                <img
-                                                    src={prod.image || resolveProductImage(prod.name, prod.categoryName)}
-                                                    alt={prod.name}
-                                                    className="table-product-thumb"
-                                                    onError={(e) => {
-                                                        const fallback = resolveProductImage(prod.name, prod.categoryName);
-                                                        if (e.target.src !== fallback) e.target.src = fallback;
-                                                    }}
-                                                />
+                                                <ProductTableThumb src={prod.image} alt={prod.name} />
                                                 <div className="prod-tbl-info">
                                                     <span className="prod-tbl-title">{prod.name}</span>
                                                     {prod.description && (

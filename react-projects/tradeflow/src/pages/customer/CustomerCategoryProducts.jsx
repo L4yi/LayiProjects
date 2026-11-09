@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
-import productService, { resolveProductImage } from "../../services/productService";
+import productService from "../../services/productService";
 
 const VERIFIED_FALLBACK_CATEGORIES = [
     {
@@ -65,7 +65,7 @@ const VERIFIED_FALLBACK_PRODUCTS = [
         rating: 5,
         price: 185000,
         oldPrice: 212750,
-        image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+        image: ""
     }
 ];
 
@@ -110,7 +110,7 @@ export default function CustomerCategoryProducts() {
                         rating: 5,
                         price: Number(prod.product_price || prod.price || 0),
                         oldPrice: Number(prod.product_price || prod.price || 0) * 1.15,
-                        image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || resolveProductImage(prod.product_name, prod.categories_name)
+                        image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || ""
                     })));
                 } else {
                     setProducts(VERIFIED_FALLBACK_PRODUCTS);

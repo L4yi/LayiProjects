@@ -5,7 +5,7 @@ import CategoryCard from "../../components/CategoryCard";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
-import productService, { resolveProductImage } from "../../services/productService";
+import productService from "../../services/productService";
 
 const VERIFIED_FALLBACK_CATEGORIES = [
     {
@@ -60,7 +60,7 @@ const VERIFIED_FALLBACK_PRODUCTS = [
         rating: 5,
         price: "₦ 185,000",
         oldPrice: "₦ 212,750",
-        image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+        image: ""
     }
 ];
 
@@ -109,7 +109,7 @@ export default function CustomerDashboard() {
                             rating: 5,
                             price: `₦ ${Number(prod.product_price || prod.price || 0).toLocaleString()}`,
                             oldPrice: `₦ ${(Number(prod.product_price || prod.price || 0) * 1.15).toLocaleString()}`,
-                            image: directImg || resolveProductImage(prod.product_name, prod.categories_name)
+                            image: directImg || ""
                         };
                     }));
                 } else {

@@ -1,46 +1,9 @@
 import setupService from './setupService';
 import api from "../api/axios";
 
-// Resolves a high-quality product image from the frontend based on product name and taxonomy
+// Product image helper: preserves user-provided images with no hardcoded presets.
 export function resolveProductImage(name = "", category = "") {
-    const text = `${name} ${category}`.toLowerCase();
-    if (text.includes("samsung") || text.includes("galaxy") || text.includes("a15") || text.includes("phone") || text.includes("iphone") || text.includes("mobile") || text.includes("pixel") || text.includes("redmi") || text.includes("infinix") || text.includes("tecno")) {
-        return "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("macbook") || text.includes("laptop") || text.includes("computer") || text.includes("dell") || text.includes("hp") || text.includes("lenovo")) {
-        return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("headphone") || text.includes("earbud") || text.includes("audio") || text.includes("airpod") || text.includes("speaker") || text.includes("sound")) {
-        return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("watch") || text.includes("smartwatch") || text.includes("wearable")) {
-        return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("shoe") || text.includes("sneaker") || text.includes("boot") || text.includes("footwear") || text.includes("jordan") || text.includes("nike") || text.includes("adidas")) {
-        return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("shirt") || text.includes("cloth") || text.includes("pant") || text.includes("jean") || text.includes("dress") || text.includes("hoodie") || text.includes("apparel") || text.includes("wear") || text.includes("jacket") || text.includes("fashion")) {
-        return "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("beauty") || text.includes("health") || text.includes("skincare") || text.includes("cream") || text.includes("lotion") || text.includes("serum") || text.includes("perfume") || text.includes("cosmetic")) {
-        return "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("office") || text.includes("paper") || text.includes("pen") || text.includes("desk") || text.includes("stationery") || text.includes("folder") || text.includes("printer") || text.includes("supplies")) {
-        return "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("grocer") || text.includes("food") || text.includes("rice") || text.includes("snack") || text.includes("fruit") || text.includes("oil") || text.includes("tea") || text.includes("coffee") || text.includes("beverage")) {
-        return "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("tv") || text.includes("screen") || text.includes("monitor") || text.includes("display")) {
-        return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("camera") || text.includes("lens") || text.includes("dslr") || text.includes("photo")) {
-        return "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80";
-    }
-    if (text.includes("electronic") || text.includes("cable") || text.includes("charger") || text.includes("device") || text.includes("gadget") || text.includes("cpu")) {
-        return "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=600&auto=format&fit=crop&q=80";
-    }
-    return "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&auto=format&fit=crop&q=80";
+    return "";
 }
 
 export function getProductErrorMessage(error, defaultMsg = "An unexpected error occurred") {

@@ -215,7 +215,7 @@ export default function ProductSlideDrawer({
                     <input
                         type="url"
                         className="drawer-input"
-                        placeholder="e.g. https://images.unsplash.com/photo-..."
+                        placeholder="e.g. https://example.com/images/product.jpg"
                         value={formData.image || formData.imageUrl || ""}
                         onChange={(e) => {
                             handleChange("image", e.target.value);
