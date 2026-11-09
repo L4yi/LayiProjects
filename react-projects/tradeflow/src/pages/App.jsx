@@ -22,6 +22,7 @@ import CustomerCategories from "./customer/CustomerCategories";
 import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
 import CustomerProductDetails from "./customer/CustomerProductDetails";
 import CustomerCart from "./customer/CustomerCart";
+import CustomerCheckout from "./customer/CustomerCheckout";
 import CustomerSignIn from "./customer/CustomerSignIn";
 import CustomerSignUp from "./customer/CustomerSignUp";
 
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
       {
         path: "/customer/cart",
         element: <CustomerCart />
+      },
+      {
+        path: "/customer/checkout",
+        element: <CustomerCheckout />
       },
       {
         path: "/customer/settings",

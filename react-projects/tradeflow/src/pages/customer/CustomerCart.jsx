@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
@@ -50,6 +50,7 @@ function WishlistThumb({ src, alt }) {
 }
 
 export default function CustomerCart() {
+    const navigate = useNavigate();
     const [cartItems, setCartItems] = useState(getCartItems());
     const [wishlistItems, setWishlistItems] = useState(getWishlistItems());
     const [checkoutComplete, setCheckoutComplete] = useState(false);
@@ -406,9 +407,9 @@ export default function CustomerCart() {
                                 type="button"
                                 className="btn-cart-checkout"
                                 disabled={cartItems.length === 0}
-                                onClick={() => setCheckoutComplete(true)}
+                                onClick={() => navigate("/customer/checkout")}
                             >
-                                Checkout (₦ {subtotal.toLocaleString()})
+                                Proceed to Checkout (₦ {subtotal.toLocaleString()})
                             </button>
 
                             {/* Trust badges */}
