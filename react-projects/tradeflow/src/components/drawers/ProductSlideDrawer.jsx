@@ -33,15 +33,20 @@ export default function ProductSlideDrawer({
             const isEdit = Boolean(initialData.id || initialData.productId);
             const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
             const categoryId = initialData.categoryId ? String(initialData.categoryId) : (initialData.categories_id ? String(initialData.categories_id) : "");
+            const imgVal = initialData.rawImage || initialData.image || initialData.imageUrl || initialData.productImage || "";
             setFormData({
                 ...initialData,
                 statusId: statusId || "",
-                categoryId: categoryId || ""
+                categoryId: categoryId || "",
+                image: imgVal,
+                imageUrl: imgVal
             });
         } else {
             setFormData({
                 statusId: "",
-                categoryId: ""
+                categoryId: "",
+                image: "",
+                imageUrl: ""
             });
         }
     }, [initialData, isOpen]);
@@ -202,6 +207,37 @@ export default function ProductSlideDrawer({
                             }}
                         />
                     </div>
+                </div>
+
+                {/* Product Image URL */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Product Image URL</label>
+                    <input
+                        type="url"
+                        className="drawer-input"
+                        placeholder="e.g. https://images.unsplash.com/photo-..."
+                        value={formData.image || formData.imageUrl || ""}
+                        onChange={(e) => {
+                            handleChange("image", e.target.value);
+                            handleChange("imageUrl", e.target.value);
+                        }}
+                    />
+                    {Boolean(formData.image || formData.imageUrl) && (
+                        <div className="drawer-media-preview-wrap">
+                            <img
+                                src={formData.image || formData.imageUrl}
+                                alt="Product Preview"
+                                className="drawer-img-preview-box"
+                                onError={(e) => {
+                                    e.target.style.display = "none";
+                                }}
+                                onLoad={(e) => {
+                                    e.target.style.display = "block";
+                                }}
+                            />
+                            <span className="drawer-preview-text">Live Image Preview</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Description */}

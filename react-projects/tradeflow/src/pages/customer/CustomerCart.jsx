@@ -19,7 +19,7 @@ export default function CustomerCart() {
                     name: p.product_name || p.name || 'Product',
                     price: Number(p.product_price || p.price || 0),
                     oldPrice: Number(p.product_price || p.price || 0) * 1.15,
-                    image: p.image || resolveProductImage(p.product_name, p.categories_name)
+                    image: p.image || p.imageUrl || p.product_image || p.productImage || p.image_url || resolveProductImage(p.product_name, p.categories_name)
                 })));
             } else {
                 setSuggestedProducts([

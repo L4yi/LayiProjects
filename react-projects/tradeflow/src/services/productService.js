@@ -154,6 +154,7 @@ export const productService = {
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
             const statusId = productData.statusId || setupService.getStatusId(productData.status);
+            const image = (productData.image || productData.imageUrl || productData.productImage || "").trim();
 
             formData.append("categoryId", catId);
             formData.append("productName", name);
@@ -161,6 +162,11 @@ export const productService = {
             formData.append("quantity", String(qty));
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
+            if (image) {
+                formData.append("image", image);
+                formData.append("imageUrl", image);
+                formData.append("productImage", image);
+            }
 
             const response = await api.post("admin/product/create-product.php", formData);
             return normalizeResponse(response.data, "PRODUCT CREATED SUCCESSFULLY");
@@ -183,6 +189,7 @@ export const productService = {
             const qty = productData.quantity ?? productData.inStock ?? 1;
             const desc = productData.description || `${name} - retail product`;
             const statusId = productData.statusId || setupService.getStatusId(productData.status);
+            const image = (productData.image || productData.imageUrl || productData.productImage || "").trim();
 
             formData.append("productId", prodId);
             formData.append("categoryId", catId);
@@ -191,6 +198,11 @@ export const productService = {
             formData.append("quantity", String(qty));
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
+            if (image) {
+                formData.append("image", image);
+                formData.append("imageUrl", image);
+                formData.append("productImage", image);
+            }
 
             const response = await api.post("admin/product/update-product.php", formData);
             return normalizeResponse(response.data, "PRODUCT UPDATED SUCCESSFULLY");

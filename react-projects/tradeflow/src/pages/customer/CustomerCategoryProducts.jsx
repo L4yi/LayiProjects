@@ -110,7 +110,7 @@ export default function CustomerCategoryProducts() {
                         rating: 5,
                         price: Number(prod.product_price || prod.price || 0),
                         oldPrice: Number(prod.product_price || prod.price || 0) * 1.15,
-                        image: prod.image || resolveProductImage(prod.product_name, prod.categories_name)
+                        image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || resolveProductImage(prod.product_name, prod.categories_name)
                     })));
                 } else {
                     setProducts(VERIFIED_FALLBACK_PRODUCTS);

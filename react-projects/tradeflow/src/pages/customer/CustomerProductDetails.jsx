@@ -50,7 +50,7 @@ export default function CustomerProductDetails() {
                     sku: `SKU-${found.product_id || found.productId || "001"}`,
                     stockCount: found.quantity || found.inStock || 25,
                     description: found.description || "Premium quality retail product backed by TradeFlow authenticity warranty.",
-                    image: found.image || resolveProductImage(found.product_name, found.categories_name),
+                    image: found.image || found.imageUrl || found.product_image || found.productImage || found.image_url || resolveProductImage(found.product_name, found.categories_name),
                     highlights: [
                         "Official Manufacturer Warranty included",
                         "Doorstep delivery available across all zones",

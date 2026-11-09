@@ -100,15 +100,18 @@ export default function CustomerDashboard() {
                 }
 
                 if (rawProducts.length > 0) {
-                    setProducts(rawProducts.map(prod => ({
-                        id: prod.product_id || prod.productId || prod.id,
-                        name: prod.product_name || prod.name || "Product",
-                        subtitle: prod.categories_name || prod.category_name || "Retail",
-                        rating: 5,
-                        price: `₦ ${Number(prod.product_price || prod.price || 0).toLocaleString()}`,
-                        oldPrice: `₦ ${(Number(prod.product_price || prod.price || 0) * 1.15).toLocaleString()}`,
-                        image: prod.image || resolveProductImage(prod.product_name, prod.categories_name)
-                    })));
+                    setProducts(rawProducts.map(prod => {
+                        const directImg = prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url;
+                        return {
+                            id: prod.product_id || prod.productId || prod.id,
+                            name: prod.product_name || prod.name || "Product",
+                            subtitle: prod.categories_name || prod.category_name || "Retail",
+                            rating: 5,
+                            price: `₦ ${Number(prod.product_price || prod.price || 0).toLocaleString()}`,
+                            oldPrice: `₦ ${(Number(prod.product_price || prod.price || 0) * 1.15).toLocaleString()}`,
+                            image: directImg || resolveProductImage(prod.product_name, prod.categories_name)
+                        };
+                    }));
                 } else {
                     setProducts(VERIFIED_FALLBACK_PRODUCTS);
                 }

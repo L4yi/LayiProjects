@@ -37,7 +37,8 @@ export default function Products() {
                 statusId: String(prod.status_id || prod.statusId || ""),
                 status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
                 description: prod.description || "",
-                image: prod.image || resolveProductImage(prodName, catName),
+                rawImage: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || "",
+                image: prod.image || prod.imageUrl || prod.product_image || prod.productImage || prod.image_url || resolveProductImage(prodName, catName),
                 createdAt: prod.created_at,
                 updatedAt: prod.updated_at
             };
@@ -109,13 +110,16 @@ export default function Products() {
     };
 
     const handleOpenEdit = (prod) => {
+        const rawImg = prod.rawImage || prod.image || "";
         setSelectedProd({
             ...prod,
             productId: prod.id || prod.code,
             productName: prod.name,
             productPrice: prod.price,
             quantity: prod.inStock,
-            categoryId: prod.categoryId
+            categoryId: prod.categoryId,
+            image: rawImg,
+            imageUrl: rawImg
         });
         setDrawerTitle(prod ? `Edit Product - ${prod.name}` : "Create New Product");
         setDrawerError("");
@@ -139,6 +143,7 @@ export default function Products() {
             inStock: "",
             quantity: "",
             image: "",
+            imageUrl: "",
             description: ""
         });
         setDrawerTitle("Add New Product");
