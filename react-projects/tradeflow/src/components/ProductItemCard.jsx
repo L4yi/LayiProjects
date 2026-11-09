@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { resolveProductImage } from "../services/productService";
 
 export default function ProductItemCard({
     id = "prd-01",
@@ -14,6 +15,7 @@ export default function ProductItemCard({
     badge = ""
 }) {
     const displayName = title || name || "Product Name";
+    const resolvedImg = image || resolveProductImage(displayName, subtitle);
 
     return (
         <div className="customer-product-card">
@@ -21,11 +23,14 @@ export default function ProductItemCard({
             <div className="product-card-img-wrap">
                 <Link to={`/customer/product/${id}`}>
                     <img
-                        src={image}
+                        src={resolvedImg}
                         alt={displayName}
                         className="product-card-thumb"
                         onError={(e) => {
-                            e.target.src = "/src/assets/icon.png";
+                            const fallback = resolveProductImage(displayName, subtitle);
+                            if (e.target.src !== fallback) {
+                                e.target.src = fallback;
+                            }
                         }}
                     />
                 </Link>

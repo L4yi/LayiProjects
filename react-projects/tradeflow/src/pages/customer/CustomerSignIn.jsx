@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { setSessionUser  } from "../../utils/session";
+import customerService from "../../services/customerService";
 
 export default function CustomerSignIn() {
     const navigate = useNavigate();
@@ -8,6 +8,8 @@ export default function CustomerSignIn() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
+    const [serverError, setServerError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const validateForm = () => {
         const newErrors = {};
@@ -26,29 +28,28 @@ export default function CustomerSignIn() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSignIn = (e) => {
+    const handleSignIn = async (e) => {
         e.preventDefault();
+        setServerError("");
         if (!validateForm()) return;
 
-        const existing = setSessionUser();
+        setIsSubmitting(true);
+        try {
+            const res = await customerService.customerAuthSignIn({
+                emailAddress: email.trim(),
+                password: password
+            });
 
-        let displayName = existing.name;
-        if (email) {
-            const namePart = email.split("@")[0].replace(/[._-]/g, " ");
-            const capitalized = namePart.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-            if (!existing.name || existing.name === "Afolabi Abayomi Layi" || email !== existing.email) {
-                displayName = capitalized || existing.name;
+            if (res.success) {
+                navigate("/customer/dashboard");
+            } else {
+                setServerError(res.message || "Invalid customer credentials.");
             }
+        } catch (err) {
+            setServerError(err.message || "Sign in failed. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setSessionUser({
-            email: email || existing.email,
-            name: displayName,
-            role: "Customer Member",
-            lastLogin: "Just now"
-        });
-
-        navigate("/customer/dashboard");
     };
 
     return (
@@ -79,6 +80,12 @@ export default function CustomerSignIn() {
                                         </Link>
                                     </p>
                                 </div>
+
+                                {serverError && (
+                                    <div className="auth-error-alert">
+                                        <i className="bi bi-exclamation-triangle-fill"></i> {serverError}
+                                    </div>
+                                )}
 
                                 <form onSubmit={handleSignIn} className="input-container" noValidate>
                                     <div className="input-wrapper">
@@ -147,9 +154,19 @@ export default function CustomerSignIn() {
                                     <button
                                         className="btn-primary customer-primary-btn"
                                         type="submit"
+                                        disabled={isSubmitting}
                                         title="Sign In to Customer Portal"
                                     >
-                                        <i className="bi bi-box-arrow-in-right"></i> Sign In to Portal
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Signing in...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-box-arrow-in-right"></i> Sign In to Portal
+                                            </>
+                                        )}
                                     </button>
                                          <div className="divider">
                                                                             <span>OR</span>

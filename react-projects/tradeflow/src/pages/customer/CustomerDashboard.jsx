@@ -5,7 +5,7 @@ import CategoryCard from "../../components/CategoryCard";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
-import productService from "../../services/productService";
+import productService, { resolveProductImage } from "../../services/productService";
 
 export default function CustomerDashboard() {
     const [categories, setCategories] = useState([]);
@@ -48,7 +48,7 @@ export default function CustomerDashboard() {
                         rating: 5,
                         price: `₦ ${Number(prod.product_price || prod.price || 0).toLocaleString()}`,
                         oldPrice: `₦ ${(Number(prod.product_price || prod.price || 0) * 1.15).toLocaleString()}`,
-                        image: prod.image || null
+                        image: prod.image || resolveProductImage(prod.product_name, prod.categories_name)
                     })));
                 }
             } catch (err) {

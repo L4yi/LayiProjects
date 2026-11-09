@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import productService from "../../services/productService";
+import productService, { resolveProductImage } from "../../services/productService";
 import { addToCart } from "../../utils/cart";
 import { addToWishlist, removeFromWishlist, isInWishlist } from "../../utils/wishlist";
 
@@ -37,7 +37,7 @@ export default function CustomerProductDetails() {
                             sku: `SKU-${found.product_id || found.productId || "001"}`,
                             stockCount: found.quantity || found.inStock || 25,
                             description: found.description || "Premium quality retail product backed by TradeFlow authenticity warranty.",
-                            image: found.image || null,
+                            image: found.image || resolveProductImage(found.product_name, found.categories_name),
                             highlights: [
                                 "Official Manufacturer Warranty included",
                                 "Doorstep delivery available across all zones",

@@ -375,6 +375,5 @@ export const CURRENT_USER = {
     initials: "CM",
     email: "customer@example.com",
     role: "Customer",
-    department: "Retail Commerce & Shopping",
     lastLogin: "Just now"
 };

@@ -41,7 +41,6 @@ export default function Profile() {
             name: user.name,
             email: user.email,
             phone: user.phone,
-            department: user.department,
             address: user.address,
             role: user.role
         });
@@ -181,16 +180,6 @@ export default function Profile() {
                                             <i className="bi bi-exclamation-circle"></i> {errors.phone}
                                         </span>
                                     )}
-                                </div>
-
-                                <div className="form-group-box">
-                                    <label className="field-label">Department</label>
-                                    <input
-                                        type="text"
-                                        className="form-control-field"
-                                        value={user.department || ""}
-                                        onChange={(e) => setUser({ ...user, department: e.target.value })}
-                                    />
                                 </div>
 
                                 <div className="form-group-box full-width">

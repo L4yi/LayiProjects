@@ -246,7 +246,8 @@ export const customerService = {
             return {
                 success: true,
                 message: "CUSTOMER LOGIN SUCCESSFUL",
-                user: sessionPayload
+                user: sessionPayload,
+                data: sessionPayload
             };
         }
 
@@ -254,6 +255,127 @@ export const customerService = {
             success: false,
             message: "No registered customer found with this email. Please create an account to continue."
         };
+    },
+
+    // Customer sign-up using the real backend endpoint: admin/customer/create-customer.php
+    async customerAuthSignUp({ firstName, lastName, emailAddress, phoneNumber, password, address }) {
+        try {
+            // Check if customer already exists before creating
+            const cleanEmail = (emailAddress || "").trim().toLowerCase();
+            const existingCust = await this.searchCustomer(cleanEmail);
+            if (existingCust.success && existingCust.data.length > 0) {
+                const found = existingCust.data.find(
+                    (c) => (c.emailAddress || "").toLowerCase() === cleanEmail || (c.email || "").toLowerCase() === cleanEmail
+                );
+                if (found) {
+                    return {
+                        success: false,
+                        message: "A customer account with this email already exists. Please sign in."
+                    };
+                }
+            }
+
+            // Create customer via the live backend customer creation endpoint
+            const res = await this.createCustomer({
+                firstName,
+                lastName,
+                emailAddress,
+                phoneNumber,
+                address: address || "Abeokuta, Ogun State, Nigeria"
+            });
+
+            if (res.success) {
+                return {
+                    success: true,
+                    data: res.data,
+                    message: res.message || "CUSTOMER SIGN UP SUCCESSFUL"
+                };
+            }
+
+            return {
+                success: false,
+                message: res.message || "Customer sign up failed."
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Failed to sign up customer."
+            };
+        }
+    },
+
+    // Customer sign-in using live customer verification (admin/customer/search-customer.php)
+    async customerAuthSignIn({ emailAddress, password }) {
+        const cleanEmail = (emailAddress || "").trim().toLowerCase();
+        if (!cleanEmail) {
+            return {
+                success: false,
+                message: "Email address is required."
+            };
+        }
+
+        try {
+            // Verify customer in backend database
+            const searchRes = await this.searchCustomer(cleanEmail);
+            let matched = null;
+
+            if (searchRes.success && searchRes.data.length > 0) {
+                matched = searchRes.data.find(
+                    (c) => (c.emailAddress || "").toLowerCase() === cleanEmail || (c.email || "").toLowerCase() === cleanEmail
+                ) || searchRes.data[0];
+            } else {
+                // Fallback check against full customer list
+                const allCust = await this.fetchAllCustomers();
+                if (allCust.success && Array.isArray(allCust.data)) {
+                    matched = allCust.data.find(
+                        (c) => (c.emailAddress || "").toLowerCase() === cleanEmail || (c.email || "").toLowerCase() === cleanEmail
+                    );
+                }
+            }
+
+            if (!matched) {
+                return {
+                    success: false,
+                    message: "No registered customer found with this email. Please sign up to create an account."
+                };
+            }
+
+            if (matched.statusId === "2" || matched.status === "INACTIVE") {
+                return {
+                    success: false,
+                    message: "Your customer account is currently inactive. Please contact support."
+                };
+            }
+
+            const sessionPayload = {
+                customerId: matched.customerId || matched.id,
+                id: matched.customerId || matched.id,
+                name: matched.name || `${matched.firstName || ""} ${matched.lastName || ""}`.trim(),
+                firstName: matched.firstName || "",
+                lastName: matched.lastName || "",
+                email: matched.emailAddress || cleanEmail,
+                phone: matched.phoneNumber || "",
+                address: matched.address || "",
+                role: "Customer",
+                roleId: matched.roleId || setupService.getRoleId("Customer") || "19",
+                status: matched.status || "ACTIVE",
+                statusId: matched.statusId || setupService.getStatusId("Active") || "1",
+                lastLogin: "Just now"
+            };
+
+            setSessionUser(sessionPayload);
+            return {
+                success: true,
+                data: sessionPayload,
+                user: sessionPayload,
+                message: "CUSTOMER SIGN IN SUCCESSFUL"
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Sign in request failed."
+            };
+        }
     }
 };
 

@@ -23,7 +23,7 @@ export default function CustomerUserBanner() {
                 <div className="banner-details">
                     <h3 className="banner-user-name">{user.name}</h3>
                     <p className="banner-user-dept">
-                        Department: <span>{user.department || "Computer Science / Retail Commerce"}</span>
+                        Account Tier: <span>{user.role || "Verified Customer"}</span>
                     </p>
                     <p className="banner-login-date">
                         <i className="bi bi-clock-history"></i> Last Login Date - {user.lastLogin || "2026-10-04 08:30 AM"}

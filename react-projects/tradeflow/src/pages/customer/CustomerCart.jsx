@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import productService from "../../services/productService";
+import productService, { resolveProductImage } from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
 
@@ -19,7 +19,7 @@ export default function CustomerCart() {
                     name: p.product_name || p.name || 'Product',
                     price: Number(p.product_price || p.price || 0),
                     oldPrice: Number(p.product_price || p.price || 0) * 1.15,
-                    image: p.image || null
+                    image: p.image || resolveProductImage(p.product_name, p.categories_name)
                 })));
             }
         });
@@ -134,11 +134,15 @@ export default function CustomerCart() {
                                     
                                             <div className="cart-item-img-wrap">
                                                 <Link to={`/customer/product/${item.id}`}>
-                                                    {item.image ? (
-                                                        <img src={item.image} alt={item.name} className="cart-prod-img" />
-                                                    ) : (
-                                                        <i className="bi bi-box-seam cart-fallback-icon"></i>
-                                                    )}
+                                                    <img
+                                                        src={item.image || resolveProductImage(item.name, item.categoryName)}
+                                                        alt={item.name}
+                                                        className="cart-prod-img"
+                                                        onError={(e) => {
+                                                            const fallback = resolveProductImage(item.name, item.categoryName);
+                                                            if (e.target.src !== fallback) e.target.src = fallback;
+                                                        }}
+                                                    />
                                                 </Link>
                                             </div>
 
@@ -245,11 +249,14 @@ export default function CustomerCart() {
                                                 <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
                                             )}
                                             <div className="wishlist-img-box">
-                                                {wItem.image ? (
-                                                    <img src={wItem.image} alt={wItem.name} />
-                                                ) : (
-                                                    <i className="bi bi-box-seam wishlist-fallback-icon"></i>
-                                                )}
+                                                <img
+                                                    src={wItem.image || resolveProductImage(wItem.name, wItem.categoryName)}
+                                                    alt={wItem.name}
+                                                    onError={(e) => {
+                                                        const fallback = resolveProductImage(wItem.name, wItem.categoryName);
+                                                        if (e.target.src !== fallback) e.target.src = fallback;
+                                                    }}
+                                                />
                                             </div>
                                             <h5 className="wishlist-item-title">{wItem.name}</h5>
                                             <div className="wishlist-price-row">

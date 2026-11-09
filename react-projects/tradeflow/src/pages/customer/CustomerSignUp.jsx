@@ -58,18 +58,22 @@ export default function CustomerSignUp() {
             const cleanEmail = email.trim();
             const cleanPhone = phone.trim();
 
-            const createRes = await customerService.createCustomer({
+            const createRes = await customerService.customerAuthSignUp({
                 firstName: cleanFirst,
                 lastName: cleanLast,
                 emailAddress: cleanEmail,
                 phoneNumber: cleanPhone,
-                address: "Online Store Customer",
-                titleId: "1",
-                roleId: "19",
-                statusId: "1"
+                password: password,
+                address: "Abeokuta, Ogun State, Nigeria"
             });
 
-            const customerId = createRes?.data?.customerId || createRes?.data?.id || `CUST-${Date.now().toString().slice(-6)}`;
+            if (!createRes.success) {
+                setServerError(createRes.message || "Registration failed. Please check your details.");
+                return;
+            }
+
+            const custData = createRes.data || {};
+            const customerId = custData.customerId || custData.id || `CUST-${Date.now().toString().slice(-6)}`;
 
             setSessionUser({
                 id: customerId,
@@ -79,7 +83,6 @@ export default function CustomerSignUp() {
                 phone: cleanPhone,
                 role: "Customer",
                 roleId: "19",
-                department: "Retail Commerce & Shopping",
                 lastLogin: "Just now"
             });
 

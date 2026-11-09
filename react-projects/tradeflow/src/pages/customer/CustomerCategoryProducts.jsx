@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
-import productService from "../../services/productService";
+import productService, { resolveProductImage } from "../../services/productService";
 
 export default function CustomerCategoryProducts() {
     const { categoryId } = useParams();
@@ -44,7 +44,7 @@ export default function CustomerCategoryProducts() {
                         rating: 5,
                         price: Number(prod.product_price || prod.price || 0),
                         oldPrice: Number(prod.product_price || prod.price || 0) * 1.15,
-                        image: prod.image || null
+                        image: prod.image || resolveProductImage(prod.product_name, prod.categories_name)
                     })));
                 }
             } catch (err) {

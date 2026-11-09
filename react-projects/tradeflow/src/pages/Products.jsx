@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ProductSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
-import productService from "../services/productService";
+import productService, { resolveProductImage } from "../services/productService";
 import categoryService from "../services/categoryService";
 import setupService from "../services/setupService";
 
@@ -23,21 +23,25 @@ export default function Products() {
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
     const mapProducts = (items = []) => {
-        return items.map((prod, idx) => ({
-            id: prod.product_id || prod.productId || `prod-${idx}`,
-            code: prod.product_id || prod.productId || `#PRD-0${idx + 1}`,
-            name: prod.product_name || prod.productName || "Untitled Product",
-            price: Number(prod.product_price || prod.productPrice || prod.price || 0),
-            inStock: Number(prod.quantity ?? prod.inStock ?? 0),
-            categoryId: String(prod.categories_id || prod.categoryId || ""),
-            categoryName: prod.categories_name || prod.categoryName || "General Category",
-            statusId: String(prod.status_id || prod.statusId || ""),
-            status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
-            description: prod.description || "",
-            image: prod.image || "",
-            createdAt: prod.created_at,
-            updatedAt: prod.updated_at
-        }));
+        return items.map((prod, idx) => {
+            const prodName = prod.product_name || prod.productName || prod.name || "Untitled Product";
+            const catName = prod.categories_name || prod.categoryName || "General Category";
+            return {
+                id: prod.product_id || prod.productId || `prod-${idx}`,
+                code: prod.product_id || prod.productId || `#PRD-0${idx + 1}`,
+                name: prodName,
+                price: Number(prod.product_price || prod.productPrice || prod.price || 0),
+                inStock: Number(prod.quantity ?? prod.inStock ?? 0),
+                categoryId: String(prod.categories_id || prod.categoryId || ""),
+                categoryName: catName,
+                statusId: String(prod.status_id || prod.statusId || ""),
+                status: prod.status_name || (String(prod.status_id) === "2" ? "INACTIVE" : String(prod.status_id) === "3" ? "PENDING" : "ACTIVE"),
+                description: prod.description || "",
+                image: prod.image || resolveProductImage(prodName, catName),
+                createdAt: prod.created_at,
+                updatedAt: prod.updated_at
+            };
+        });
     };
 
     const loadProducts = async () => {
@@ -307,38 +311,41 @@ export default function Products() {
                         subtitle="Live inventory records and stock statuses"
                         isEmpty={filteredProds.length === 0}
                         emptyMessage="No products cataloged yet."
+                        footer={
+                            <div className="table-footer-status">
+                                <span>Showing {filteredProds.length} of {productsList.length} products</span>
+                                <span>Inventory catalog active</span>
+                            </div>
+                        }
                     >
-                        <table className="solara-data-table">
+                        <table className="solara-data-table products-table">
                             <thead>
                                 <tr>
-                                    <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Product Name <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Category <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Stock <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Action</th>
+                                    <th className="th-sn">SN <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-name">Product Name <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-id">ID <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-category">Category <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-price">Price (₦) <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-stock">Stock <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-status">Status <span className="sort-icon">&uarr;&darr;</span></th>
+                                    <th className="th-action">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredProds.map((prod, idx) => (
                                     <tr key={prod.id || idx}>
                                         <td className="col-sn">{idx + 1}</td>
-                                        <td>
+                                        <td className="col-prod-name">
                                             <div className="product-table-cell">
-                                                {prod.image ? (
-                                                    <img
-                                                        src={prod.image}
-                                                        alt={prod.name}
-                                                        className="table-product-thumb"
-                                                        onError={(e) => { e.target.style.display = "none"; }}
-                                                    />
-                                                ) : (
-                                                    <div className="table-product-thumb-placeholder">
-                                                        <i className="bi bi-box"></i>
-                                                    </div>
-                                                )}
+                                                <img
+                                                    src={prod.image || resolveProductImage(prod.name, prod.categoryName)}
+                                                    alt={prod.name}
+                                                    className="table-product-thumb"
+                                                    onError={(e) => {
+                                                        const fallback = resolveProductImage(prod.name, prod.categoryName);
+                                                        if (e.target.src !== fallback) e.target.src = fallback;
+                                                    }}
+                                                />
                                                 <div className="prod-tbl-info">
                                                     <span className="prod-tbl-title">{prod.name}</span>
                                                     {prod.description && (
@@ -352,13 +359,13 @@ export default function Products() {
                                         <td className="col-prod-id">{prod.code}</td>
                                         <td className="col-category">{prod.categoryName}</td>
                                         <td className="col-price">₦ {Number(prod.price || 0).toLocaleString()}</td>
-                                        <td>{prod.inStock}</td>
-                                        <td>
+                                        <td className="col-stock">{prod.inStock}</td>
+                                        <td className="col-status">
                                             <span className={`status-badge-pill ${(prod.status || "active").toLowerCase()}`}>
                                                 {prod.status}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td className="col-action">
                                             <div className="action-btn-group">
                                                 <button
                                                     type="button"
@@ -376,8 +383,7 @@ export default function Products() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-edit"
-                                                    style={{ color: "#e53e3e", borderColor: "#feb2b2", background: "#fff5f5" }}
+                                                    className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleDeleteProduct(prod)}
                                                     title="Delete Product"
                                                 >
