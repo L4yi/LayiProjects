@@ -69,10 +69,20 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const categoryService = {
-    // Fetches all categories from database (admin/categories/fetch-all-category.php)
+    // Fetches all categories from database (supports customer and admin endpoints)
     async fetchAllCategories() {
         try {
-            const response = await api.post("admin/categories/fetch-all-category.php", new FormData());
+            let response;
+            try {
+                response = await api.post("customer/category/fetch-all-category.php", new FormData());
+                if (!response?.data?.success) {
+                    throw new Error("Customer category endpoint returned unsuccessful");
+                }
+            } catch (err) {
+                // Fall back directly to admin category endpoint
+                response = await api.post("admin/categories/fetch-all-category.php", new FormData());
+            }
+
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return resData;

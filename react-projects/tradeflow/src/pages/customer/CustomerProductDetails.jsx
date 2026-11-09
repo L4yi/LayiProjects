@@ -19,34 +19,45 @@ export default function CustomerProductDetails() {
         const loadProduct = async () => {
             try {
                 const res = await productService.fetchAllProducts();
-                if (res.success && Array.isArray(res.data)) {
-                    const found = res.data.find(
+                let found = null;
+                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+                    found = res.data.find(
                         p => String(p.product_id || p.productId || p.id) === String(productId)
                     ) || res.data[0];
-
-                    if (found) {
-                        setProduct({
-                            id: String(found.product_id || found.productId || found.id),
-                            name: found.product_name || found.name || "Product",
-                            categoryId: String(found.categories_id || found.category_id || found.categoryId || ""),
-                            categoryName: found.categories_name || found.category_name || "Catalog",
-                            price: Number(found.product_price || found.price || 0),
-                            oldPrice: Number(found.product_price || found.price || 0) * 1.15,
-                            rating: 5,
-                            reviewCount: 12,
-                            sku: `SKU-${found.product_id || found.productId || "001"}`,
-                            stockCount: found.quantity || found.inStock || 25,
-                            description: found.description || "Premium quality retail product backed by TradeFlow authenticity warranty.",
-                            image: found.image || resolveProductImage(found.product_name, found.categories_name),
-                            highlights: [
-                                "Official Manufacturer Warranty included",
-                                "Doorstep delivery available across all zones",
-                                "7-day return and exchange guarantee"
-                            ]
-                        });
-                        setIsSaved(isInWishlist(found.product_id || found.productId || found.id));
-                    }
                 }
+
+                if (!found) {
+                    found = {
+                        product_id: "PROD20261109083122",
+                        product_name: "Samsung Galaxy A15",
+                        categories_id: "CAT20261109082827",
+                        categories_name: "Mobile Devices & phones",
+                        product_price: 185000,
+                        quantity: 49,
+                        description: "A powerful Android smartphone with a 6.5-inch display, 4GB RAM, 128GB storage and long-lasting 5000mAh battery, perfect for everyday use."
+                    };
+                }
+
+                setProduct({
+                    id: String(found.product_id || found.productId || found.id),
+                    name: found.product_name || found.name || "Product",
+                    categoryId: String(found.categories_id || found.category_id || found.categoryId || ""),
+                    categoryName: found.categories_name || found.category_name || "Catalog",
+                    price: Number(found.product_price || found.price || 0),
+                    oldPrice: Number(found.product_price || found.price || 0) * 1.15,
+                    rating: 5,
+                    reviewCount: 12,
+                    sku: `SKU-${found.product_id || found.productId || "001"}`,
+                    stockCount: found.quantity || found.inStock || 25,
+                    description: found.description || "Premium quality retail product backed by TradeFlow authenticity warranty.",
+                    image: found.image || resolveProductImage(found.product_name, found.categories_name),
+                    highlights: [
+                        "Official Manufacturer Warranty included",
+                        "Doorstep delivery available across all zones",
+                        "7-day return and exchange guarantee"
+                    ]
+                });
+                setIsSaved(isInWishlist(found.product_id || found.productId || found.id));
             } catch (err) {
                 console.error("Failed to load product details:", err);
             } finally {

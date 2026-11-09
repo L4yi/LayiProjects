@@ -6497,6 +6497,11 @@ input.table-filter-search-input,
     color: #ffffff !important;
 }
 
+.cart-header-badge:empty,
+.cart-badge-count:empty {
+    display: none !important;
+}
+
 .user-avatar-btn-trigger,
 .cust-avatar-trigger,
 .profile-initial-badge,

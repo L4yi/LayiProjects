@@ -113,7 +113,9 @@ export default function CustomerLayout() {
                                     <i className="bi bi-cart3"></i>
                                     <span>My Cart</span>
                                 </div>
-                                <span className="cart-badge-count">{cartCount}</span>
+                                {cartCount > 0 && (
+                                    <span className="cart-badge-count">{cartCount}</span>
+                                )}
                             </NavLink>
 
                             <NavLink
@@ -227,7 +229,9 @@ export default function CustomerLayout() {
                             {/* Cart Icon */}
                             <Link to="/customer/cart" className="customer-cart-btn" title="View Cart">
                                 <i className="bi bi-cart3"></i>
-                                <span className="cart-header-badge">{cartCount}</span>
+                                {cartCount > 0 && (
+                                    <span className="cart-header-badge">{cartCount}</span>
+                                )}
                             </Link>
 
                             {/* Bell Notification */}

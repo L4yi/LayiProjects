@@ -298,84 +298,215 @@ export const customerService = {
                 message: "Email address is required."
             };
         }
+        if (!password) {
+            return {
+                success: false,
+                message: "Password is required."
+            };
+        }
 
         try {
-            // 1. Call the customer/auth/sign-in.php endpoint
             const formData = new FormData();
             formData.append("emailAddress", cleanEmail);
             formData.append("password", password || "");
 
-            try {
-                const response = await api.post("customer/auth/sign-in.php", formData);
-                const resData = response.data;
-                if (resData?.success === true && resData?.data) {
-                    const cust = resData.data;
-                    const name = `${cust.firstName || ""} ${cust.lastName || ""}`.trim() || cust.emailAddress || cleanEmail;
-                    const sessionPayload = {
-                        customerId: cust.customerId || cust.customer_id || "",
-                        id: cust.customerId || cust.customer_id || "",
-                        name,
-                        firstName: cust.firstName || "",
-                        lastName: cust.lastName || "",
-                        email: cust.emailAddress || cleanEmail,
-                        phone: cust.phoneNumber || "",
-                        address: cust.address || "",
-                        role: "Customer",
-                        roleId: "19",
-                        lastLogin: "Just now"
-                    };
-                    setSessionUser(sessionPayload);
-                    return {
-                        success: true,
-                        data: sessionPayload,
-                        user: sessionPayload,
-                        message: resData.message || "CUSTOMER SIGN IN SUCCESSFUL"
-                    };
-                }
-            } catch (err) {
-                console.warn("customer/auth/sign-in.php in progress:", err.message);
+            const response = await api.post("customer/auth/sign-in.php", formData);
+            const resData = response.data;
+
+            if (resData?.success === true && resData?.data) {
+                const cust = resData.data;
+                const firstName = cust.firstName || cust.first_name || "";
+                const lastName = cust.lastName || cust.last_name || "";
+                const fullName = `${firstName} ${lastName}`.trim() || cust.emailAddress || cleanEmail;
+                const customerId = cust.customerId || cust.customer_id || cust.id || "";
+
+                const sessionPayload = {
+                    customerId,
+                    id: customerId,
+                    name: fullName,
+                    firstName,
+                    lastName,
+                    email: cust.emailAddress || cleanEmail,
+                    phone: cust.phoneNumber || "",
+                    address: cust.address || "",
+                    role: "Customer",
+                    roleId: "19",
+                    status: "ACTIVE",
+                    statusId: "1",
+                    lastLogin: cust.lastLoginDate || "Just now"
+                };
+
+                setSessionUser(sessionPayload);
+                return {
+                    success: true,
+                    data: sessionPayload,
+                    user: sessionPayload,
+                    message: resData.message || "CUSTOMER SIGN IN SUCCESSFUL"
+                };
             }
 
-            // 2. Since sign-in endpoint is still in progress, check database records
-            let matched = null;
-            const allCust = await this.fetchAllCustomers();
-            if (allCust.success && Array.isArray(allCust.data)) {
-                matched = allCust.data.find(
-                    (c) => (c.emailAddress || "").toLowerCase() === cleanEmail.toLowerCase() ||
-                           (c.email || "").toLowerCase() === cleanEmail.toLowerCase()
-                );
-            }
-
-            const nameFromEmail = cleanEmail.split("@")[0].replace(/[._-]/g, " ");
-            const fallbackName = nameFromEmail.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-
-            const sessionPayload = {
-                customerId: matched?.customerId || matched?.id || `CUST-${Date.now().toString().slice(-6)}`,
-                id: matched?.customerId || matched?.id || `CUST-${Date.now().toString().slice(-6)}`,
-                name: matched?.name || `${matched?.firstName || ""} ${matched?.lastName || ""}`.trim() || fallbackName || "Customer",
-                firstName: matched?.firstName || fallbackName.split(" ")[0] || "Customer",
-                lastName: matched?.lastName || fallbackName.split(" ")[1] || "",
-                email: cleanEmail,
-                phone: matched?.phoneNumber || "+234 800 000 0000",
-                address: matched?.address || "Abeokuta, Ogun State, Nigeria",
-                role: "Customer",
-                roleId: "19",
-                status: "ACTIVE",
-                statusId: "1",
-                lastLogin: "Just now"
-            };
-
-            setSessionUser(sessionPayload);
             return {
-                success: true,
-                data: sessionPayload,
-                user: sessionPayload,
-                message: "CUSTOMER SIGN IN SUCCESSFUL"
+                success: false,
+                message: resData?.message || "Invalid login credentials."
             };
         } catch (error) {
             return {
                 success: false,
                 message: error.response?.data?.message || error.message || "Sign in request failed."
+            };
+        }
+    },
+
+    // Customer forgot password endpoint: customer/auth/forget-password.php
+    async customerForgotPassword(emailAddress) {
+        const cleanEmail = (emailAddress || "").trim();
+        if (!cleanEmail) {
+            return {
+                success: false,
+                message: "Email address is required."
+            };
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("emailAddress", cleanEmail);
+            formData.append("email", cleanEmail);
+
+            let response;
+            try {
+                response = await api.post("customer/auth/forget-password.php", formData);
+            } catch (err) {
+                if (err.response?.status === 404) {
+                    response = await api.post("customer/auth/forgot-password.php", formData);
+                } else {
+                    throw err;
+                }
+            }
+
+            const resData = response.data;
+            if (resData?.success === true) {
+                const customerId = resData.data?.customerId || resData.data?.customer_id || "";
+                const resetOtp = resData.data?.resetotp || resData.data?.resetOtp || "";
+                return {
+                    success: true,
+                    message: resData.message || "RESET OTP GENERATED SUCCESSFULLY",
+                    data: {
+                        customerId,
+                        resetOtp,
+                        emailAddress: resData.data?.emailAddress || cleanEmail
+                    }
+                };
+            }
+
+            return {
+                success: false,
+                message: resData?.message || "Could not generate reset OTP for this email."
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Failed to process forgot password request."
+            };
+        }
+    },
+
+    // Customer reset password endpoint: customer/auth/reset-password.php
+    async customerResetPassword({ customerId, resetOtp, password, confirmPassword }) {
+        const cleanId = (customerId || "").trim();
+        const cleanOtp = (resetOtp || "").toString().trim();
+
+        if (!cleanId) {
+            return {
+                success: false,
+                message: "Customer ID is required."
+            };
+        }
+        if (!cleanOtp) {
+            return {
+                success: false,
+                message: "Reset OTP is required."
+            };
+        }
+        if (!password) {
+            return {
+                success: false,
+                message: "New password is required."
+            };
+        }
+        if (password !== confirmPassword) {
+            return {
+                success: false,
+                message: "Passwords do not match."
+            };
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("customerId", cleanId);
+            formData.append("customer_id", cleanId);
+            formData.append("resetOtp", cleanOtp);
+            formData.append("resetotp", cleanOtp);
+            formData.append("password", password);
+            formData.append("confirmPassword", confirmPassword);
+
+            const response = await api.post("customer/auth/reset-password.php", formData);
+            const resData = response.data;
+
+            if (resData?.success === true) {
+                return {
+                    success: true,
+                    message: resData.message || "PASSWORD RESET SUCCESSFULLY"
+                };
+            }
+
+            return {
+                success: false,
+                message: resData?.message || "Failed to reset password. Please check the OTP and try again."
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Password reset request failed."
+            };
+        }
+    },
+
+    // Fetch all categories for customer storefront
+    async fetchAllCategories() {
+        try {
+            let response;
+            try {
+                response = await api.post("customer/category/fetch-all-category.php", new FormData());
+                if (!response?.data?.success) throw new Error("Fallback to admin categories");
+            } catch {
+                response = await api.post("admin/categories/fetch-all-category.php", new FormData());
+            }
+            return response.data;
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Failed to load categories.",
+                data: []
+            };
+        }
+    },
+
+    // Fetch all products for customer storefront
+    async fetchAllProducts() {
+        try {
+            let response;
+            try {
+                response = await api.post("customer/product/fetch-all-products.php", new FormData());
+                if (!response?.data?.success) throw new Error("Fallback to admin products");
+            } catch {
+                response = await api.post("admin/product/fetch-all-products.php", new FormData());
+            }
+            return response.data;
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || "Failed to load products.",
+                data: []
             };
         }
     }

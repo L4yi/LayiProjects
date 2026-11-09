@@ -92,10 +92,20 @@ function normalizeResponse(resData, defaultSuccessMsg = "Success") {
 }
 
 export const productService = {
-    // Fetches all products from database (admin/product/fetch-all-products.php)
+    // Fetches all products from database (supports customer and admin endpoints)
     async fetchAllProducts() {
         try {
-            const response = await api.post("admin/product/fetch-all-products.php", new FormData());
+            let response;
+            try {
+                response = await api.post("customer/product/fetch-all-products.php", new FormData());
+                if (!response?.data?.success) {
+                    throw new Error("Customer product endpoint returned unsuccessful");
+                }
+            } catch (err) {
+                // Fall back directly to admin product endpoint
+                response = await api.post("admin/product/fetch-all-products.php", new FormData());
+            }
+
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
                 return resData;

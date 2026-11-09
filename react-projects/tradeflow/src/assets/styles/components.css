@@ -418,43 +418,56 @@
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 480px;
+    max-height: 380px;
     scrollbar-width: thin;
-    scrollbar-color: #94a3b8 #f1f5f9;
+    scrollbar-color: #64748b #f1f5f9;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
 }
 
+.category-table-card .common-table-responsive {
+    max-height: 290px !important;
+    overflow-y: scroll !important;
+}
+
 @media (max-height: 750px) {
     .common-table-responsive {
-        max-height: 380px;
+        max-height: 320px;
+    }
+    .category-table-card .common-table-responsive {
+        max-height: 270px !important;
     }
 }
 
 @media (max-height: 600px) {
     .common-table-responsive {
-        max-height: 300px;
+        max-height: 260px;
+    }
+    .category-table-card .common-table-responsive {
+        max-height: 240px !important;
     }
 }
 
 .common-table-responsive::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 8px !important;
+    height: 8px !important;
+    display: block !important;
 }
 
 .common-table-responsive::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
+    background: #f1f5f9 !important;
+    border-radius: 4px !important;
 }
 
 .common-table-responsive::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-    border-radius: 4px;
+    background: #64748b !important;
+    border-radius: 4px !important;
+    border: 2px solid #f1f5f9 !important;
 }
 
 .common-table-responsive::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color, #143526);
+    background: var(--primary-color, #143526) !important;
 }
 
 .common-table-empty {

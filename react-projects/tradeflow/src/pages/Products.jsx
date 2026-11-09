@@ -311,12 +311,6 @@ export default function Products() {
                         subtitle="Live inventory records and stock statuses"
                         isEmpty={filteredProds.length === 0}
                         emptyMessage="No products cataloged yet."
-                        footer={
-                            <div className="table-footer-status">
-                                <span>Showing {filteredProds.length} of {productsList.length} products</span>
-                                <span>Inventory catalog active</span>
-                            </div>
-                        }
                     >
                         <table className="solara-data-table products-table">
                             <thead>

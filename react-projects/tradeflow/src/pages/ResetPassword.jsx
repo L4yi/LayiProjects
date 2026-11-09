@@ -8,7 +8,7 @@ export default function ResetPassword() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [staffId, setStaffId] = useState(location.state?.staffId || "");
+    const [staffId, setStaffId] = useState(location.state?.staffId || location.state?.customerId || "");
     const [otpCode, setOtpCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,10 +18,12 @@ export default function ResetPassword() {
     const [apiError, setApiError] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+    const isCustomer = Boolean(location.state?.isCustomer || staffId.trim().startsWith("CUST"));
+
     const validateForm = () => {
         const errors = {};
         if (!staffId.trim()) {
-            errors.staffId = "Staff ID is required to reset password.";
+            errors.staffId = `${isCustomer ? "Customer ID" : "Staff ID"} is required to reset password.`;
         }
         if (!otpCode.trim()) {
             errors.otpCode = "Please enter the OTP code sent to your email.";
@@ -53,6 +55,7 @@ export default function ResetPassword() {
         setLoading(true);
         const result = await authService.resetPassword({
             staffId: staffId.trim(),
+            customerId: location.state?.customerId || (staffId.trim().startsWith("CUST") ? staffId.trim() : undefined),
             resetOtp: otpCode.trim(),
             password: newPassword,
             confirmPassword: confirmPassword
@@ -87,7 +90,7 @@ export default function ResetPassword() {
                                         <h2>Reset Password</h2>
                                         <p>
                                             Remembered your password?{" "}
-                                            <Link to="/signin" className="link">
+                                            <Link to={isCustomer ? "/customer/signin" : "/signin"} className="link">
                                                 Sign In &rarr;
                                             </Link>
                                         </p>
@@ -267,7 +270,7 @@ export default function ResetPassword() {
                 title="PASSWORD RESET SUCCESSFULLY!"
                 message="Your password has been securely updated. You can now log in with your new credentials."
                 buttonText="Okay, Continue"
-                onConfirm={() => navigate("/signin")}
+                onConfirm={() => navigate(isCustomer ? "/customer/signin" : "/signin")}
             />
         </>
     );

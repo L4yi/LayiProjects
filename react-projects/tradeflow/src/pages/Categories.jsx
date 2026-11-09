@@ -269,12 +269,8 @@ export default function Categories() {
                         subtitle="Active and archived categories in the catalog"
                         isEmpty={displayCats.length === 0}
                         emptyMessage="No categories available."
-                        footer={
-                            <div className="table-footer-status">
-                                <span>Showing {displayCats.length} of {categoriesList.length} categories</span>
-                                <span>Catalog taxonomy active</span>
-                            </div>
-                        }
+                        className="category-table-card"
+                        tableMaxHeight="290px"
                     >
                         <table className="solara-data-table">
                             <thead>

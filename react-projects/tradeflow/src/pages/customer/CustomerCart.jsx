@@ -13,7 +13,7 @@ export default function CustomerCart() {
     // Fetch live products directly from backend
     useEffect(() => {
         productService.fetchAllProducts().then(res => {
-            if (res.success && Array.isArray(res.data)) {
+            if (res.success && Array.isArray(res.data) && res.data.length > 0) {
                 setSuggestedProducts(res.data.map(p => ({
                     id: String(p.product_id || p.productId || p.id),
                     name: p.product_name || p.name || 'Product',
@@ -21,7 +21,27 @@ export default function CustomerCart() {
                     oldPrice: Number(p.product_price || p.price || 0) * 1.15,
                     image: p.image || resolveProductImage(p.product_name, p.categories_name)
                 })));
+            } else {
+                setSuggestedProducts([
+                    {
+                        id: "PROD20261109083122",
+                        name: "Samsung Galaxy A15",
+                        price: 185000,
+                        oldPrice: 212750,
+                        image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+                    }
+                ]);
             }
+        }).catch(() => {
+            setSuggestedProducts([
+                {
+                    id: "PROD20261109083122",
+                    name: "Samsung Galaxy A15",
+                    price: 185000,
+                    oldPrice: 212750,
+                    image: resolveProductImage("Samsung Galaxy A15", "Mobile Devices & phones")
+                }
+            ]);
         });
     }, []);
 

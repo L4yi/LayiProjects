@@ -12,6 +12,7 @@ export default function ForgotPassword() {
     const [apiError, setApiError] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [staffId, setStaffId] = useState("");
+    const [isCustomer, setIsCustomer] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,7 +36,9 @@ export default function ForgotPassword() {
         setLoading(false);
 
         if (result.success) {
-            setStaffId(result.data?.staffId || "");
+            const id = result.data?.staffId || result.data?.customerId || "";
+            setStaffId(id);
+            setIsCustomer(Boolean(result.isCustomer || id.startsWith("CUST")));
             setShowSuccessModal(true);
         } else {
             setApiError(result.message || "Could not generate reset OTP for this email.");
@@ -45,7 +48,12 @@ export default function ForgotPassword() {
     const handleModalConfirm = () => {
         setShowSuccessModal(false);
         navigate("/reset-password", {
-            state: { staffId, email: email.trim() }
+            state: {
+                staffId,
+                customerId: isCustomer ? staffId : undefined,
+                isCustomer,
+                email: email.trim()
+            }
         });
     };
 

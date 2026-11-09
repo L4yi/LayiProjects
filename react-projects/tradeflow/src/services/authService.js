@@ -102,8 +102,8 @@ export const authService = {
     },
 
     async forgotPassword(emailAddress) {
+        const cleanEmail = (emailAddress || "").trim();
         try {
-            const cleanEmail = (emailAddress || "").trim();
             const formData = new FormData();
             formData.append("emailAddress", cleanEmail);
             formData.append("email", cleanEmail);
@@ -114,8 +114,23 @@ export const authService = {
             if (resData?.success === true) {
                 return {
                     success: resData.success,
+                    isCustomer: false,
                     message: resData.message || "Reset OTP generated successfully.",
                     data: resData.data
+                };
+            }
+
+            // If not found in staff, check customer forgot-password endpoint
+            const custRes = await customerService.customerForgotPassword(cleanEmail);
+            if (custRes.success) {
+                return {
+                    success: true,
+                    isCustomer: true,
+                    message: custRes.message,
+                    data: {
+                        ...custRes.data,
+                        staffId: custRes.data?.customerId
+                    }
                 };
             }
 
@@ -124,6 +139,22 @@ export const authService = {
                 message: resData?.message || "Could not generate reset OTP for this email."
             };
         } catch (error) {
+            // Also try customer forgot password if admin request throws
+            try {
+                const custRes = await customerService.customerForgotPassword(cleanEmail);
+                if (custRes.success) {
+                    return {
+                        success: true,
+                        isCustomer: true,
+                        message: custRes.message,
+                        data: {
+                            ...custRes.data,
+                            staffId: custRes.data?.customerId
+                        }
+                    };
+                }
+            } catch (_) {}
+
             return {
                 success: false,
                 message: extractErrorMessage(error, "Failed to process forgot password request.")
@@ -131,7 +162,19 @@ export const authService = {
         }
     },
 
-    async resetPassword({ staffId, resetOtp, password, confirmPassword }) {
+    async resetPassword({ staffId, customerId, resetOtp, password, confirmPassword }) {
+        const targetId = (customerId || staffId || "").trim();
+        const isCustomer = targetId.startsWith("CUST") || Boolean(customerId);
+
+        if (isCustomer) {
+            return await customerService.customerResetPassword({
+                customerId: targetId,
+                resetOtp,
+                password,
+                confirmPassword
+            });
+        }
+
         try {
             const formData = new FormData();
             formData.append("staffId", (staffId || "").trim());
@@ -149,11 +192,34 @@ export const authService = {
                 };
             }
 
+            // Fallback attempt to customer reset password
+            const custTry = await customerService.customerResetPassword({
+                customerId: targetId,
+                resetOtp,
+                password,
+                confirmPassword
+            });
+            if (custTry.success) {
+                return custTry;
+            }
+
             return {
                 success: false,
                 message: resData?.message || "Failed to reset password. Please verify the OTP and try again."
             };
         } catch (error) {
+            try {
+                const custTry = await customerService.customerResetPassword({
+                    customerId: targetId,
+                    resetOtp,
+                    password,
+                    confirmPassword
+                });
+                if (custTry.success) {
+                    return custTry;
+                }
+            } catch (_) {}
+
             return {
                 success: false,
                 message: extractErrorMessage(error, "Failed to submit new password.")
