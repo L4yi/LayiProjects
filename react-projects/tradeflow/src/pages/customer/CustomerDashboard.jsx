@@ -21,21 +21,30 @@ export default function CustomerDashboard() {
                     productService.fetchAllProducts()
                 ]);
 
+                const rawProducts = (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data))
+                    ? prodRes.value.data
+                    : [];
+
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
-                    setCategories(catRes.value.data.map(cat => ({
-                        id: cat.categories_id || cat.categoryId || cat.id,
-                        title: cat.category_name || cat.name || "Category",
-                        badge: cat.status_name || "Active",
-                        image: cat.image || null,
-                        itemCount: 0
-                    })));
+                    setCategories(catRes.value.data.map(cat => {
+                        const catId = cat.categories_id || cat.categoryId || cat.id;
+                        const catName = cat.categories_name || cat.category_name || cat.name || "Category";
+                        const matchCount = rawProducts.filter(p => (p.categories_id || p.categoryId || p.category_id) === catId).length;
+                        return {
+                            id: catId,
+                            title: catName,
+                            badge: cat.status_name || (String(cat.status_id) === "2" ? "Inactive" : "Active"),
+                            image: cat.image || null,
+                            itemCount: matchCount > 0 ? `${matchCount} ${matchCount === 1 ? "Item" : "Items"}` : "0 Items"
+                        };
+                    }));
                 }
 
-                if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data)) {
-                    setProducts(prodRes.value.data.map(prod => ({
+                if (rawProducts.length > 0) {
+                    setProducts(rawProducts.map(prod => ({
                         id: prod.product_id || prod.productId || prod.id,
                         name: prod.product_name || prod.name || "Product",
-                        subtitle: prod.category_name || "Retail",
+                        subtitle: prod.categories_name || prod.category_name || "Retail",
                         rating: 5,
                         price: `₦ ${Number(prod.product_price || prod.price || 0).toLocaleString()}`,
                         oldPrice: `₦ ${(Number(prod.product_price || prod.price || 0) * 1.15).toLocaleString()}`,

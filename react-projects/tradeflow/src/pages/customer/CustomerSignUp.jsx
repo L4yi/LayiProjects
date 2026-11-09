@@ -1,20 +1,28 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { setSessionUser } from "../../utils/session";
+import customerService from "../../services/customerService";
 
 export default function CustomerSignUp() {
     const navigate = useNavigate();
-    const [fullName, setFullName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
+    const [serverError, setServerError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const validateForm = () => {
         const newErrors = {};
-        if (!fullName.trim()) {
-            newErrors.fullName = "Full name is required.";
+        if (!firstName.trim()) {
+            newErrors.firstName = "First name is required.";
+        }
+
+        if (!lastName.trim()) {
+            newErrors.lastName = "Last name is required.";
         }
 
         const trimmedEmail = email.trim();
@@ -38,20 +46,49 @@ export default function CustomerSignUp() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSignUp = (e) => {
+    const handleSignUp = async (e) => {
         e.preventDefault();
+        setServerError("");
         if (!validateForm()) return;
 
-        setSessionUser({
-            name: fullName.trim() || "New Customer",
-            email: email.trim() || "customer@example.com",
-            phone: phone.trim() || "+234 800 000 0000",
-            role: "Customer Member",
-            department: "Retail Commerce & Shopping",
-            lastLogin: "Just now"
-        });
+        setIsSubmitting(true);
+        try {
+            const cleanFirst = firstName.trim();
+            const cleanLast = lastName.trim();
+            const cleanEmail = email.trim();
+            const cleanPhone = phone.trim();
 
-        navigate("/customer/dashboard");
+            const createRes = await customerService.createCustomer({
+                firstName: cleanFirst,
+                lastName: cleanLast,
+                emailAddress: cleanEmail,
+                phoneNumber: cleanPhone,
+                address: "Online Store Customer",
+                titleId: "1",
+                roleId: "19",
+                statusId: "1"
+            });
+
+            const customerId = createRes?.data?.customerId || createRes?.data?.id || `CUST-${Date.now().toString().slice(-6)}`;
+
+            setSessionUser({
+                id: customerId,
+                customerId: customerId,
+                name: `${cleanFirst} ${cleanLast}`.trim(),
+                email: cleanEmail,
+                phone: cleanPhone,
+                role: "Customer",
+                roleId: "19",
+                department: "Retail Commerce & Shopping",
+                lastLogin: "Just now"
+            });
+
+            navigate("/customer/dashboard");
+        } catch (err) {
+            setServerError(err.message || "Unable to register customer account. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -83,26 +120,56 @@ export default function CustomerSignUp() {
                                     </p>
                                 </div>
 
+                                {serverError && (
+                                    <div className="auth-error-alert">
+                                        <i className="bi bi-exclamation-triangle-fill"></i> {serverError}
+                                    </div>
+                                )}
+
                                 <form onSubmit={handleSignUp} className="input-container" noValidate>
-                                    <div className="input-wrapper">
-                                        <label htmlFor="customerFullName">Full Name</label>
-                                        <input
-                                            type="text"
-                                            className={`text-field ${errors.fullName ? "is-invalid" : ""}`}
-                                            id="customerFullName"
-                                            placeholder="e.g. Layi Olawale"
-                                            value={fullName}
-                                            onChange={(e) => {
-                                                setFullName(e.target.value);
-                                                if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: "" }));
-                                            }}
-                                            autoComplete="name"
-                                        />
-                                        {errors.fullName && (
-                                            <span className="inline-error">
-                                                <i className="bi bi-exclamation-circle"></i> {errors.fullName}
-                                            </span>
-                                        )}
+                                    {/* First Name & Last Name Side by Side */}
+                                    <div className="name-input-grid">
+                                        <div className="input-wrapper">
+                                            <label htmlFor="customerFirstName">First Name</label>
+                                            <input
+                                                type="text"
+                                                className={`text-field ${errors.firstName ? "is-invalid" : ""}`}
+                                                id="customerFirstName"
+                                                placeholder="e.g. Layi"
+                                                value={firstName}
+                                                onChange={(e) => {
+                                                    setFirstName(e.target.value);
+                                                    if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: "" }));
+                                                }}
+                                                autoComplete="given-name"
+                                            />
+                                            {errors.firstName && (
+                                                <span className="inline-error">
+                                                    <i className="bi bi-exclamation-circle"></i> {errors.firstName}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="input-wrapper">
+                                            <label htmlFor="customerLastName">Last Name</label>
+                                            <input
+                                                type="text"
+                                                className={`text-field ${errors.lastName ? "is-invalid" : ""}`}
+                                                id="customerLastName"
+                                                placeholder="e.g. Olawale"
+                                                value={lastName}
+                                                onChange={(e) => {
+                                                    setLastName(e.target.value);
+                                                    if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: "" }));
+                                                }}
+                                                autoComplete="family-name"
+                                            />
+                                            {errors.lastName && (
+                                                <span className="inline-error">
+                                                    <i className="bi bi-exclamation-circle"></i> {errors.lastName}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="input-wrapper">
@@ -190,9 +257,19 @@ export default function CustomerSignUp() {
                                     <button
                                         className="btn-primary customer-primary-btn"
                                         type="submit"
+                                        disabled={isSubmitting}
                                         title="Create Customer Account"
                                     >
-                                        <i className="bi bi-person-check"></i> Register Account
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Creating Account...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-person-check"></i> Register Account
+                                            </>
+                                        )}
                                     </button>
                                 </form>
 

@@ -382,6 +382,8 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     overflow: hidden;
     margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
 }
 
 .common-table-header {
@@ -415,6 +417,31 @@
 .common-table-responsive {
     width: 100%;
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 290px);
+    min-height: 280px;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.common-table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.common-table-responsive::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+}
+
+.common-table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.common-table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color, #143526);
 }
 
 .common-table-empty {
@@ -434,6 +461,15 @@
     padding: 14px 22px;
     border-top: 1px solid var(--border-color, #e5e7eb);
     background-color: #fafbfc;
+}
+
+.table-footer-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-family: sub-title-font, sans-serif;
+    color: var(--text-muted, #64748b);
 }
 
 
@@ -469,4 +505,217 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+
+/* --------------------------------------------------------------------------
+   6. Dashboard Body Scrolling & Full Accessibility
+   -------------------------------------------------------------------------- */
+.dashboard-section .dashboard-layout .main-content .dashboard-body {
+    flex: 1 1 auto !important;
+    height: calc(100vh - 70px) !important;
+    max-height: calc(100vh - 70px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 28px 32px 140px 32px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+    scroll-behavior: smooth !important;
+}
+
+.dashboard-section .dashboard-layout .main-content .dashboard-body::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.dashboard-section .dashboard-layout .main-content .dashboard-body::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 4px !important;
+}
+
+.dashboard-section .dashboard-layout .main-content .dashboard-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+
+.dashboard-section .dashboard-layout .main-content .dashboard-body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color, #143526) !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. Customer Registration (First Name & Last Name Grid)
+   -------------------------------------------------------------------------- */
+.name-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+}
+
+@media (max-width: 576px) {
+    .name-input-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.auth-error-alert {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   8. Storefront Category Card Icon Avatar
+   -------------------------------------------------------------------------- */
+.cat-card-icon-avatar {
+    width: 100%;
+    height: 100%;
+    min-height: 130px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.cat-card-icon-avatar i {
+    font-size: 44px;
+    color: var(--primary-color, #143526);
+    transition: transform 0.25s ease;
+}
+
+.customer-category-card:hover .cat-card-icon-avatar i {
+    transform: scale(1.15);
+}
+
+/* --------------------------------------------------------------------------
+   9. Product Details CTA Toolbar & Quantity Picker
+   -------------------------------------------------------------------------- */
+.buy-actions-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.quantity-picker {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 46px;
+}
+
+.quantity-picker button {
+    width: 40px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--black-color, #111827);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-picker button:hover {
+    background-color: #e2e8f0;
+}
+
+.quantity-picker span {
+    min-width: 44px;
+    text-align: center;
+    font-family: title-font, sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--black-color, #111827);
+}
+
+.btn-add-to-cart-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 46px;
+    padding: 0 24px;
+    background-color: var(--primary-color, #143526);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 10px;
+    font-family: sub-title-font, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(20, 53, 38, 0.2);
+}
+
+.btn-add-to-cart-primary:hover {
+    background-color: var(--primary-hover, #0d2319);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20, 53, 38, 0.3);
+}
+
+.btn-buy-now-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 46px;
+    padding: 0 24px;
+    background-color: #f97316;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 10px;
+    font-family: sub-title-font, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(249, 115, 22, 0.25);
+}
+
+.btn-buy-now-accent:hover {
+    background-color: #ea580c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   10. Cart Checkout Continue Shopping CTA
+   -------------------------------------------------------------------------- */
+.btn-cart-continue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background-color: var(--primary-color, #143526);
+    color: #ffffff !important;
+    border-radius: 10px;
+    font-family: sub-title-font, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(20, 53, 38, 0.2);
+}
+
+.btn-cart-continue:hover {
+    background-color: var(--primary-hover, #0d2319);
+    transform: translateY(-1px);
 }

@@ -28,8 +28,8 @@ export default function CustomerProductDetails() {
                         setProduct({
                             id: String(found.product_id || found.productId || found.id),
                             name: found.product_name || found.name || "Product",
-                            categoryId: String(found.category_id || found.categoryId || ""),
-                            categoryName: found.category_name || "Catalog",
+                            categoryId: String(found.categories_id || found.category_id || found.categoryId || ""),
+                            categoryName: found.categories_name || found.category_name || "Catalog",
                             price: Number(found.product_price || found.price || 0),
                             oldPrice: Number(found.product_price || found.price || 0) * 1.15,
                             rating: 5,

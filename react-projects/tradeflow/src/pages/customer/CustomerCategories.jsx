@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import CategoryCard from "../../components/CategoryCard";
 import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
+import productService from "../../services/productService";
 
 export default function CustomerCategories() {
     const [categories, setCategories] = useState([]);
@@ -12,15 +13,28 @@ export default function CustomerCategories() {
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const res = await categoryService.fetchAllCategories();
-                if (res.success && Array.isArray(res.data)) {
-                    const mapped = res.data.map((cat) => ({
-                        id: cat.categories_id || cat.categoryId || cat.id,
-                        title: cat.category_name || cat.name || "Category",
-                        badge: cat.status_name || "Active",
-                        image: cat.image || null,
-                        itemCount: 0
-                    }));
+                const [catRes, prodRes] = await Promise.allSettled([
+                    categoryService.fetchAllCategories(),
+                    productService.fetchAllProducts()
+                ]);
+
+                const rawProducts = (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data))
+                    ? prodRes.value.data
+                    : [];
+
+                if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
+                    const mapped = catRes.value.data.map((cat) => {
+                        const catId = cat.categories_id || cat.categoryId || cat.id;
+                        const catName = cat.categories_name || cat.category_name || cat.name || "Category";
+                        const matchCount = rawProducts.filter(p => (p.categories_id || p.categoryId || p.category_id) === catId).length;
+                        return {
+                            id: catId,
+                            title: catName,
+                            badge: cat.status_name || (String(cat.status_id) === "2" ? "Inactive" : "Active"),
+                            image: cat.image || null,
+                            itemCount: matchCount > 0 ? `${matchCount} ${matchCount === 1 ? "Item" : "Items"}` : "0 Items"
+                        };
+                    });
                     setCategories(mapped);
                 }
             } catch (err) {

@@ -22,22 +22,25 @@ export default function CustomerCategoryProducts() {
                 ]);
 
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
-                    setCategories(catRes.value.data.map(cat => ({
-                        id: String(cat.categories_id || cat.categoryId || cat.id),
-                        title: cat.category_name || cat.name || "Category",
-                        name: cat.category_name || cat.name || "Category",
-                        badge: cat.status_name || "Active",
-                        description: cat.description || "Verified catalog collection",
-                        image: cat.image || null
-                    })));
+                    setCategories(catRes.value.data.map(cat => {
+                        const name = cat.categories_name || cat.category_name || cat.name || "Category";
+                        return {
+                            id: String(cat.categories_id || cat.categoryId || cat.id),
+                            title: name,
+                            name: name,
+                            badge: cat.status_name || "Active",
+                            description: cat.description || "Verified catalog collection",
+                            image: cat.image || null
+                        };
+                    }));
                 }
 
                 if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data)) {
                     setProducts(prodRes.value.data.map(prod => ({
                         id: String(prod.product_id || prod.productId || prod.id),
-                        categoryId: String(prod.category_id || prod.categoryId || ""),
+                        categoryId: String(prod.categories_id || prod.category_id || prod.categoryId || ""),
                         name: prod.product_name || prod.name || "Product",
-                        subtitle: prod.category_name || "Retail",
+                        subtitle: prod.categories_name || prod.category_name || "Retail",
                         rating: 5,
                         price: Number(prod.product_price || prod.price || 0),
                         oldPrice: Number(prod.product_price || prod.price || 0) * 1.15,

@@ -204,31 +204,6 @@ export default function ProductSlideDrawer({
                     </div>
                 </div>
 
-                {/* Image URL */}
-                <div className="drawer-form-group">
-                    <label className="drawer-label">Image URL</label>
-                    <input
-                        type="text"
-                        className="drawer-input"
-                        placeholder="https://images.unsplash.com/..."
-                        value={formData.image || ""}
-                        onChange={(e) => handleChange("image", e.target.value)}
-                    />
-                    {formData.image && (
-                        <div className="drawer-media-preview-wrap">
-                            <img
-                                src={formData.image}
-                                alt="Product Preview"
-                                className="drawer-img-preview-box"
-                                onError={(e) => {
-                                    e.target.style.display = "none";
-                                }}
-                            />
-                            <span className="table-cell-ellipsis-sub">Image Preview</span>
-                        </div>
-                    )}
-                </div>
-
                 {/* Description */}
                 <div className="drawer-form-group">
                     <label className="drawer-label">Product Description</label>

@@ -37,8 +37,12 @@ export function getCategoryErrorMessage(error, defaultMsg = "An unexpected error
 export function inferCategoryIcon(name = "") {
     const n = String(name).toLowerCase();
     if (n.includes("phone") || n.includes("mobile") || n.includes("device")) return "bi bi-phone";
+    if (n.includes("beauty") || n.includes("health") || n.includes("skincare") || n.includes("cosmetic")) return "bi bi-heart-pulse";
+    if (n.includes("office") || n.includes("supplies") || n.includes("stationery")) return "bi bi-briefcase";
+    if (n.includes("grocer") || n.includes("food") || n.includes("fruit") || n.includes("beverage")) return "bi bi-basket";
+    if (n.includes("electronic") || n.includes("gadget") || n.includes("hardware")) return "bi bi-cpu";
     if (n.includes("foot") || n.includes("shoe") || n.includes("boot") || n.includes("sneaker")) return "bi bi-boot";
-    if (n.includes("apparel") || n.includes("cloth") || n.includes("wear") || n.includes("shirt")) return "bi bi-person-standing";
+    if (n.includes("apparel") || n.includes("cloth") || n.includes("wear") || n.includes("shirt") || n.includes("fashion")) return "bi bi-person-standing";
     if (n.includes("bag") || n.includes("accessori") || n.includes("wallet") || n.includes("backpack")) return "bi bi-bag";
     if (n.includes("audio") || n.includes("sound") || n.includes("headphone") || n.includes("speaker")) return "bi bi-headphones";
     if (n.includes("watch") || n.includes("smartwatch") || n.includes("wearable")) return "bi bi-smartwatch";

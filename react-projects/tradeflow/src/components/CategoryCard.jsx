@@ -1,15 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { inferCategoryIcon } from "../services/categoryService";
 
 export default function CategoryCard({
     id = "tubers",
     to = "",
     title = "Category",
     image = "",
-    badge = "Get FoodStuffs",
+    icon = "",
+    badge = "Active",
     itemCount = ""
 }) {
     const destination = to || `/customer/category/${id}`;
+    const [imgFailed, setImgFailed] = useState(false);
+    const iconClass = icon || inferCategoryIcon(title);
+    const hasValidImage = Boolean(image && !imgFailed);
 
     return (
         <Link to={destination} className="customer-category-card" title={`Browse ${title}`}>
@@ -20,14 +25,18 @@ export default function CategoryCard({
                         <span className="cat-brand-text">{badge}</span>
                     </div>
                 )}
-                <img
-                    src={image}
-                    alt={title}
-                    className="cat-group-img"
-                    onError={(e) => {
-                        e.target.style.display = 'none';
-                    }}
-                />
+                {hasValidImage ? (
+                    <img
+                        src={image}
+                        alt={title}
+                        className="cat-group-img"
+                        onError={() => setImgFailed(true)}
+                    />
+                ) : (
+                    <div className="cat-card-icon-avatar">
+                        <i className={iconClass}></i>
+                    </div>
+                )}
             </div>
             <div className="cat-card-footer">
                 <h4 className="cat-card-title">{title}</h4>
