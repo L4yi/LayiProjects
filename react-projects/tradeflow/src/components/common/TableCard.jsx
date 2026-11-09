@@ -11,6 +11,8 @@ export default function TableCard({
     emptyMessage = "No records found",
     className = "",
     style = {},
+    tableMaxHeight,
+    tableStyle = {},
 }) {
     return (
         <div className={`common-table-card ${className}`} style={style}>
@@ -31,7 +33,15 @@ export default function TableCard({
                         <p>{emptyMessage}</p>
                     </div>
                 ) : (
-                    <div className="common-table-responsive">{children}</div>
+                    <div
+                        className="common-table-responsive"
+                        style={{
+                            ...(tableMaxHeight ? { maxHeight: tableMaxHeight } : {}),
+                            ...tableStyle
+                        }}
+                    >
+                        {children}
+                    </div>
                 )}
             </div>
 

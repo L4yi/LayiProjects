@@ -418,11 +418,24 @@
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 290px);
-    min-height: 280px;
-    scrollbar-gutter: stable;
+    max-height: 480px;
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #f1f5f9;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+}
+
+@media (max-height: 750px) {
+    .common-table-responsive {
+        max-height: 380px;
+    }
+}
+
+@media (max-height: 600px) {
+    .common-table-responsive {
+        max-height: 300px;
+    }
 }
 
 .common-table-responsive::-webkit-scrollbar {
@@ -431,12 +444,12 @@
 }
 
 .common-table-responsive::-webkit-scrollbar-track {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 4px;
 }
 
 .common-table-responsive::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #94a3b8;
     border-radius: 4px;
 }
 
@@ -513,13 +526,14 @@
    -------------------------------------------------------------------------- */
 .dashboard-section .dashboard-layout .main-content .dashboard-body {
     flex: 1 1 auto !important;
-    height: calc(100vh - 70px) !important;
-    max-height: calc(100vh - 70px) !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 28px 32px 140px 32px !important;
+    padding: 24px 32px 60px 32px !important;
     scrollbar-width: thin !important;
-    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
     scroll-behavior: smooth !important;
 }
 
@@ -533,7 +547,7 @@
 }
 
 .dashboard-section .dashboard-layout .main-content .dashboard-body::-webkit-scrollbar-thumb {
-    background: #cbd5e1 !important;
+    background: #94a3b8 !important;
     border-radius: 4px !important;
 }
 
