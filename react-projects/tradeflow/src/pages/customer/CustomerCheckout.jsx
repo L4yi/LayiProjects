@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCartItems, getCartSubtotal, clearCart } from "../../utils/cart";
 import { getSessionUser } from "../../utils/session";
+import { getDefaultPaymentMethod, OFFICIAL_BANK_DETAILS } from "../../utils/payment";
 import orderService from "../../services/orderService";
+import setupService from "../../services/setupService";
 
 const DELIVERY_OPTIONS = [
     {
@@ -75,7 +77,7 @@ export default function CustomerCheckout() {
     });
 
     const [selectedDelivery, setSelectedDelivery] = useState(DELIVERY_OPTIONS[0]);
-    const [selectedPayment, setSelectedPayment] = useState(PAYMENT_METHODS[0].id);
+    const [selectedPayment, setSelectedPayment] = useState(() => getDefaultPaymentMethod() || PAYMENT_METHODS[1].id);
     const [formErrors, setFormErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderConfirmed, setOrderConfirmed] = useState(null);
@@ -492,15 +494,15 @@ export default function CustomerCheckout() {
                                 <div className="transfer-data-grid">
                                     <div>
                                         <span className="lbl">Bank Name:</span>
-                                        <strong>Moniepoint Microfinance Bank</strong>
+                                        <strong>{OFFICIAL_BANK_DETAILS.bankName}</strong>
                                     </div>
                                     <div>
                                         <span className="lbl">Account Name:</span>
-                                        <strong>TradeFlow Retail Nigeria Ltd</strong>
+                                        <strong>{OFFICIAL_BANK_DETAILS.accountName}</strong>
                                     </div>
                                     <div>
                                         <span className="lbl">Account Number:</span>
-                                        <strong className="font-mono text-emerald">8012345678</strong>
+                                        <strong className="font-mono text-emerald">{OFFICIAL_BANK_DETAILS.accountNumber}</strong>
                                     </div>
                                 </div>
                             </div>

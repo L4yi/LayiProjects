@@ -22,11 +22,27 @@ import {
     Heart,
     Trash2,
     FileText,
-    ChevronRight
+    ChevronRight,
+    CreditCard,
+    Building2,
+    Copy,
+    Wallet,
+    Banknote,
+    Plus,
+    X
 } from "lucide-react";
 import { getSessionUser, setSessionUser } from "../utils/session";
 import { getCartCount, addToCart } from "../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../utils/wishlist";
+import { 
+    OFFICIAL_BANK_DETAILS, 
+    getDefaultPaymentMethod, 
+    setDefaultPaymentMethod, 
+    getSavedCards, 
+    addSavedCard, 
+    removeSavedCard, 
+    getWalletBalance 
+} from "../utils/payment";
 import customerService from "../services/customerService";
 import orderService from "../services/orderService";
 
@@ -68,6 +84,19 @@ export default function Profile() {
     const [wishlistItems, setWishlistItems] = useState(getWishlistItems());
     const [cartCount, setCartCount] = useState(getCartCount());
 
+    // Payment Methods state
+    const [defaultPayment, setDefaultPayment] = useState(getDefaultPaymentMethod());
+    const [savedCards, setSavedCards] = useState(getSavedCards());
+    const [walletBal, setWalletBal] = useState(getWalletBalance());
+    const [copiedBank, setCopiedBank] = useState(false);
+    const [showAddCard, setShowAddCard] = useState(false);
+    const [cardForm, setCardForm] = useState({
+        brand: "Mastercard",
+        number: "",
+        expiry: "12/28",
+        holder: user.name || "Customer"
+    });
+
     useEffect(() => {
         const handleSessionUpdate = () => {
             const u = getSessionUser();
@@ -90,14 +119,26 @@ export default function Profile() {
             setCartCount(getCartCount());
         };
 
+        const handleCardsUpdate = (e) => {
+            if (e.detail) setSavedCards(e.detail);
+        };
+
+        const handlePaymentPrefUpdate = (e) => {
+            if (e.detail) setDefaultPayment(e.detail);
+        };
+
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
         window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
         window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+        window.addEventListener("tradeflow_cards_update", handleCardsUpdate);
+        window.addEventListener("tradeflow_payment_preference_update", handlePaymentPrefUpdate);
 
         return () => {
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
             window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
             window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+            window.removeEventListener("tradeflow_cards_update", handleCardsUpdate);
+            window.removeEventListener("tradeflow_payment_preference_update", handlePaymentPrefUpdate);
         };
     }, []);
 
@@ -301,6 +342,43 @@ export default function Profile() {
         }
     };
 
+    // Save Default Payment Preference
+    const handleSavePaymentPref = () => {
+        setDefaultPaymentMethod(defaultPayment);
+        showToast("Default payment preference saved! Will auto-apply at Checkout.");
+    };
+
+    // Copy Bank Account
+    const handleCopyBankAcc = () => {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(OFFICIAL_BANK_DETAILS.accountNumber);
+        }
+        setCopiedBank(true);
+        showToast(`Copied ${OFFICIAL_BANK_DETAILS.bankName} Account (${OFFICIAL_BANK_DETAILS.accountNumber}) to clipboard!`);
+        setTimeout(() => setCopiedBank(false), 2500);
+    };
+
+    // Add Card
+    const handleAddCard = (e) => {
+        e.preventDefault();
+        const cleanNum = cardForm.number.replace(/\s+/g, "");
+        if (cleanNum.length < 12) {
+            showToast("Please enter a valid card number.");
+            return;
+        }
+        const last4 = cleanNum.slice(-4);
+        const updated = addSavedCard({
+            brand: cardForm.brand,
+            last4,
+            expiry: cardForm.expiry || "12/28",
+            holder: cardForm.holder || user.name
+        });
+        setSavedCards(updated);
+        setShowAddCard(false);
+        setCardForm({ brand: "Mastercard", number: "", expiry: "12/28", holder: user.name || "Customer" });
+        showToast("New card added successfully!");
+    };
+
     const isCustomerPortal = user.role === "Customer" || window.location.pathname.startsWith("/customer");
     const dashboardLink = isCustomerPortal ? "/customer/dashboard" : "/dashboard";
     const logoutLink = isCustomerPortal ? "/customer/signin" : "/signin";
@@ -358,7 +436,7 @@ export default function Profile() {
                                 </div>
                             </div>
 
-                            {/* Green Privacy Reassurance Pill (matching user mockup) */}
+                            {/* Green Privacy Reassurance Pill */}
                             <div className="profile-privacy-note">
                                 <ShieldCheck size={16} className="text-emerald shrink-0" />
                                 <span>Your information and privacy will be kept secure and uncompromised.</span>
@@ -409,6 +487,19 @@ export default function Profile() {
                                         <span className="profile-quick-badge">{cartCount}</span>
                                     )}
                                 </Link>
+
+                                <button
+                                    type="button"
+                                    className={`btn-profile-quick-link ${activeTab === "payment" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("payment")}
+                                    style={{ border: "none", width: "100%", textAlign: "left", cursor: "pointer" }}
+                                >
+                                    <div className="btn-quick-link-left">
+                                        <CreditCard size={16} />
+                                        <span>Payment Methods</span>
+                                    </div>
+                                    <span className="profile-quick-badge" style={{ backgroundColor: "#0284c7" }}>Active</span>
+                                </button>
 
                                 <Link to="/customer/products" className="btn-profile-quick-link">
                                     <div className="btn-quick-link-left">
@@ -464,6 +555,17 @@ export default function Profile() {
                                 <Lock size={16} />
                                 <span>Password &amp; Security</span>
                             </button>
+
+                            {isCustomerPortal && (
+                                <button
+                                    type="button"
+                                    className={`profile-tab-pill-btn ${activeTab === "payment" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("payment")}
+                                >
+                                    <CreditCard size={16} />
+                                    <span>Payment Methods</span>
+                                </button>
+                            )}
 
                             {isCustomerPortal && (
                                 <button
@@ -742,7 +844,305 @@ export default function Profile() {
                             </div>
                         )}
 
-                        {/* Tab 4: Recent Orders */}
+                        {/* Tab 4: Payment Methods */}
+                        {isCustomerPortal && activeTab === "payment" && (
+                            <div className="profile-tab-pane-content payment-methods-tab-container">
+                                <div className="pane-intro-row">
+                                    <h3 className="form-box-title">Payment Methods &amp; Preferences</h3>
+                                    <p className="form-box-sub">Configure your default checkout payment method, verified bank transfer details, and saved cards.</p>
+                                </div>
+
+                                {/* Default Payment Preference Section */}
+                                <div className="payment-section-box">
+                                    <div className="payment-section-title-wrap">
+                                        <h4><CheckCircle2 size={18} className="text-emerald" /> Default Payment Preference</h4>
+                                        <p>This payment channel will be automatically selected for you at checkout.</p>
+                                    </div>
+
+                                    <div className="payment-prefs-grid">
+                                        <div 
+                                            className={`payment-pref-card ${defaultPayment === "bank_transfer" ? "selected" : ""}`}
+                                            onClick={() => setDefaultPayment("bank_transfer")}
+                                        >
+                                            <div className="payment-pref-top">
+                                                <div className="pref-icon-name">
+                                                    <span className="pref-icon-circle"><Building2 size={16} /></span>
+                                                    <span className="pref-title-text">Bank Transfer</span>
+                                                </div>
+                                                <span className="pref-badge-tag">Zero Fee</span>
+                                            </div>
+                                            <p className="pref-desc-text">Direct transfer to TradeFlow corporate account with instant receipt generation.</p>
+                                            <div className="pref-selection-radio">
+                                                <input 
+                                                    type="radio" 
+                                                    name="pref_method" 
+                                                    checked={defaultPayment === "bank_transfer"} 
+                                                    onChange={() => setDefaultPayment("bank_transfer")} 
+                                                />
+                                                <span>{defaultPayment === "bank_transfer" ? "Default Option" : "Select Default"}</span>
+                                            </div>
+                                        </div>
+
+                                        <div 
+                                            className={`payment-pref-card ${defaultPayment === "card" ? "selected" : ""}`}
+                                            onClick={() => setDefaultPayment("card")}
+                                        >
+                                            <div className="payment-pref-top">
+                                                <div className="pref-icon-name">
+                                                    <span className="pref-icon-circle"><CreditCard size={16} /></span>
+                                                    <span className="pref-title-text">Debit / Credit Card</span>
+                                                </div>
+                                                <span className="pref-badge-tag">Instant</span>
+                                            </div>
+                                            <p className="pref-desc-text">Pay securely using Mastercard, Visa, or Verve via Paystack gateway.</p>
+                                            <div className="pref-selection-radio">
+                                                <input 
+                                                    type="radio" 
+                                                    name="pref_method" 
+                                                    checked={defaultPayment === "card"} 
+                                                    onChange={() => setDefaultPayment("card")} 
+                                                />
+                                                <span>{defaultPayment === "card" ? "Default Option" : "Select Default"}</span>
+                                            </div>
+                                        </div>
+
+                                        <div 
+                                            className={`payment-pref-card ${defaultPayment === "pod" ? "selected" : ""}`}
+                                            onClick={() => setDefaultPayment("pod")}
+                                        >
+                                            <div className="payment-pref-top">
+                                                <div className="pref-icon-name">
+                                                    <span className="pref-icon-circle"><Banknote size={16} /></span>
+                                                    <span className="pref-title-text">Pay on Delivery</span>
+                                                </div>
+                                                <span className="pref-badge-tag">Flexible</span>
+                                            </div>
+                                            <p className="pref-desc-text">Inspect and verify your package first. Pay with cash or card upon doorstep delivery.</p>
+                                            <div className="pref-selection-radio">
+                                                <input 
+                                                    type="radio" 
+                                                    name="pref_method" 
+                                                    checked={defaultPayment === "pod"} 
+                                                    onChange={() => setDefaultPayment("pod")} 
+                                                />
+                                                <span>{defaultPayment === "pod" ? "Default Option" : "Select Default"}</span>
+                                            </div>
+                                        </div>
+
+                                        <div 
+                                            className={`payment-pref-card ${defaultPayment === "wallet" ? "selected" : ""}`}
+                                            onClick={() => setDefaultPayment("wallet")}
+                                        >
+                                            <div className="payment-pref-top">
+                                                <div className="pref-icon-name">
+                                                    <span className="pref-icon-circle"><Wallet size={16} /></span>
+                                                    <span className="pref-title-text">Store Wallet</span>
+                                                </div>
+                                                <span className="pref-badge-tag">1-Click</span>
+                                            </div>
+                                            <p className="pref-desc-text">Instant payment from your verified customer account balance with zero processing delay.</p>
+                                            <div className="pref-selection-radio">
+                                                <input 
+                                                    type="radio" 
+                                                    name="pref_method" 
+                                                    checked={defaultPayment === "wallet"} 
+                                                    onChange={() => setDefaultPayment("wallet")} 
+                                                />
+                                                <span>{defaultPayment === "wallet" ? "Default Option" : "Select Default"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="profile-form-footer mt-16">
+                                        <button 
+                                            type="button" 
+                                            className="btn-save-profile"
+                                            onClick={handleSavePaymentPref}
+                                        >
+                                            <Check size={16} />
+                                            <span>Save Payment Preference</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Verified TradeFlow Bank Details Card */}
+                                <div className="bank-details-highlight-card">
+                                    <div className="bank-header-row">
+                                        <div className="bank-brand-title">
+                                            <Building2 size={18} />
+                                            <span>TradeFlow Central Treasury Account</span>
+                                        </div>
+                                        <span className="bank-verified-tag">VERIFIED BUSINESS</span>
+                                    </div>
+
+                                    <div className="bank-details-grid">
+                                        <div className="bank-meta-item">
+                                            <span className="bank-meta-label">Bank Name</span>
+                                            <span className="bank-meta-val">{OFFICIAL_BANK_DETAILS.bankName}</span>
+                                        </div>
+
+                                        <div className="bank-meta-item">
+                                            <span className="bank-meta-label">Beneficiary Account Name</span>
+                                            <span className="bank-meta-val">{OFFICIAL_BANK_DETAILS.accountName}</span>
+                                        </div>
+
+                                        <div className="bank-meta-item">
+                                            <span className="bank-meta-label">Account Number (Click to copy)</span>
+                                            <div className="bank-acc-copy-row">
+                                                <span className="bank-acc-large-num">{OFFICIAL_BANK_DETAILS.accountNumber}</span>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn-copy-acc-num"
+                                                    onClick={handleCopyBankAcc}
+                                                    title="Copy account number"
+                                                >
+                                                    {copiedBank ? (
+                                                        <>
+                                                            <Check size={13} />
+                                                            <span>Copied!</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Copy size={13} />
+                                                            <span>Copy</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Saved Cards Management */}
+                                <div className="payment-section-box">
+                                    <div className="pane-intro-row-flex">
+                                        <div className="payment-section-title-wrap" style={{ margin: 0 }}>
+                                            <h4><CreditCard size={18} className="text-emerald" /> Saved Payment Cards</h4>
+                                            <p>Manage your linked debit/credit cards for seamless 1-click checkout.</p>
+                                        </div>
+
+                                        <button 
+                                            type="button" 
+                                            className="btn-view-all-orders-link"
+                                            onClick={() => setShowAddCard(!showAddCard)}
+                                        >
+                                            {showAddCard ? <X size={14} /> : <Plus size={14} />}
+                                            <span>{showAddCard ? "Close Form" : "Add New Card"}</span>
+                                        </button>
+                                    </div>
+
+                                    {showAddCard && (
+                                        <form onSubmit={handleAddCard} className="mb-20 p-16 bg-slate-50 border rounded-lg mt-12">
+                                            <div className="form-fields-grid">
+                                                <div className="form-group-box">
+                                                    <label className="field-label">Card Brand</label>
+                                                    <select 
+                                                        className="form-control-field"
+                                                        value={cardForm.brand}
+                                                        onChange={(e) => setCardForm({ ...cardForm, brand: e.target.value })}
+                                                    >
+                                                        <option value="Mastercard">Mastercard</option>
+                                                        <option value="Visa">Visa</option>
+                                                        <option value="Verve">Verve</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="form-group-box">
+                                                    <label className="field-label">Card Number</label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="form-control-field" 
+                                                        placeholder="5399 •••• •••• ••••"
+                                                        value={cardForm.number}
+                                                        onChange={(e) => setCardForm({ ...cardForm, number: e.target.value })}
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="form-group-box">
+                                                    <label className="field-label">Expiry (MM/YY)</label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="form-control-field" 
+                                                        placeholder="12/28"
+                                                        value={cardForm.expiry}
+                                                        onChange={(e) => setCardForm({ ...cardForm, expiry: e.target.value })}
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="form-group-box">
+                                                    <label className="field-label">Cardholder Name</label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="form-control-field" 
+                                                        placeholder="Name on card"
+                                                        value={cardForm.holder}
+                                                        onChange={(e) => setCardForm({ ...cardForm, holder: e.target.value })}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-12 flex justify-end">
+                                                <button type="submit" className="btn-tab-cta">
+                                                    <Check size={14} />
+                                                    <span>Save Card</span>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+
+                                    <div className="saved-cards-list mt-12">
+                                        {savedCards.map((c) => (
+                                            <div key={c.id} className="saved-card-item">
+                                                <div className="card-item-left">
+                                                    <span className="card-brand-badge">{c.brand}</span>
+                                                    <span className="card-mask-num">•••• •••• •••• {c.last4}</span>
+                                                    <span className="card-exp-date">Expires {c.expiry}</span>
+                                                </div>
+                                                <div className="card-item-actions">
+                                                    {c.isDefault && (
+                                                        <span className="pref-badge-tag text-emerald bg-emerald-50">Default</span>
+                                                    )}
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn-card-delete"
+                                                        onClick={() => {
+                                                            const updated = removeSavedCard(c.id);
+                                                            setSavedCards(updated);
+                                                            showToast("Card removed successfully.");
+                                                        }}
+                                                        title="Delete card"
+                                                    >
+                                                        <Trash2 size={13} />
+                                                        <span>Remove</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Store Wallet Banner */}
+                                <div className="wallet-banner-box">
+                                    <div className="wallet-banner-left">
+                                        <div className="wallet-icon-circle">
+                                            <Wallet size={22} />
+                                        </div>
+                                        <div>
+                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">TradeFlow Customer Wallet</span>
+                                            <div className="wallet-balance-amount">₦ {walletBal.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <span className="pref-badge-tag text-emerald bg-emerald-100">
+                                        Verified &amp; Active
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab 5: Recent Orders */}
                         {isCustomerPortal && activeTab === "orders" && (
                             <div className="profile-tab-pane-content">
                                 <div className="pane-intro-row-flex">
@@ -809,7 +1209,7 @@ export default function Profile() {
                             </div>
                         )}
 
-                        {/* Tab 5: Saved Wishlist */}
+                        {/* Tab 6: Saved Wishlist */}
                         {isCustomerPortal && activeTab === "wishlist" && (
                             <div className="profile-tab-pane-content">
                                 <div className="pane-intro-row">
