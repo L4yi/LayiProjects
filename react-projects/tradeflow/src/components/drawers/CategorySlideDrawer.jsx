@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import BaseDrawerShell from "./BaseDrawerShell";
 import setupService from "../../services/setupService";
+import { getStoredCategoryImage } from "../../services/categoryService";
+
+const DEFAULT_CATEGORY_STATUSES = [
+    { status_id: "1", status_name: "ACTIVE" },
+    { status_id: "2", status_name: "INACTIVE" }
+];
 
 // Slide drawer specifically for adding or editing a product category.
 export default function CategorySlideDrawer({
@@ -14,7 +20,10 @@ export default function CategorySlideDrawer({
     onSave
 }) {
     const [formData, setFormData] = useState({});
-    const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
+    const [statusesList, setStatusesList] = useState(() => {
+        const cached = setupService.getActiveInactiveStatuses(setupService.getCachedStatuses());
+        return (cached && cached.length > 0) ? cached : DEFAULT_CATEGORY_STATUSES;
+    });
     const [errors, setErrors] = useState({});
     const [localError, setLocalError] = useState("");
 
@@ -22,25 +31,41 @@ export default function CategorySlideDrawer({
     useEffect(() => {
         setupService.fetchAllStatus().then((res) => {
             if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getActiveInactiveStatuses(res.data));
+                const filtered = setupService.getActiveInactiveStatuses(res.data);
+                if (filtered && filtered.length > 0) {
+                    setStatusesList(filtered);
+                }
             }
         });
     }, []);
 
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            const isEdit = Boolean(initialData.id || initialData.categoryId || initialData.categories_id);
-            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
-            const imgVal = initialData.image || initialData.imageUrl || initialData.categoryImage || initialData.category_image || "";
+            const isEdit = Boolean(initialData.id || initialData.categoryId || initialData.categories_id || initialData.code);
+            const rawId = initialData.id || initialData.categoryId || initialData.categories_id || initialData.code || "";
+            const catName = initialData.name || initialData.categoryName || "";
+            const statusId = initialData.statusId
+                ? String(initialData.statusId)
+                : (isEdit && initialData.status ? (setupService.getStatusId(initialData.status) || "1") : "1");
+            const storedImg = getStoredCategoryImage(rawId, catName);
+            const imgVal = initialData.image || initialData.imageUrl || initialData.categoryImage || initialData.category_image || storedImg || "";
             setFormData({
                 ...initialData,
-                statusId: statusId || "",
+                id: rawId,
+                categoryId: rawId,
+                name: catName,
+                categoryName: catName,
+                statusId: statusId || "1",
                 image: imgVal,
                 imageUrl: imgVal
             });
         } else {
             setFormData({
-                statusId: "",
+                id: "",
+                categoryId: "",
+                name: "",
+                categoryName: "",
+                statusId: "1",
                 image: "",
                 imageUrl: ""
             });
@@ -60,17 +85,25 @@ export default function CategorySlideDrawer({
         const newErrors = {};
         const catName = (formData.name || formData.categoryName || "").trim();
         if (!catName) newErrors.name = true;
-        if (!formData.statusId) newErrors.statusId = true;
+
+        const effectiveStatusId = formData.statusId ? String(formData.statusId) : "1";
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            setLocalError("Please select a status and enter a category name marked in red.");
+            setLocalError("Please enter a category name.");
             return;
         }
 
         setErrors({});
         setLocalError("");
-        if (onSave) onSave(formData);
+        if (onSave) {
+            onSave({
+                ...formData,
+                name: catName,
+                categoryName: catName,
+                statusId: effectiveStatusId
+            });
+        }
     };
 
     return (

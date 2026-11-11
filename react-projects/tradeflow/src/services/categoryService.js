@@ -53,6 +53,42 @@ export function inferCategoryIcon(name = "") {
     return "bi bi-tag";
 }
 
+const CATEGORY_IMAGES_STORAGE_KEY = "tradeflow_category_images";
+
+export function getStoredCategoryImages() {
+    try {
+        const stored = localStorage.getItem(CATEGORY_IMAGES_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch {
+        return {};
+    }
+}
+
+export function getStoredCategoryImage(catId, catName = "") {
+    if (!catId && !catName) return "";
+    const images = getStoredCategoryImages();
+    if (catId && images[String(catId)]) return images[String(catId)];
+    if (catName) {
+        const key = String(catName).toLowerCase().trim();
+        if (images[key]) return images[key];
+    }
+    return "";
+}
+
+export function setStoredCategoryImage(catId, catName, imageUrl) {
+    if (!catId && !catName) return;
+    try {
+        const images = getStoredCategoryImages();
+        const cleanUrl = (imageUrl || "").trim();
+        if (catId) images[String(catId)] = cleanUrl;
+        if (catName) images[String(catName).toLowerCase().trim()] = cleanUrl;
+        localStorage.setItem(CATEGORY_IMAGES_STORAGE_KEY, JSON.stringify(images));
+        window.dispatchEvent(new CustomEvent("tradeflow_category_images_updated", { detail: images }));
+    } catch (e) {
+        console.warn("Could not save category image to localStorage:", e);
+    }
+}
+
 function normalizeResponse(resData, defaultSuccessMsg = "Success") {
     if (typeof resData === "object" && resData !== null) {
         const isSuccess = resData.success === true || resData.success === "true";
@@ -85,7 +121,22 @@ export const categoryService = {
 
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
-                return resData;
+                const enriched = resData.data.map(cat => {
+                    const id = cat.categories_id || cat.categoryId || cat.id;
+                    const name = cat.categories_name || cat.categoryName || cat.name;
+                    const storedImg = getStoredCategoryImage(id, name);
+                    const finalImg = (cat.image_url || cat.image || cat.imageUrl || storedImg || "").trim();
+                    return {
+                        ...cat,
+                        image_url: finalImg || null,
+                        image: finalImg,
+                        imageUrl: finalImg
+                    };
+                });
+                return {
+                    ...resData,
+                    data: enriched
+                };
             }
             const msg = String(resData?.message || "").toUpperCase();
             if (msg.includes("NO CATEGOR") || msg.includes("NOT FOUND") || msg.includes("EMPTY")) {
@@ -110,7 +161,24 @@ export const categoryService = {
             const formData = new FormData();
             formData.append("categoryId", categoryId);
             const response = await api.post("admin/categories/fetch-each-category.php", formData);
-            return normalizeResponse(response.data, "Category fetched successfully.");
+            const resData = response.data;
+            if (resData?.success === true && resData?.data) {
+                const cat = resData.data;
+                const id = cat.categories_id || cat.categoryId || categoryId;
+                const name = cat.categories_name || cat.categoryName;
+                const storedImg = getStoredCategoryImage(id, name);
+                const finalImg = (cat.image_url || cat.image || cat.imageUrl || storedImg || "").trim();
+                return {
+                    ...resData,
+                    data: {
+                        ...cat,
+                        image_url: finalImg || null,
+                        image: finalImg,
+                        imageUrl: finalImg
+                    }
+                };
+            }
+            return normalizeResponse(resData, "Category fetched successfully.");
         } catch (error) {
             return {
                 success: false,
@@ -139,7 +207,14 @@ export const categoryService = {
             }
 
             const response = await api.post("admin/categories/create-category.php", formData);
-            return normalizeResponse(response.data, "CATEGORY CREATED SUCCESSFULLY");
+            const resData = response.data;
+            if (resData?.success) {
+                const newId = resData.data?.categoryId || resData.data?.categories_id || "";
+                if (image) {
+                    setStoredCategoryImage(newId, name, image);
+                }
+            }
+            return normalizeResponse(resData, "CATEGORY CREATED SUCCESSFULLY");
         } catch (error) {
             return {
                 success: false,
@@ -167,10 +242,15 @@ export const categoryService = {
                 formData.append("imageUrl", image);
                 formData.append("categoryImage", image);
                 formData.append("category_image", image);
+                setStoredCategoryImage(id, name, image);
             }
 
             const response = await api.post("admin/categories/update-category.php", formData);
-            return normalizeResponse(response.data, "CATEGORY UPDATED SUCCESSFULLY");
+            const resData = response.data;
+            if (resData?.success && image) {
+                setStoredCategoryImage(id, name, image);
+            }
+            return normalizeResponse(resData, "CATEGORY UPDATED SUCCESSFULLY");
         } catch (error) {
             return {
                 success: false,
@@ -198,7 +278,26 @@ export const categoryService = {
             const formData = new FormData();
             formData.append("searchContent", searchContent);
             const response = await api.post("admin/categories/search-category.php", formData);
-            return normalizeResponse(response.data, "CATEGORIES SEARCHED SUCCESSFULLY");
+            const resData = response.data;
+            if (resData?.success === true && Array.isArray(resData?.data)) {
+                const enriched = resData.data.map(cat => {
+                    const id = cat.categories_id || cat.categoryId || cat.id;
+                    const name = cat.categories_name || cat.categoryName || cat.name;
+                    const storedImg = getStoredCategoryImage(id, name);
+                    const finalImg = (cat.image_url || cat.image || cat.imageUrl || storedImg || "").trim();
+                    return {
+                        ...cat,
+                        image_url: finalImg || null,
+                        image: finalImg,
+                        imageUrl: finalImg
+                    };
+                });
+                return {
+                    ...resData,
+                    data: enriched
+                };
+            }
+            return normalizeResponse(resData, "CATEGORIES SEARCHED SUCCESSFULLY");
         } catch (error) {
             return {
                 success: false,

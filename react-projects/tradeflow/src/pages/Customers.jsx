@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CustomerSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import customerService from "../services/customerService";
 import setupService from "../services/setupService";
 
 export default function Customers() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [customersList, setCustomersList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -13,9 +15,17 @@ export default function Customers() {
     const [drawerError, setDrawerError] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Add New Customer Account");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    // Sync search parameter from URL
+    useEffect(() => {
+        const urlSearch = searchParams.get("search");
+        if (urlSearch !== null) {
+            setSearchQuery(urlSearch);
+        }
+    }, [searchParams]);
 
     const loadCustomers = async () => {
         setIsLoading(true);
@@ -191,12 +201,20 @@ export default function Customers() {
                                     className="table-filter-search-input"
                                     placeholder="Search customers..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setSearchQuery(val);
+                                        if (val.trim()) setSearchParams({ search: val.trim() });
+                                        else setSearchParams({});
+                                    }}
                                 />
                                 {searchQuery && (
                                     <button
                                         type="button"
-                                        onClick={() => setSearchQuery("")}
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setSearchParams({});
+                                        }}
                                         className="table-filter-clear-btn"
                                         title="Clear search"
                                     >

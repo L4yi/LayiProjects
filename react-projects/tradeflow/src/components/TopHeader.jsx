@@ -1,12 +1,34 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
 
 export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchTerm, setSearchTerm] = useState("");
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
     const dropdownRef = useRef(null);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const q = searchTerm.trim();
+        if (!q) return;
+
+        const path = location.pathname;
+        if (path.includes("/customers")) {
+            navigate(`/customers?search=${encodeURIComponent(q)}`);
+        } else if (path.includes("/categories")) {
+            navigate(`/categories?search=${encodeURIComponent(q)}`);
+        } else if (path.includes("/staff")) {
+            navigate(`/staff?search=${encodeURIComponent(q)}`);
+        } else if (path.includes("/orders")) {
+            navigate(`/orders?search=${encodeURIComponent(q)}`);
+        } else {
+            navigate(`/products?search=${encodeURIComponent(q)}`);
+        }
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -44,14 +66,18 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                 <h2 className="page-title">{title}</h2>
             </div>
 
-            <div className="header-search">
+            <form className="header-search" onSubmit={handleSearchSubmit}>
                 <input
                     type="text"
                     className="search-input"
-                    placeholder="Search data, users, or reports"
+                    placeholder="Search products, customers, categories..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <i className="bi bi-search search-icon"></i>
-            </div>
+                <button type="submit" className="search-submit-btn" title="Search">
+                    <i className="bi bi-search search-icon"></i>
+                </button>
+            </form>
 
             <div className="header-actions" ref={dropdownRef}>
                 <button

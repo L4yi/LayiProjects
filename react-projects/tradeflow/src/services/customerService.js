@@ -556,15 +556,30 @@ export const customerService = {
 
         // If customerId is missing from session, look it up by email
         const lookupEmail = currentEmail || emailAddress;
-        if (!validCustomerId && lookupEmail) {
+        if (!validCustomerId) {
             try {
-                const searchRes = await this.searchCustomer(lookupEmail);
-                if (searchRes.success && Array.isArray(searchRes.data) && searchRes.data.length > 0) {
-                    const matched = searchRes.data.find(c =>
-                        (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()
-                    ) || searchRes.data[0];
-                    validCustomerId = matched.customerId || matched.id || "";
-                    if (!roleId && matched.roleId) roleId = matched.roleId;
+                if (lookupEmail) {
+                    const searchRes = await this.searchCustomer(lookupEmail);
+                    if (searchRes.success && Array.isArray(searchRes.data) && searchRes.data.length > 0) {
+                        const matched = searchRes.data.find(c =>
+                            (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()
+                        ) || searchRes.data[0];
+                        validCustomerId = matched.customerId || matched.id || "";
+                        if (!roleId && matched.roleId) roleId = matched.roleId;
+                    }
+                }
+                if (!validCustomerId) {
+                    const allRes = await this.fetchAllCustomers();
+                    if (allRes.success && Array.isArray(allRes.data) && allRes.data.length > 0) {
+                        const matched = allRes.data.find(c =>
+                            (lookupEmail && (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()) ||
+                            (emailAddress && (c.emailAddress || c.email || "").toLowerCase() === emailAddress.toLowerCase().trim())
+                        ) || allRes.data[0];
+                        if (matched) {
+                            validCustomerId = matched.customerId || matched.id || "";
+                            if (!roleId && matched.roleId) roleId = matched.roleId;
+                        }
+                    }
                 }
             } catch (e) {
                 console.warn("Could not lookup customerId by email:", e);

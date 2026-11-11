@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CategorySlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
 import setupService from "../services/setupService";
 
 export default function Categories() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [categoriesList, setCategoriesList] = useState([]);
     const [statusesList, setStatusesList] = useState(() => setupService.getCategoryStatuses(setupService.getCachedStatuses()));
     const [isLoading, setIsLoading] = useState(true);
@@ -15,9 +17,17 @@ export default function Categories() {
     const [drawerError, setDrawerError] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [statusFilter, setStatusFilter] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    // Sync search from URL
+    useEffect(() => {
+        const urlSearch = searchParams.get("search");
+        if (urlSearch !== null) {
+            setSearchQuery(urlSearch);
+        }
+    }, [searchParams]);
 
     const loadCategories = async () => {
         setIsLoading(true);
@@ -65,39 +75,12 @@ export default function Categories() {
         });
     }, []);
 
-    const handleSearchChange = async (val) => {
+    const handleSearchChange = (val) => {
         setSearchQuery(val);
-        const query = val.trim();
-        if (!query) {
-            loadCategories();
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const result = await categoryService.searchCategory(query);
-            if (result?.success && Array.isArray(result?.data)) {
-                const mapped = result.data.map((cat, idx) => ({
-                    id: cat.categories_id || cat.categoryId || `cat-${idx}`,
-                    code: cat.categories_id || cat.categoryId || `#CAT-${idx + 101}`,
-                    name: cat.categories_name || cat.categoryName || "Untitled Category",
-                    statusId: String(cat.status_id || cat.statusId || ""),
-                    status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
-                    description: cat.description || "",
-                    image: cat.image || cat.imageUrl || cat.category_image || cat.categoryImage || cat.image_url || "",
-                    icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
-                    itemCount: "Catalog Item",
-                    createdAt: cat.created_at,
-                    updatedAt: cat.updated_at
-                }));
-                setCategoriesList(mapped);
-            } else {
-                setCategoriesList([]);
-            }
-        } catch {
-            setCategoriesList([]);
-        } finally {
-            setIsLoading(false);
+        if (val.trim()) {
+            setSearchParams({ search: val.trim() });
+        } else {
+            setSearchParams({});
         }
     };
 
@@ -115,8 +98,10 @@ export default function Categories() {
             code: "",
             icon: "bi bi-tag",
             status: "",
-            statusId: "",
+            statusId: "1",
             description: "",
+            image: "",
+            imageUrl: "",
             itemCount: "Catalog Item"
         });
         setDrawerTitle("Create New Category");
@@ -129,13 +114,23 @@ export default function Categories() {
         setDrawerError("");
 
         const catName = categoryData.name || categoryData.categoryName || "";
-        const isUpdate = Boolean(categoryData.id || categoryData.categoryId || categoryData.categories_id);
+        const catId = categoryData.id || categoryData.categoryId || categoryData.categories_id || categoryData.code || "";
+        const isUpdate = Boolean(catId);
+
+        const payload = {
+            ...categoryData,
+            id: catId,
+            categoryId: catId,
+            name: catName,
+            categoryName: catName,
+            statusId: categoryData.statusId || "1"
+        };
 
         let result;
         if (isUpdate) {
-            result = await categoryService.updateCategory(categoryData);
+            result = await categoryService.updateCategory(payload);
         } else {
-            result = await categoryService.createCategory(categoryData);
+            result = await categoryService.createCategory(payload);
         }
         setIsSaving(false);
 

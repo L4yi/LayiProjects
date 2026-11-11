@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ProductSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import productService from "../services/productService";
@@ -30,6 +31,7 @@ function ProductTableThumb({ src, alt }) {
 }
 
 export default function Products() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [productsList, setProductsList] = useState([]);
     const [categories, setCategories] = useState([]);
     const [statusesList, setStatusesList] = useState(() => setupService.getProductStatuses(setupService.getCachedStatuses()));
@@ -42,9 +44,17 @@ export default function Products() {
     const [isSaving, setIsSaving] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+
+    // Sync search query from URL search parameters
+    useEffect(() => {
+        const urlSearch = searchParams.get("search");
+        if (urlSearch !== null) {
+            setSearchQuery(urlSearch);
+        }
+    }, [searchParams]);
 
     const mapProducts = (items = []) => {
         return items.map((prod, idx) => {
@@ -110,26 +120,12 @@ export default function Products() {
         });
     }, []);
 
-    const handleSearchChange = async (val) => {
+    const handleSearchChange = (val) => {
         setSearchQuery(val);
-        const query = val.trim();
-        if (!query) {
-            loadProducts();
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const res = await productService.searchProduct(query);
-            if (res?.success && Array.isArray(res?.data)) {
-                setProductsList(mapProducts(res.data));
-            } else {
-                setProductsList([]);
-            }
-        } catch {
-            setProductsList([]);
-        } finally {
-            setIsLoading(false);
+        if (val.trim()) {
+            setSearchParams({ search: val.trim() });
+        } else {
+            setSearchParams({});
         }
     };
 

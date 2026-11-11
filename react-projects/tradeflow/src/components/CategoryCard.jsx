@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function CategoryCard({
@@ -11,6 +11,11 @@ export default function CategoryCard({
 }) {
     const destination = to || `/customer/category/${id}`;
     const [imgFailed, setImgFailed] = useState(false);
+
+    useEffect(() => {
+        setImgFailed(false);
+    }, [image]);
+
     const hasValidImage = Boolean(image && !imgFailed);
 
     return (
