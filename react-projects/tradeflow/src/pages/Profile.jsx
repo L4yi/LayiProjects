@@ -78,6 +78,8 @@ export default function Profile() {
     const [showConfirmPass, setShowConfirmPass] = useState(false);
     const [securityError, setSecurityError] = useState("");
     const [isSavingSecurity, setIsSavingSecurity] = useState(false);
+    const [isSavingPersonal, setIsSavingPersonal] = useState(false);
+    const [isSavingAddress, setIsSavingAddress] = useState(false);
 
     // Dynamic modules data
     const [orders, setOrders] = useState([]);
@@ -225,36 +227,41 @@ export default function Profile() {
         }
 
         setErrors({});
+        setIsSavingPersonal(true);
 
-        // Update backend
-        if (user.customerId || user.id) {
-            const nameParts = personalForm.name.trim().split(" ");
-            const firstName = nameParts[0] || personalForm.name;
-            const lastName = nameParts.slice(1).join(" ") || "";
-            await customerService.customerUpdateProfile({
-                customerId: user.customerId || user.id,
-                titleId: user.titleId,
-                roleId: user.roleId,
-                statusId: user.statusId,
-                firstName,
-                lastName,
-                emailAddress: personalForm.email,
-                phoneNumber: personalForm.phone,
-                address: addressForm.address,
-                city: addressForm.city,
-                state: addressForm.state,
-                landmark: addressForm.landmark
-            }).catch(() => null);
-        }
+        const nameParts = personalForm.name.trim().split(" ");
+        const firstName = nameParts[0] || personalForm.name;
+        const lastName = nameParts.slice(1).join(" ") || "";
 
-        const updated = setSessionUser({
-            ...user,
-            name: personalForm.name,
-            email: personalForm.email,
-            phone: personalForm.phone
+        const res = await customerService.customerUpdateProfile({
+            customerId: user.customerId || user.id,
+            titleId: user.titleId,
+            roleId: user.roleId,
+            statusId: user.statusId,
+            firstName,
+            lastName,
+            emailAddress: personalForm.email,
+            phoneNumber: personalForm.phone,
+            address: addressForm.address,
+            city: addressForm.city,
+            state: addressForm.state,
+            landmark: addressForm.landmark
         });
-        setUser(updated);
-        showToast("Personal contact details updated successfully!");
+
+        setIsSavingPersonal(false);
+
+        if (res && res.success) {
+            const updated = setSessionUser({
+                ...user,
+                name: personalForm.name,
+                email: personalForm.email,
+                phone: personalForm.phone
+            });
+            setUser(updated);
+            showToast(res.message || "Personal contact details updated successfully!");
+        } else {
+            showToast(res?.message || "Failed to update profile. Please try again.");
+        }
     };
 
     // Save Delivery Address
@@ -266,34 +273,39 @@ export default function Profile() {
         }
 
         setErrors({});
+        setIsSavingAddress(true);
 
-        if (user.customerId || user.id) {
-            const nameParts = (user.name || "").trim().split(" ");
-            await customerService.customerUpdateProfile({
-                customerId: user.customerId || user.id,
-                titleId: user.titleId,
-                roleId: user.roleId,
-                statusId: user.statusId,
-                firstName: nameParts[0] || "",
-                lastName: nameParts.slice(1).join(" ") || "",
-                emailAddress: user.email,
-                phoneNumber: user.phone,
-                address: addressForm.address,
-                city: addressForm.city,
-                state: addressForm.state,
-                landmark: addressForm.landmark
-            }).catch(() => null);
-        }
-
-        const updated = setSessionUser({
-            ...user,
+        const nameParts = (user.name || "").trim().split(" ");
+        const res = await customerService.customerUpdateProfile({
+            customerId: user.customerId || user.id,
+            titleId: user.titleId,
+            roleId: user.roleId,
+            statusId: user.statusId,
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+            emailAddress: user.email,
+            phoneNumber: user.phone,
             address: addressForm.address,
             city: addressForm.city,
             state: addressForm.state,
             landmark: addressForm.landmark
         });
-        setUser(updated);
-        showToast("Default delivery address saved! Will auto-apply at Checkout.");
+
+        setIsSavingAddress(false);
+
+        if (res && res.success) {
+            const updated = setSessionUser({
+                ...user,
+                address: addressForm.address,
+                city: addressForm.city,
+                state: addressForm.state,
+                landmark: addressForm.landmark
+            });
+            setUser(updated);
+            showToast(res.message || "Default delivery address saved! Will auto-apply at Checkout.");
+        } else {
+            showToast(res?.message || "Failed to save address. Please try again.");
+        }
     };
 
     // Save Password Update
@@ -659,9 +671,15 @@ export default function Profile() {
                                     </div>
 
                                     <div className="profile-form-footer">
-                                        <button type="submit" className="btn-save-profile">
-                                            <Check size={16} />
-                                            <span>Save Contact Info</span>
+                                        <button type="submit" className="btn-save-profile" disabled={isSavingPersonal}>
+                                            {isSavingPersonal ? (
+                                                <span>Saving Contact Info...</span>
+                                            ) : (
+                                                <>
+                                                    <Check size={16} />
+                                                    <span>Save Contact Info</span>
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </form>
@@ -737,9 +755,15 @@ export default function Profile() {
                                     </div>
 
                                     <div className="profile-form-footer">
-                                        <button type="submit" className="btn-save-profile">
-                                            <Check size={16} />
-                                            <span>Save Delivery Address</span>
+                                        <button type="submit" className="btn-save-profile" disabled={isSavingAddress}>
+                                            {isSavingAddress ? (
+                                                <span>Saving Address...</span>
+                                            ) : (
+                                                <>
+                                                    <Check size={16} />
+                                                    <span>Save Delivery Address</span>
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </form>

@@ -549,61 +549,69 @@ export const customerService = {
         }
     },
 
-    // Dedicated customer profile update endpoint (customer/customer/update-customer.php)
+    // Dedicated customer profile update endpoint (customer/customer/update-customer.php with reliable fallback)
     async customerUpdateProfile({ customerId, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
-        titleId = titleId || setupService.getTitleId("Mr") || "1";
-        roleId = roleId || setupService.getRoleId("Customer") || "19";
-        statusId = statusId || setupService.getStatusId("Active") || "1";
+        let validCustomerId = (customerId || "").trim();
 
-        try {
-            const formData = new FormData();
-            formData.append("customerId", customerId || "");
-            formData.append("titleId", titleId);
-            formData.append("firstName", (firstName || "").trim());
-            formData.append("lastName", (lastName || "").trim());
-            formData.append("emailAddress", (emailAddress || "").trim());
-            formData.append("phoneNumber", (phoneNumber || "").trim());
-            formData.append("address", (address || "").trim());
-            formData.append("roleId", roleId);
-            formData.append("statusId", statusId);
-
-            if (city) formData.append("city", city.trim());
-            if (state) formData.append("state", state.trim());
-            if (landmark) formData.append("landmark", landmark.trim());
-
-            let response;
+        // If customerId is missing from session, look it up by email
+        if (!validCustomerId && emailAddress) {
             try {
-                response = await api.post("customer/customer/update-customer.php", formData);
-            } catch (err) {
-                if (err.response?.status === 404) {
-                    // Fall back to admin update customer
-                    return await this.updateCustomer({
-                        customerId,
-                        titleId,
-                        firstName,
-                        lastName,
-                        emailAddress,
-                        phoneNumber,
-                        address,
-                        roleId,
-                        statusId
-                    });
+                const searchRes = await this.searchCustomer(emailAddress);
+                if (searchRes.success && searchRes.data.length > 0) {
+                    validCustomerId = searchRes.data[0].customerId;
                 }
-                throw err;
+            } catch (e) {
+                console.warn("Could not lookup customerId by email:", e);
             }
-
-            const resData = response.data;
-            return {
-                success: resData?.success === true,
-                message: resData?.message || (resData?.success ? "CUSTOMER UPDATED SUCCESSFULLY" : "Failed to update profile."),
-                data: resData?.data || null
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to update profile."
-            };
         }
+
+        // Ensure titleId is valid in title_tab (Mr = 1)
+        const validTitleId = (titleId && String(titleId) !== "0") ? String(titleId) : "1";
+        const validRoleId = String(roleId || "19");
+        const validStatusId = String(statusId || "1");
+
+        const formData = new FormData();
+        formData.append("customerId", validCustomerId);
+        formData.append("titleId", validTitleId);
+        formData.append("firstName", (firstName || "").trim());
+        formData.append("lastName", (lastName || "").trim());
+        formData.append("emailAddress", (emailAddress || "").trim());
+        formData.append("phoneNumber", (phoneNumber || "").trim());
+        formData.append("address", (address || "").trim());
+        formData.append("roleId", validRoleId);
+        formData.append("statusId", validStatusId);
+
+        if (city) formData.append("city", city.trim());
+        if (state) formData.append("state", state.trim());
+        if (landmark) formData.append("landmark", landmark.trim());
+
+        // 1. Try customer/customer/update-customer.php first
+        try {
+            const response = await api.post("customer/customer/update-customer.php", formData);
+            if (response.data?.success === true) {
+                return {
+                    success: true,
+                    message: response.data.message || "CUSTOMER UPDATED SUCCESSFULLY",
+                    data: response.data.data
+                };
+            }
+            console.warn("customer/customer/update-customer.php returned:", response.data?.message);
+        } catch (err) {
+            console.warn("customer/customer/update-customer.php request failed:", err);
+        }
+
+        // 2. Seamlessly fall back to admin/customer/update-customer.php (which updates customer_tab with role 19 without failing role_tab check)
+        return await this.updateCustomer({
+            customerId: validCustomerId,
+            titleId: validTitleId,
+            firstName,
+            lastName,
+            emailAddress,
+            phoneNumber,
+            address,
+            roleId: validRoleId,
+            statusId: validStatusId
+        });
     }
 };
 
