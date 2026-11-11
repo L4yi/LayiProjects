@@ -66,10 +66,7 @@ export default function Profile() {
 
     // Delivery address state
     const [addressForm, setAddressForm] = useState({
-        address: user.address || "Abeokuta, Ogun State, Nigeria",
-        city: user.city || "Abeokuta",
-        state: user.state || "Ogun State",
-        landmark: user.landmark || ""
+        address: user.address || "Ibara, Abeokuta, Ogun State"
     });
 
     // Password & Security state
@@ -341,29 +338,29 @@ export default function Profile() {
     // Save Delivery Address
     const handleSaveAddress = async (e) => {
         e.preventDefault();
-        if (!addressForm.address.trim()) {
-            setErrors({ address: "Street address is required." });
+        const trimmedAddress = (addressForm.address || "").trim();
+        if (!trimmedAddress) {
+            setErrors({ address: "Delivery address is required." });
             return;
         }
 
         setErrors({});
         setIsSavingAddress(true);
 
-        const nameParts = (user.name || "").trim().split(" ");
+        const uFirst = user.firstName || (user.name ? user.name.split(" ")[0] : "Customer");
+        const uLast = user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "User");
+
         const res = await customerService.customerUpdateProfile({
             customerId: user.customerId || user.id,
             currentEmail: user.email,
             titleId: user.titleId || "1",
             roleId: user.roleId || "1",
             statusId: user.statusId || "1",
-            firstName: nameParts[0] || "",
-            lastName: nameParts.slice(1).join(" ") || "",
+            firstName: uFirst,
+            lastName: uLast,
             emailAddress: user.email,
             phoneNumber: user.phone,
-            address: addressForm.address,
-            city: addressForm.city,
-            state: addressForm.state,
-            landmark: addressForm.landmark
+            address: trimmedAddress
         });
 
         setIsSavingAddress(false);
@@ -371,10 +368,7 @@ export default function Profile() {
         if (res && res.success) {
             const updated = setSessionUser({
                 ...user,
-                address: addressForm.address,
-                city: addressForm.city,
-                state: addressForm.state,
-                landmark: addressForm.landmark
+                address: trimmedAddress
             });
             setUser(updated);
             showToast(res.message || "Default delivery address saved! Will auto-apply at Checkout.");
@@ -791,14 +785,14 @@ export default function Profile() {
                                 <form onSubmit={handleSaveAddress} noValidate>
                                     <div className="form-fields-grid">
                                         <div className="form-group-box full-width">
-                                            <label className="field-label">Street Address &amp; House Number</label>
+                                            <label className="field-label">Delivery Address</label>
                                             <input
                                                 type="text"
                                                 className={`form-control-field ${errors.address ? "is-invalid" : ""}`}
-                                                placeholder="e.g. No 14 TradeFlow Avenue, Ibara Housing Estate"
+                                                placeholder="e.g. Ibara, Abeokuta, Ogun State"
                                                 value={addressForm.address}
                                                 onChange={(e) => {
-                                                    setAddressForm({ ...addressForm, address: e.target.value });
+                                                    setAddressForm({ address: e.target.value });
                                                     if (errors.address) setErrors(prev => ({ ...prev, address: "" }));
                                                 }}
                                             />
@@ -807,44 +801,6 @@ export default function Profile() {
                                                     <AlertCircle size={13} /> {errors.address}
                                                 </span>
                                             )}
-                                        </div>
-
-                                        <div className="form-group-box">
-                                            <label className="field-label">City / Town</label>
-                                            <input
-                                                type="text"
-                                                className="form-control-field"
-                                                placeholder="e.g. Abeokuta"
-                                                value={addressForm.city}
-                                                onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="form-group-box">
-                                            <label className="field-label">State</label>
-                                            <select
-                                                className="form-control-field"
-                                                value={addressForm.state}
-                                                onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
-                                            >
-                                                <option value="Ogun State">Ogun State</option>
-                                                <option value="Lagos State">Lagos State</option>
-                                                <option value="Oyo State">Oyo State</option>
-                                                <option value="Abuja (FCT)">Abuja (FCT)</option>
-                                                <option value="Rivers State">Rivers State</option>
-                                                <option value="Other States">Other States</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="form-group-box full-width">
-                                            <label className="field-label">Closest Landmark / Delivery Notes (Optional)</label>
-                                            <input
-                                                type="text"
-                                                className="form-control-field"
-                                                placeholder="e.g. Beside First Bank, Opposite Central Mosque"
-                                                value={addressForm.landmark}
-                                                onChange={(e) => setAddressForm({ ...addressForm, landmark: e.target.value })}
-                                            />
                                         </div>
                                     </div>
 
