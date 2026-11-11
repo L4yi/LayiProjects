@@ -91,7 +91,7 @@ export default function CustomerDashboard() {
                             id: catId,
                             title: catName,
                             badge: cat.status_name || (String(cat.status_id) === "2" ? "Inactive" : "Active"),
-                            image: cat.image || null,
+                            image: cat.image || cat.imageUrl || cat.category_image || cat.categoryImage || cat.image_url || null,
                             itemCount: matchCount > 0 ? `${matchCount} ${matchCount === 1 ? "Item" : "Items"}` : "0 Items"
                         };
                     }));

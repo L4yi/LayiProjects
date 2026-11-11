@@ -21,6 +21,8 @@ import CustomerDashboard from "./customer/CustomerDashboard";
 import CustomerCategories from "./customer/CustomerCategories";
 import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
 import CustomerProductDetails from "./customer/CustomerProductDetails";
+import CustomerProducts from "./customer/CustomerProducts";
+import CustomerOrders from "./customer/CustomerOrders";
 import CustomerCart from "./customer/CustomerCart";
 import CustomerCheckout from "./customer/CustomerCheckout";
 import CustomerSignIn from "./customer/CustomerSignIn";
@@ -77,6 +79,14 @@ export const router = createBrowserRouter([
       {
         path: "/customer/categories",
         element: <CustomerCategories />
+      },
+      {
+        path: "/customer/products",
+        element: <CustomerProducts />
+      },
+      {
+        path: "/customer/orders",
+        element: <CustomerOrders />
       },
       {
         path: "/customer/category/:categoryId",

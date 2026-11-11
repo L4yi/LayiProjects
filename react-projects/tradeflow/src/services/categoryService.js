@@ -126,9 +126,17 @@ export const categoryService = {
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
             const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
+            const image = (categoryData.image || categoryData.imageUrl || categoryData.categoryImage || categoryData.category_image || "").trim();
+
             formData.append("categoryName", name);
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
+            if (image) {
+                formData.append("image", image);
+                formData.append("imageUrl", image);
+                formData.append("categoryImage", image);
+                formData.append("category_image", image);
+            }
 
             const response = await api.post("admin/categories/create-category.php", formData);
             return normalizeResponse(response.data, "CATEGORY CREATED SUCCESSFULLY");
@@ -148,11 +156,18 @@ export const categoryService = {
             const name = categoryData.categoryName || categoryData.name || "";
             const desc = categoryData.description || categoryData.notes || name || "Category description";
             const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
+            const image = (categoryData.image || categoryData.imageUrl || categoryData.categoryImage || categoryData.category_image || "").trim();
 
             formData.append("categoryId", id);
             formData.append("categoryName", name);
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
+            if (image) {
+                formData.append("image", image);
+                formData.append("imageUrl", image);
+                formData.append("categoryImage", image);
+                formData.append("category_image", image);
+            }
 
             const response = await api.post("admin/categories/update-category.php", formData);
             return normalizeResponse(response.data, "CATEGORY UPDATED SUCCESSFULLY");

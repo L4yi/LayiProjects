@@ -31,13 +31,18 @@ export default function CategorySlideDrawer({
         if (initialData && Object.keys(initialData).length > 0) {
             const isEdit = Boolean(initialData.id || initialData.categoryId || initialData.categories_id);
             const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const imgVal = initialData.image || initialData.imageUrl || initialData.categoryImage || initialData.category_image || "";
             setFormData({
                 ...initialData,
-                statusId: statusId || ""
+                statusId: statusId || "",
+                image: imgVal,
+                imageUrl: imgVal
             });
         } else {
             setFormData({
-                statusId: ""
+                statusId: "",
+                image: "",
+                imageUrl: ""
             });
         }
     }, [initialData, isOpen]);
@@ -121,6 +126,37 @@ export default function CategorySlideDrawer({
                             </option>
                         ))}
                     </select>
+                </div>
+
+                {/* Category Image URL */}
+                <div className="drawer-form-group">
+                    <label className="drawer-label">Category Image URL</label>
+                    <input
+                        type="url"
+                        className="drawer-input"
+                        placeholder="e.g. https://example.com/images/category.jpg"
+                        value={formData.image || formData.imageUrl || ""}
+                        onChange={(e) => {
+                            handleChange("image", e.target.value);
+                            handleChange("imageUrl", e.target.value);
+                        }}
+                    />
+                    {Boolean(formData.image || formData.imageUrl) && (
+                        <div className="drawer-media-preview-wrap">
+                            <img
+                                src={formData.image || formData.imageUrl}
+                                alt="Category Preview"
+                                className="drawer-img-preview-box"
+                                onError={(e) => {
+                                    e.target.style.display = "none";
+                                }}
+                                onLoad={(e) => {
+                                    e.target.style.display = "block";
+                                }}
+                            />
+                            <span className="drawer-preview-text">Live Image Preview</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Description */}

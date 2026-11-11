@@ -103,6 +103,28 @@ export default function CustomerLayout() {
                             </NavLink>
 
                             <NavLink
+                                to="/customer/products"
+                                onClick={closeSidebar}
+                                className={({ isActive }) =>
+                                    `cust-nav-item ${isActive ? "active" : ""}`
+                                }
+                            >
+                                <i className="bi bi-box-seam"></i>
+                                <span>Products</span>
+                            </NavLink>
+
+                            <NavLink
+                                to="/customer/orders"
+                                onClick={closeSidebar}
+                                className={({ isActive }) =>
+                                    `cust-nav-item ${isActive ? "active" : ""}`
+                                }
+                            >
+                                <i className="bi bi-bag-check"></i>
+                                <span>Your Orders</span>
+                            </NavLink>
+
+                            <NavLink
                                 to="/customer/cart"
                                 onClick={closeSidebar}
                                 className={({ isActive }) =>
@@ -162,11 +184,6 @@ export default function CustomerLayout() {
                                 <span>My Profile</span>
                             </div>
                             <i className="bi bi-arrow-right-short" style={{ fontSize: "18px" }}></i>
-                        </Link>
-
-                        <Link to="/signin" className="admin-switch-btn mt-8" title="Switch to Admin Dashboard" onClick={closeSidebar}>
-                            <i className="bi bi-shield-lock"></i>
-                            <span>Admin Portal</span>
                         </Link>
                     </div>
                 </aside>

@@ -32,6 +32,7 @@ export default function Categories() {
                     statusId: String(cat.status_id || cat.statusId || ""),
                     status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
+                    image: cat.image || cat.imageUrl || cat.category_image || cat.categoryImage || cat.image_url || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
                     itemCount: "Catalog Item",
                     createdAt: cat.created_at,
@@ -83,6 +84,7 @@ export default function Categories() {
                     statusId: String(cat.status_id || cat.statusId || ""),
                     status: cat.status_name || (String(cat.status_id) === "2" ? "INACTIVE" : String(cat.status_id) === "3" ? "PENDING" : "ACTIVE"),
                     description: cat.description || "",
+                    image: cat.image || cat.imageUrl || cat.category_image || cat.categoryImage || cat.image_url || "",
                     icon: inferCategoryIcon(cat.categories_name || cat.categoryName),
                     itemCount: "Catalog Item",
                     createdAt: cat.created_at,
@@ -289,7 +291,11 @@ export default function Categories() {
                                         <td>
                                             <div className="category-name-cell">
                                                 <div className="category-icon-box">
-                                                    <i className={cat.icon || "bi bi-tag"}></i>
+                                                    {cat.image ? (
+                                                        <img src={cat.image} alt={cat.name} className="cat-table-thumb" onError={(e) => { e.target.style.display = "none"; }} />
+                                                    ) : (
+                                                        <i className={cat.icon || "bi bi-tag"}></i>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <span className="cat-title">{cat.name}</span>
