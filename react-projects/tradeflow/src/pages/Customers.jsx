@@ -6,15 +6,13 @@ import setupService from "../services/setupService";
 
 export default function Customers() {
     const [customersList, setCustomersList] = useState([]);
-    const [statusesList, setStatusesList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [drawerError, setDrawerError] = useState("");
     const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [drawerTitle, setDrawerTitle] = useState("Edit Customer");
-    const [statusFilter, setStatusFilter] = useState("");
+    const [drawerTitle, setDrawerTitle] = useState("Add New Customer Account");
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
@@ -41,20 +39,7 @@ export default function Customers() {
 
     useEffect(() => {
         loadCustomers();
-        // Load customer account statuses from backend setup
-        setupService.fetchAllStatus().then(res => {
-            if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getAccountStatuses(res.data));
-            }
-        });
     }, []);
-
-    const handleOpenEdit = (customer) => {
-        setSelectedCustomer({ ...customer });
-        setDrawerTitle(`Edit Customer - ${customer.name}`);
-        setDrawerError("");
-        setDrawerOpen(true);
-    };
 
     const handleOpenAdd = () => {
         setSelectedCustomer({
@@ -179,15 +164,13 @@ export default function Customers() {
     };
 
     const filteredCustomers = customersList.filter((cust) => {
-        const matchesStatus = !statusFilter || String(cust.statusId) === String(statusFilter);
         const q = searchQuery.trim().toLowerCase();
-        const matchesSearch = !q ||
+        return !q ||
             (cust.name && cust.name.toLowerCase().includes(q)) ||
             (cust.email && cust.email.toLowerCase().includes(q)) ||
             (cust.phone && cust.phone.toLowerCase().includes(q)) ||
             (cust.id && String(cust.id).toLowerCase().includes(q)) ||
             (cust.customerId && String(cust.customerId).toLowerCase().includes(q));
-        return matchesStatus && matchesSearch;
     });
 
     return (
@@ -196,7 +179,7 @@ export default function Customers() {
                 <PageHeader
                     badgeIcon="bi bi-people"
                     badgeTitle="Customers"
-                    breadcrumb="Users → View customer accounts, activity logs, and status."
+                    breadcrumb="Users → View customer accounts, contact details, and registered profiles."
                     title="All Customers"
                     countSubtitle={`${filteredCustomers.length} registered customer${filteredCustomers.length === 1 ? "" : "s"}`}
                     actions={
@@ -222,20 +205,6 @@ export default function Customers() {
                                 )}
                             </div>
 
-                            <div className="filter-select-wrap">
-                                <i className="bi bi-funnel"></i>
-                                <select
-                                    className="filter-dropdown-select"
-                                    title="Filter by Status"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                >
-                                    <option value="">All Status</option>
-                                    {statusesList.map(s => (
-                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
-                                    ))}
-                                </select>
-                            </div>
                             <button
                                 type="button"
                                 className="btn-add-entity"
@@ -248,7 +217,7 @@ export default function Customers() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner variant="table" columns={["SN", "Customer Name", "Customer ID", "Email Address", "Contact Phone", "Status", "Action"]} />
+                    <LoadingSpinner variant="table" columns={["Customer Name", "Role / Type", "Email Address", "Contact Phone", "Address", "Action"]} />
                 ) : hasNetworkError ? (
                     <div className="connection-error-box">
                         <i className="bi bi-wifi-off connection-error-icon"></i>
@@ -269,7 +238,7 @@ export default function Customers() {
                         title="Customer Accounts"
                         subtitle="Registered platform user profiles"
                         isEmpty={filteredCustomers.length === 0}
-                        emptyMessage="No customer accounts   ."
+                        emptyMessage="No customer accounts found."
                     >
                         <table className="solara-data-table">
                             <thead>
@@ -279,7 +248,6 @@ export default function Customers() {
                                     <th>Email Address <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Phone <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Address <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -307,23 +275,9 @@ export default function Customers() {
                                         <td>{cust.phone || cust.phoneNumber || "—"}</td>
                                         <td>{cust.address || "—"}</td>
                                         <td>
-                                            <span className={`status-badge-pill ${(cust.status || "ACTIVE").toLowerCase()}`}>
-                                                {cust.status || "ACTIVE"}
-                                            </span>
-                                        </td>
-                                        <td>
                                             <div className="action-btn-group">
                                                 <button
                                                     type="button"
-                                                    className="action-pill-btn"
-                                                    onClick={() => handleOpenEdit(cust)}
-                                                    title="View / Edit Customer"
-                                                >
-                                                    View / Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit"
                                                     className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleDeleteCustomer(cust)}
                                                     title="Delete Customer"

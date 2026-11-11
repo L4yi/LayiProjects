@@ -72,6 +72,7 @@ const VERIFIED_FALLBACK_PRODUCTS = [
 export default function CustomerCategoryProducts() {
     const { categoryId } = useParams();
     const [sortBy, setSortBy] = useState("popular");
+    const [searchKeyword, setSearchKeyword] = useState("");
     const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -136,18 +137,35 @@ export default function CustomerCategoryProducts() {
         image: null
     };
 
-    const filteredProducts = products.filter(
+    const cleanCategoryName = (currentCat.name || currentCat.title || "Category").trim();
+    const cleanCategoryDesc = (currentCat.description || "").trim();
+    const isDuplicateDesc = !cleanCategoryDesc || cleanCategoryDesc.toLowerCase() === cleanCategoryName.toLowerCase();
+    const displayCategoryDesc = isDuplicateDesc
+        ? `Explore verified products, official manufacturer warranties, and authentic catalog deals in ${cleanCategoryName}.`
+        : cleanCategoryDesc;
+
+    // Filter by category and search keyword
+    const categoryMatchedProducts = products.filter(
         p => String(p.categoryId) === String(currentCat.id)
     );
 
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const baseProducts = categoryMatchedProducts.length > 0 ? categoryMatchedProducts : products;
+
+    const searchedProducts = baseProducts.filter(p => {
+        if (!searchKeyword.trim()) return true;
+        const q = searchKeyword.trim().toLowerCase();
+        return (
+            (p.name || "").toLowerCase().includes(q) ||
+            (p.subtitle || "").toLowerCase().includes(q)
+        );
+    });
+
+    const displayProducts = [...searchedProducts].sort((a, b) => {
         if (sortBy === "low-high") return a.price - b.price;
         if (sortBy === "high-low") return b.price - a.price;
         if (sortBy === "rating") return b.rating - a.rating;
         return 0;
     });
-
-    const displayProducts = sortedProducts.length > 0 ? sortedProducts : products;
 
     return (
         <div className="customer-category-catalog-container">
@@ -158,16 +176,16 @@ export default function CustomerCategoryProducts() {
                     <span>/</span>
                     <Link to="/customer/categories">Categories</Link>
                     <span>/</span>
-                    <span className="current-page">{currentCat.title}</span>
+                    <span className="current-page">{cleanCategoryName}</span>
                 </div>
             </div>
 
             {/* Category Hero Banner */}
             <div className="category-hero-card">
                 <div className="hero-text-side">
-                    <span className="hero-badge-tag">{currentCat.badge}</span>
-                    <h2 className="hero-category-title">{currentCat.name}</h2>
-                    <p className="hero-category-desc">{currentCat.description}</p>
+                    <span className="hero-badge-tag">{currentCat.badge || "ACTIVE"}</span>
+                    <h2 className="hero-category-title">{cleanCategoryName}</h2>
+                    <p className="hero-category-desc">{displayCategoryDesc}</p>
                     <div className="hero-meta-stats">
                         <span className="meta-pill"><i className="bi bi-box-seam"></i> {displayProducts.length} Verified Items</span>
                         <span className="meta-pill"><i className="bi bi-truck"></i> Fast Delivery</span>
@@ -176,7 +194,7 @@ export default function CustomerCategoryProducts() {
                 </div>
                 <div className="hero-image-side">
                     {currentCat.image && (
-                        <img src={currentCat.image} alt={currentCat.name} className="hero-cat-img" />
+                        <img src={currentCat.image} alt={cleanCategoryName} className="hero-cat-img" />
                     )}
                 </div>
             </div>
@@ -198,27 +216,64 @@ export default function CustomerCategoryProducts() {
             <div className="catalog-content-section">
                 <div className="catalog-toolbar">
                     <span className="results-count-text">
-                        Showing <strong>{displayProducts.length}</strong> items in <strong>{currentCat.title}</strong>
+                        Showing <strong>{displayProducts.length}</strong> {displayProducts.length === 1 ? "item" : "items"} in <strong>{cleanCategoryName}</strong>
                     </span>
-                    <div className="sort-selector-wrap">
-                        <label htmlFor="sortSelect">Sort By:</label>
-                        <select
-                            id="sortSelect"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="catalog-sort-select"
-                        >
-                            <option value="popular">Sort: Most Popular</option>
-                            <option value="low-high">Price: Low to High</option>
-                            <option value="high-low">Price: High to Low</option>
-                            <option value="rating">Top Rated</option>
-                        </select>
+                    <div className="catalog-toolbar-actions">
+                        <div className="cat-search-input-wrap">
+                            <i className="bi bi-search cat-search-icon"></i>
+                            <input
+                                type="text"
+                                placeholder={`Search in ${cleanCategoryName}...`}
+                                value={searchKeyword}
+                                onChange={(e) => setSearchKeyword(e.target.value)}
+                                className="cat-inpage-search-input"
+                            />
+                            {searchKeyword && (
+                                <button
+                                    type="button"
+                                    className="cat-search-clear-btn"
+                                    onClick={() => setSearchKeyword("")}
+                                    title="Clear filter"
+                                >
+                                    <i className="bi bi-x-circle-fill"></i>
+                                </button>
+                            )}
+                        </div>
+                        <div className="sort-selector-wrap">
+                            <label htmlFor="sortSelect">Sort By:</label>
+                            <select
+                                id="sortSelect"
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="catalog-sort-select"
+                            >
+                                <option value="popular">Sort: Most Popular</option>
+                                <option value="low-high">Price: Low to High</option>
+                                <option value="high-low">Price: High to Low</option>
+                                <option value="rating">Top Rated</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 {isLoading ? (
                     <div className="mt-16">
                         <PageSkeleton variant="product-grid" />
+                    </div>
+                ) : displayProducts.length === 0 ? (
+                    <div className="empty-catalog-state p-24 text-center bg-white rounded-12 mt-16 border border-slate-200">
+                        <i className="bi bi-search text-slate-400 text-3xl mb-3 block"></i>
+                        <h4 className="text-base font-semibold text-slate-700 mb-1">No products found</h4>
+                        <p className="text-sm text-slate-500 mb-4">
+                            No products in {cleanCategoryName} match "{searchKeyword}".
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-action-primary px-4 py-2 text-sm"
+                            onClick={() => setSearchKeyword("")}
+                        >
+                            Reset Search Filter
+                        </button>
                     </div>
                 ) : (
                     <div className="customer-products-grid mt-16">

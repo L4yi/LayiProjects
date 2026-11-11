@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 
 export default function CustomerProducts() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortBy, setSortBy] = useState("featured");
+
+    // Sync search query whenever URL search params change
+    useEffect(() => {
+        const urlSearch = searchParams.get("search");
+        if (urlSearch !== null) {
+            setSearchQuery(urlSearch);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const loadCatalog = async () => {
@@ -90,6 +99,7 @@ export default function CustomerProducts() {
         setSearchQuery("");
         setSelectedCategory("all");
         setSortBy("featured");
+        setSearchParams({});
     };
 
     return (

@@ -156,9 +156,9 @@ export const customerService = {
 
     // Updates an existing customer's contact and account details in the database
     async updateCustomer({ customerId, titleId, firstName, lastName, emailAddress, phoneNumber, address, roleId, statusId }) {
-        titleId = titleId || setupService.getTitleId("Mr");
-        roleId = roleId || setupService.getRoleId("Customer");
-        statusId = statusId || setupService.getStatusId("Active");
+        titleId = (titleId && String(titleId) !== "0" && String(titleId).trim() !== "") ? String(titleId) : "1";
+        roleId = (roleId && Number(roleId) >= 1 && Number(roleId) <= 17) ? String(roleId) : "1";
+        statusId = (statusId && String(statusId) !== "0" && String(statusId).trim() !== "") ? String(statusId) : "1";
         try {
             const formData = new FormData();
             formData.append("customerId", customerId);
@@ -175,7 +175,8 @@ export const customerService = {
             const resData = response.data;
             return {
                 success: resData?.success === true,
-                message: resData?.message || (resData?.success ? "CUSTOMER UPDATED SUCCESSFULLY" : "Failed to update customer.")
+                message: resData?.message || (resData?.success ? "CUSTOMER UPDATED SUCCESSFULLY" : "Failed to update customer."),
+                data: resData?.data
             };
         } catch (error) {
             return {
@@ -550,25 +551,31 @@ export const customerService = {
     },
 
     // Dedicated customer profile update endpoint (customer/customer/update-customer.php with reliable fallback)
-    async customerUpdateProfile({ customerId, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
-        let validCustomerId = (customerId || "").trim();
+    async customerUpdateProfile({ customerId, currentEmail, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
+        let validCustomerId = (customerId || "").toString().trim();
 
         // If customerId is missing from session, look it up by email
-        if (!validCustomerId && emailAddress) {
+        const lookupEmail = currentEmail || emailAddress;
+        if (!validCustomerId && lookupEmail) {
             try {
-                const searchRes = await this.searchCustomer(emailAddress);
-                if (searchRes.success && searchRes.data.length > 0) {
-                    validCustomerId = searchRes.data[0].customerId;
+                const searchRes = await this.searchCustomer(lookupEmail);
+                if (searchRes.success && Array.isArray(searchRes.data) && searchRes.data.length > 0) {
+                    const matched = searchRes.data.find(c =>
+                        (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()
+                    ) || searchRes.data[0];
+                    validCustomerId = matched.customerId || matched.id || "";
+                    if (!roleId && matched.roleId) roleId = matched.roleId;
                 }
             } catch (e) {
                 console.warn("Could not lookup customerId by email:", e);
             }
         }
 
-        // Ensure titleId is valid in title_tab (Mr = 1)
-        const validTitleId = (titleId && String(titleId) !== "0") ? String(titleId) : "1";
-        const validRoleId = String(roleId || "19");
-        const validStatusId = String(statusId || "1");
+        // Ensure titleId is valid in title_tab (default to 1 = Mr)
+        const validTitleId = (titleId && String(titleId) !== "0" && String(titleId).trim() !== "") ? String(titleId) : "1";
+        // Ensure roleId is a valid role between 1 and 17 from role_tab (staff/customer role = 1)
+        const validRoleId = (roleId && Number(roleId) >= 1 && Number(roleId) <= 17) ? String(roleId) : "1";
+        const validStatusId = (statusId && String(statusId) !== "0" && String(statusId).trim() !== "") ? String(statusId) : "1";
 
         const formData = new FormData();
         formData.append("customerId", validCustomerId);
@@ -600,7 +607,7 @@ export const customerService = {
             console.warn("customer/customer/update-customer.php request failed:", err);
         }
 
-        // 2. Seamlessly fall back to admin/customer/update-customer.php (which updates customer_tab with role 19 without failing role_tab check)
+        // 2. Seamlessly fall back to admin/customer/update-customer.php
         return await this.updateCustomer({
             customerId: validCustomerId,
             titleId: validTitleId,

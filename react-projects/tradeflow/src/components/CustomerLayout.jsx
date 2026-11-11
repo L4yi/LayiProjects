@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavLink, Link, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
 import { getCartCount } from "../utils/cart";
 
 export default function CustomerLayout() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const [headerSearch, setHeaderSearch] = useState("");
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
@@ -42,6 +44,16 @@ export default function CustomerLayout() {
     }, []);
 
     const closeSidebar = () => setIsSidebarOpen(false);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const q = headerSearch.trim();
+        if (q) {
+            navigate(`/customer/products?search=${encodeURIComponent(q)}`);
+        } else {
+            navigate("/customer/products");
+        }
+    };
 
     return (
         <section className="customer-portal-section">
@@ -250,14 +262,18 @@ export default function CustomerLayout() {
 
                         <div className="header-right-tools" ref={profileRef}>
                             {/* Search bar */}
-                            <div className="header-search cust-search-bar">
+                            <form className="header-search cust-search-bar" onSubmit={handleSearchSubmit}>
                                 <input
                                     type="text"
                                     className="search-input"
                                     placeholder="Search products, brands and categories..."
+                                    value={headerSearch}
+                                    onChange={(e) => setHeaderSearch(e.target.value)}
                                 />
-                                <i className="bi bi-search search-icon"></i>
-                            </div>
+                                <button type="submit" className="search-submit-btn" title="Search catalog">
+                                    <i className="bi bi-search search-icon"></i>
+                                </button>
+                            </form>
 
                             {/* Cart Icon */}
                             <Link to="/customer/cart" className="customer-cart-btn" title="View Cart">

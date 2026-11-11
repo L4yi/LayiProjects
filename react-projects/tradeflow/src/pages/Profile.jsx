@@ -135,6 +135,60 @@ export default function Profile() {
         window.addEventListener("tradeflow_cards_update", handleCardsUpdate);
         window.addEventListener("tradeflow_payment_preference_update", handlePaymentPrefUpdate);
 
+        // Fetch live customer record from backend on mount
+        const fetchLiveCustomerData = async () => {
+            const currentUser = getSessionUser();
+            const cid = currentUser?.customerId || currentUser?.id;
+            const cEmail = currentUser?.email;
+            if (!cid && !cEmail) return;
+
+            let liveData = null;
+            if (cid) {
+                const res = await customerService.fetchCustomerById(cid);
+                if (res.success && res.data) liveData = res.data;
+            }
+            if (!liveData && cEmail) {
+                const res = await customerService.searchCustomer(cEmail);
+                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+                    liveData = res.data.find(c =>
+                        (c.emailAddress || c.email || "").toLowerCase() === cEmail.toLowerCase().trim()
+                    ) || res.data[0];
+                }
+            }
+
+            if (liveData) {
+                const fullName = liveData.name || `${liveData.firstName || ""} ${liveData.lastName || ""}`.trim() || currentUser.name;
+                const updated = setSessionUser({
+                    ...currentUser,
+                    customerId: liveData.customerId || liveData.id || cid,
+                    id: liveData.customerId || liveData.id || cid,
+                    name: fullName,
+                    firstName: liveData.firstName || currentUser.firstName,
+                    lastName: liveData.lastName || currentUser.lastName,
+                    email: liveData.emailAddress || liveData.email || currentUser.email,
+                    phone: liveData.phoneNumber || liveData.phone || currentUser.phone,
+                    address: liveData.address || currentUser.address,
+                    titleId: liveData.titleId || "1",
+                    roleId: (liveData.roleId && Number(liveData.roleId) <= 17) ? liveData.roleId : "1",
+                    statusId: liveData.statusId || "1"
+                });
+                setUser(updated);
+                setPersonalForm({
+                    name: updated.name || "",
+                    email: updated.email || "",
+                    phone: updated.phone || ""
+                });
+                if (updated.address) {
+                    setAddressForm(prev => ({
+                        ...prev,
+                        address: updated.address
+                    }));
+                }
+            }
+        };
+
+        fetchLiveCustomerData();
+
         return () => {
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
             window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
@@ -235,9 +289,10 @@ export default function Profile() {
 
         const res = await customerService.customerUpdateProfile({
             customerId: user.customerId || user.id,
-            titleId: user.titleId,
-            roleId: user.roleId,
-            statusId: user.statusId,
+            currentEmail: user.email,
+            titleId: user.titleId || "1",
+            roleId: user.roleId || "1",
+            statusId: user.statusId || "1",
             firstName,
             lastName,
             emailAddress: personalForm.email,
@@ -253,7 +308,10 @@ export default function Profile() {
         if (res && res.success) {
             const updated = setSessionUser({
                 ...user,
+                customerId: res.data?.customerId || user.customerId || user.id,
                 name: personalForm.name,
+                firstName,
+                lastName,
                 email: personalForm.email,
                 phone: personalForm.phone
             });
@@ -278,9 +336,10 @@ export default function Profile() {
         const nameParts = (user.name || "").trim().split(" ");
         const res = await customerService.customerUpdateProfile({
             customerId: user.customerId || user.id,
-            titleId: user.titleId,
-            roleId: user.roleId,
-            statusId: user.statusId,
+            currentEmail: user.email,
+            titleId: user.titleId || "1",
+            roleId: user.roleId || "1",
+            statusId: user.statusId || "1",
             firstName: nameParts[0] || "",
             lastName: nameParts.slice(1).join(" ") || "",
             emailAddress: user.email,
