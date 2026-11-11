@@ -192,6 +192,9 @@ export default function Profile() {
             const lastName = nameParts.slice(1).join(" ") || "";
             await customerService.customerUpdateProfile({
                 customerId: user.customerId || user.id,
+                titleId: user.titleId,
+                roleId: user.roleId,
+                statusId: user.statusId,
                 firstName,
                 lastName,
                 emailAddress: personalForm.email,
@@ -227,6 +230,9 @@ export default function Profile() {
             const nameParts = (user.name || "").trim().split(" ");
             await customerService.customerUpdateProfile({
                 customerId: user.customerId || user.id,
+                titleId: user.titleId,
+                roleId: user.roleId,
+                statusId: user.statusId,
                 firstName: nameParts[0] || "",
                 lastName: nameParts.slice(1).join(" ") || "",
                 emailAddress: user.email,

@@ -549,33 +549,44 @@ export const customerService = {
         }
     },
 
-    // Dedicated customer profile update endpoint (customer/profile/update-profile.php)
-    async customerUpdateProfile({ customerId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark }) {
+    // Dedicated customer profile update endpoint (customer/customer/update-customer.php)
+    async customerUpdateProfile({ customerId, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
+        titleId = titleId || setupService.getTitleId("Mr") || "1";
+        roleId = roleId || setupService.getRoleId("Customer") || "19";
+        statusId = statusId || setupService.getStatusId("Active") || "1";
+
         try {
             const formData = new FormData();
             formData.append("customerId", customerId || "");
+            formData.append("titleId", titleId);
             formData.append("firstName", (firstName || "").trim());
             formData.append("lastName", (lastName || "").trim());
             formData.append("emailAddress", (emailAddress || "").trim());
             formData.append("phoneNumber", (phoneNumber || "").trim());
             formData.append("address", (address || "").trim());
+            formData.append("roleId", roleId);
+            formData.append("statusId", statusId);
+
             if (city) formData.append("city", city.trim());
             if (state) formData.append("state", state.trim());
             if (landmark) formData.append("landmark", landmark.trim());
 
             let response;
             try {
-                response = await api.post("customer/profile/update-profile.php", formData);
+                response = await api.post("customer/customer/update-customer.php", formData);
             } catch (err) {
                 if (err.response?.status === 404) {
                     // Fall back to admin update customer
                     return await this.updateCustomer({
                         customerId,
+                        titleId,
                         firstName,
                         lastName,
                         emailAddress,
                         phoneNumber,
-                        address
+                        address,
+                        roleId,
+                        statusId
                     });
                 }
                 throw err;
@@ -584,7 +595,8 @@ export const customerService = {
             const resData = response.data;
             return {
                 success: resData?.success === true,
-                message: resData?.message || (resData?.success ? "PROFILE UPDATED SUCCESSFULLY" : "Failed to update profile.")
+                message: resData?.message || (resData?.success ? "CUSTOMER UPDATED SUCCESSFULLY" : "Failed to update profile."),
+                data: resData?.data || null
             };
         } catch (error) {
             return {
