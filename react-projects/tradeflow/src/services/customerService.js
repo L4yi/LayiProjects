@@ -159,12 +159,25 @@ export const customerService = {
         titleId = (titleId && String(titleId) !== "0" && String(titleId).trim() !== "") ? String(titleId) : "1";
         roleId = (roleId && Number(roleId) >= 1 && Number(roleId) <= 17) ? String(roleId) : "1";
         statusId = (statusId && String(statusId) !== "0" && String(statusId).trim() !== "") ? String(statusId) : "1";
+
+        const cleanFirst = (firstName || "").trim() || "Customer";
+        let cleanLast = (lastName || "").trim();
+        if (!cleanLast) {
+            // Guard against backend 'LAST NAME IS REQUIRED' error
+            const parts = cleanFirst.split(/\s+/);
+            if (parts.length > 1) {
+                cleanLast = parts.slice(1).join(" ");
+            } else {
+                cleanLast = "Customer";
+            }
+        }
+
         try {
             const formData = new FormData();
             formData.append("customerId", customerId);
             formData.append("titleId", titleId);
-            formData.append("firstName", (firstName || "").trim());
-            formData.append("lastName", (lastName || "").trim());
+            formData.append("firstName", cleanFirst);
+            formData.append("lastName", cleanLast);
             formData.append("emailAddress", (emailAddress || "").trim());
             formData.append("phoneNumber", (phoneNumber || "").trim());
             formData.append("address", (address || "").trim());

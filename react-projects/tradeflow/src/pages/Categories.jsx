@@ -8,7 +8,6 @@ import setupService from "../services/setupService";
 export default function Categories() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [categoriesList, setCategoriesList] = useState([]);
-    const [statusesList, setStatusesList] = useState(() => setupService.getCategoryStatuses(setupService.getCachedStatuses()));
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -16,7 +15,6 @@ export default function Categories() {
     const [drawerTitle, setDrawerTitle] = useState("Edit Category");
     const [drawerError, setDrawerError] = useState("");
     const [isSaving, setIsSaving] = useState(false);
-    const [statusFilter, setStatusFilter] = useState("");
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
@@ -67,12 +65,6 @@ export default function Categories() {
 
     useEffect(() => {
         loadCategories();
-        // Load category taxonomy statuses from backend setup
-        setupService.fetchAllStatus().then(res => {
-            if (res.success && Array.isArray(res.data)) {
-                setStatusesList(setupService.getCategoryStatuses(res.data));
-            }
-        });
     }, []);
 
     const handleSearchChange = (val) => {
@@ -176,13 +168,10 @@ export default function Categories() {
     };
 
     const displayCats = categoriesList.filter((c) => {
-        // Compare c.statusId with statusFilter
-        const matchesStatus = !statusFilter || String(c.statusId) === String(statusFilter);
-        const matchesSearch = !searchQuery ||
+        return !searchQuery ||
             c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (c.code && c.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesStatus && matchesSearch;
     });
 
     return (
@@ -217,21 +206,6 @@ export default function Categories() {
                                 )}
                             </div>
 
-                            <div className="filter-select-wrap">
-                                <i className="bi bi-funnel"></i>
-                                <select
-                                    className="filter-dropdown-select"
-                                    title="Filter by Status"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                >
-                                    <option value="">All Status</option>
-                                    {statusesList.map(s => (
-                                        <option key={s.status_id} value={s.status_id}>{s.status_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             <button
                                 type="button"
                                 className="btn-add-entity"
@@ -244,7 +218,7 @@ export default function Categories() {
                 />
 
                 {isLoading ? (
-                    <LoadingSpinner variant="table" columns={["SN", "Category Name", "Code", "Description", "Scope / Models", "Status", "Action"]} />
+                    <LoadingSpinner variant="table" columns={["SN", "Category Name", "Code", "Description", "Action"]} />
                 ) : hasNetworkError ? (
                     <div className="connection-error-box">
                         <i className="bi bi-wifi-off connection-error-icon"></i>
@@ -275,7 +249,6 @@ export default function Categories() {
                                     <th>SN <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Name <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>ID <span className="sort-icon">&uarr;&darr;</span></th>
-                                    <th>Status <span className="sort-icon">&uarr;&darr;</span></th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -284,7 +257,12 @@ export default function Categories() {
                                     <tr key={cat.id || idx}>
                                         <td className="col-sn">{idx + 1}</td>
                                         <td>
-                                            <div className="category-name-cell">
+                                            <div
+                                                className="category-name-cell"
+                                                onClick={() => handleOpenEdit(cat)}
+                                                style={{ cursor: "pointer" }}
+                                                title="Click to view/edit category"
+                                            >
                                                 <div className="category-icon-box">
                                                     {cat.image ? (
                                                         <img src={cat.image} alt={cat.name} className="cat-table-thumb" onError={(e) => { e.target.style.display = "none"; }} />
@@ -304,28 +282,7 @@ export default function Categories() {
                                         </td>
                                         <td className="col-cat-id">{cat.code}</td>
                                         <td>
-                                            <span className={`status-badge-pill ${(cat.status || "active").toLowerCase()}`}>
-                                                {cat.status}
-                                            </span>
-                                        </td>
-                                        <td>
                                             <div className="action-btn-group">
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit"
-                                                    onClick={() => handleOpenEdit(cat)}
-                                                    title="Edit Category"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="action-pill-btn"
-                                                    onClick={() => handleOpenEdit(cat)}
-                                                    title="View Category"
-                                                >
-                                                    View
-                                                </button>
                                                 <button
                                                     type="button"
                                                     className="btn-edit btn-table-action-delete"

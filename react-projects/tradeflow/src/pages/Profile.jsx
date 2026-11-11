@@ -52,9 +52,14 @@ export default function Profile() {
     const [savedNotice, setSavedNotice] = useState("");
     const [errors, setErrors] = useState({});
 
+    const initialFirst = user.firstName || (user.name ? user.name.split(" ")[0] : "");
+    const initialLast = user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "");
+
     // Personal details state
     const [personalForm, setPersonalForm] = useState({
-        name: user.name || "",
+        firstName: initialFirst,
+        lastName: initialLast,
+        name: user.name || `${initialFirst} ${initialLast}`.trim(),
         email: user.email || "",
         phone: user.phone || ""
     });
@@ -103,8 +108,12 @@ export default function Profile() {
         const handleSessionUpdate = () => {
             const u = getSessionUser();
             setUser(u);
+            const uFirst = u.firstName || (u.name ? u.name.split(" ")[0] : "");
+            const uLast = u.lastName || (u.name ? u.name.split(" ").slice(1).join(" ") : "");
             setPersonalForm({
-                name: u.name || "",
+                firstName: uFirst,
+                lastName: uLast,
+                name: u.name || `${uFirst} ${uLast}`.trim(),
                 email: u.email || "",
                 phone: u.phone || ""
             });
@@ -173,8 +182,12 @@ export default function Profile() {
                     statusId: liveData.statusId || "1"
                 });
                 setUser(updated);
+                const uFirst = updated.firstName || (updated.name ? updated.name.split(" ")[0] : "");
+                const uLast = updated.lastName || (updated.name ? updated.name.split(" ").slice(1).join(" ") : "");
                 setPersonalForm({
-                    name: updated.name || "",
+                    firstName: uFirst,
+                    lastName: uLast,
+                    name: updated.name || `${uFirst} ${uLast}`.trim(),
                     email: updated.email || "",
                     phone: updated.phone || ""
                 });
@@ -266,14 +279,19 @@ export default function Profile() {
     const handleSavePersonal = async (e) => {
         e.preventDefault();
         const newErrors = {};
-        if (!personalForm.name.trim()) newErrors.name = "Full name is required.";
-        const trimmedEmail = personalForm.email.trim();
+        const trimmedFirst = (personalForm.firstName || "").trim();
+        const trimmedLast = (personalForm.lastName || "").trim();
+
+        if (!trimmedFirst) newErrors.firstName = "First name is required.";
+        if (!trimmedLast) newErrors.lastName = "Last name is required.";
+
+        const trimmedEmail = (personalForm.email || "").trim();
         if (!trimmedEmail) {
             newErrors.email = "Email address is required.";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
             newErrors.email = "Please enter a valid email address.";
         }
-        if (!personalForm.phone.trim()) newErrors.phone = "Phone number is required.";
+        if (!(personalForm.phone || "").trim()) newErrors.phone = "Phone number is required.";
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -283,9 +301,7 @@ export default function Profile() {
         setErrors({});
         setIsSavingPersonal(true);
 
-        const nameParts = personalForm.name.trim().split(" ");
-        const firstName = nameParts[0] || personalForm.name;
-        const lastName = nameParts.slice(1).join(" ") || "";
+        const fullName = `${trimmedFirst} ${trimmedLast}`.trim();
 
         const res = await customerService.customerUpdateProfile({
             customerId: user.customerId || user.id,
@@ -293,10 +309,10 @@ export default function Profile() {
             titleId: user.titleId || "1",
             roleId: user.roleId || "1",
             statusId: user.statusId || "1",
-            firstName,
-            lastName,
-            emailAddress: personalForm.email,
-            phoneNumber: personalForm.phone,
+            firstName: trimmedFirst,
+            lastName: trimmedLast,
+            emailAddress: trimmedEmail,
+            phoneNumber: (personalForm.phone || "").trim(),
             address: addressForm.address,
             city: addressForm.city,
             state: addressForm.state,
@@ -309,10 +325,10 @@ export default function Profile() {
             const updated = setSessionUser({
                 ...user,
                 customerId: res.data?.customerId || user.customerId || user.id,
-                name: personalForm.name,
-                firstName,
-                lastName,
-                email: personalForm.email,
+                name: fullName,
+                firstName: trimmedFirst,
+                lastName: trimmedLast,
+                email: trimmedEmail,
                 phone: personalForm.phone
             });
             setUser(updated);
@@ -666,26 +682,45 @@ export default function Profile() {
                             <div className="profile-tab-pane-content">
                                 <div className="pane-intro-row">
                                     <h3 className="form-box-title">Personal &amp; Contact Details</h3>
-                                    <p className="form-box-sub">Update your full name, email address, and mobile phone number.</p>
+                                    <p className="form-box-sub">Update your first name, last name, email address, and mobile phone number.</p>
                                 </div>
 
                                 <form onSubmit={handleSavePersonal} noValidate>
                                     <div className="form-fields-grid">
                                         <div className="form-group-box">
-                                            <label className="field-label">Full Name</label>
+                                            <label className="field-label">First Name</label>
                                             <input
                                                 type="text"
-                                                className={`form-control-field ${errors.name ? "is-invalid" : ""}`}
-                                                placeholder="e.g. Quadri Lasis"
-                                                value={personalForm.name}
+                                                className={`form-control-field ${errors.firstName ? "is-invalid" : ""}`}
+                                                placeholder="e.g. Alexander"
+                                                value={personalForm.firstName || ""}
                                                 onChange={(e) => {
-                                                    setPersonalForm({ ...personalForm, name: e.target.value });
-                                                    if (errors.name) setErrors(prev => ({ ...prev, name: "" }));
+                                                    setPersonalForm({ ...personalForm, firstName: e.target.value });
+                                                    if (errors.firstName) setErrors(prev => ({ ...prev, firstName: "" }));
                                                 }}
                                             />
-                                            {errors.name && (
+                                            {errors.firstName && (
                                                 <span className="inline-error">
-                                                    <AlertCircle size={13} /> {errors.name}
+                                                    <AlertCircle size={13} /> {errors.firstName}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="form-group-box">
+                                            <label className="field-label">Last Name</label>
+                                            <input
+                                                type="text"
+                                                className={`form-control-field ${errors.lastName ? "is-invalid" : ""}`}
+                                                placeholder="e.g. Wright"
+                                                value={personalForm.lastName || ""}
+                                                onChange={(e) => {
+                                                    setPersonalForm({ ...personalForm, lastName: e.target.value });
+                                                    if (errors.lastName) setErrors(prev => ({ ...prev, lastName: "" }));
+                                                }}
+                                            />
+                                            {errors.lastName && (
+                                                <span className="inline-error">
+                                                    <AlertCircle size={13} /> {errors.lastName}
                                                 </span>
                                             )}
                                         </div>
@@ -696,7 +731,7 @@ export default function Profile() {
                                                 type="email"
                                                 className={`form-control-field ${errors.email ? "is-invalid" : ""}`}
                                                 placeholder="e.g. customer@example.com"
-                                                value={personalForm.email}
+                                                value={personalForm.email || ""}
                                                 onChange={(e) => {
                                                     setPersonalForm({ ...personalForm, email: e.target.value });
                                                     if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
@@ -709,13 +744,13 @@ export default function Profile() {
                                             )}
                                         </div>
 
-                                        <div className="form-group-box full-width">
+                                        <div className="form-group-box">
                                             <label className="field-label">Phone Number</label>
                                             <input
                                                 type="tel"
                                                 className={`form-control-field ${errors.phone ? "is-invalid" : ""}`}
                                                 placeholder="e.g. 08108725967"
-                                                value={personalForm.phone}
+                                                value={personalForm.phone || ""}
                                                 onChange={(e) => {
                                                     setPersonalForm({ ...personalForm, phone: e.target.value });
                                                     if (errors.phone) setErrors(prev => ({ ...prev, phone: "" }));
