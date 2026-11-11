@@ -16,10 +16,19 @@ import {
     AlertCircle,
     Home,
     LogOut,
-    Sparkles
+    ShoppingBag,
+    ShoppingCart,
+    Package,
+    Heart,
+    Trash2,
+    FileText,
+    ChevronRight
 } from "lucide-react";
 import { getSessionUser, setSessionUser } from "../utils/session";
+import { getCartCount, addToCart } from "../utils/cart";
+import { getWishlistItems, removeFromWishlist } from "../utils/wishlist";
 import customerService from "../services/customerService";
+import orderService from "../services/orderService";
 
 export default function Profile() {
     const [user, setUser] = useState(getSessionUser());
@@ -54,6 +63,11 @@ export default function Profile() {
     const [securityError, setSecurityError] = useState("");
     const [isSavingSecurity, setIsSavingSecurity] = useState(false);
 
+    // Dynamic modules data
+    const [orders, setOrders] = useState([]);
+    const [wishlistItems, setWishlistItems] = useState(getWishlistItems());
+    const [cartCount, setCartCount] = useState(getCartCount());
+
     useEffect(() => {
         const handleSessionUpdate = () => {
             const u = getSessionUser();
@@ -67,9 +81,84 @@ export default function Profile() {
                 setAddressForm(prev => ({ ...prev, address: u.address }));
             }
         };
+
+        const handleWishlistUpdate = () => {
+            setWishlistItems(getWishlistItems());
+        };
+
+        const handleCartUpdate = () => {
+            setCartCount(getCartCount());
+        };
+
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
-        return () => window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+        window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+        window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+
+        return () => {
+            window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+            window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+            window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+        };
     }, []);
+
+    // Load recent orders
+    useEffect(() => {
+        const loadOrders = async () => {
+            try {
+                let localOrders = [];
+                try {
+                    localOrders = JSON.parse(localStorage.getItem("tradeflow_orders") || "[]");
+                } catch (e) {
+                    console.warn("Could not read local tradeflow_orders:", e);
+                }
+
+                const res = await orderService.fetchAllOrders();
+                let backendOrders = [];
+                if (res.success && Array.isArray(res.data)) {
+                    const currentId = String(user?.customerId || user?.id || "");
+                    const currentEmail = (user?.email || "").toLowerCase().trim();
+                    const currentName = (user?.name || "").toLowerCase().trim();
+
+                    backendOrders = res.data
+                        .filter(o => {
+                            if (!currentId && !currentEmail) return true;
+                            const matchId = currentId && String(o.customerId) === currentId;
+                            const matchEmail = currentEmail && (o.email || "").toLowerCase().trim() === currentEmail;
+                            const matchName = currentName && (o.customerName || "").toLowerCase().trim() === currentName;
+                            return matchId || matchEmail || matchName;
+                        })
+                        .map(o => ({
+                            orderId: o.code || o.orderId || `TF-ORD-${o.id}`,
+                            date: o.createdAt || "Recent",
+                            status: o.status || "Processing",
+                            totalAmount: Number(o.price || o.amount || 0),
+                            itemCount: 1,
+                            items: [
+                                {
+                                    name: o.productName || "Product",
+                                    price: Number(o.price || o.amount || 0),
+                                    quantity: 1,
+                                    image: ""
+                                }
+                            ]
+                        }));
+                }
+
+                // Merge unique orders by orderId
+                const all = [...localOrders];
+                backendOrders.forEach(bo => {
+                    if (!all.some(lo => lo.orderId === bo.orderId)) {
+                        all.push(bo);
+                    }
+                });
+                setOrders(all);
+            } catch (err) {
+                console.error("Failed to load orders in profile:", err);
+            }
+        };
+
+        loadOrders();
+    }, [user]);
 
     const showToast = (msg) => {
         setSavedNotice(msg);
@@ -96,18 +185,21 @@ export default function Profile() {
 
         setErrors({});
 
-        // Update backend if customerId is present
-        if (user.customerId) {
+        // Update backend
+        if (user.customerId || user.id) {
             const nameParts = personalForm.name.trim().split(" ");
             const firstName = nameParts[0] || personalForm.name;
             const lastName = nameParts.slice(1).join(" ") || "";
-            await customerService.updateCustomer({
-                customerId: user.customerId,
+            await customerService.customerUpdateProfile({
+                customerId: user.customerId || user.id,
                 firstName,
                 lastName,
                 emailAddress: personalForm.email,
                 phoneNumber: personalForm.phone,
-                address: addressForm.address
+                address: addressForm.address,
+                city: addressForm.city,
+                state: addressForm.state,
+                landmark: addressForm.landmark
             }).catch(() => null);
         }
 
@@ -131,15 +223,18 @@ export default function Profile() {
 
         setErrors({});
 
-        if (user.customerId) {
+        if (user.customerId || user.id) {
             const nameParts = (user.name || "").trim().split(" ");
-            await customerService.updateCustomer({
-                customerId: user.customerId,
+            await customerService.customerUpdateProfile({
+                customerId: user.customerId || user.id,
                 firstName: nameParts[0] || "",
                 lastName: nameParts.slice(1).join(" ") || "",
                 emailAddress: user.email,
                 phoneNumber: user.phone,
-                address: addressForm.address
+                address: addressForm.address,
+                city: addressForm.city,
+                state: addressForm.state,
+                landmark: addressForm.landmark
             }).catch(() => null);
         }
 
@@ -155,7 +250,7 @@ export default function Profile() {
     };
 
     // Save Password Update
-    const handleSavePassword = (e) => {
+    const handleSavePassword = async (e) => {
         e.preventDefault();
         setSecurityError("");
 
@@ -177,15 +272,27 @@ export default function Profile() {
         }
 
         setIsSavingSecurity(true);
-        setTimeout(() => {
-            setIsSavingSecurity(false);
-            setSecurityForm({
-                currentPassword: "",
-                newPassword: "",
-                confirmPassword: ""
+        try {
+            const res = await customerService.customerChangePassword({
+                customerId: user.customerId || user.id,
+                currentPassword: securityForm.currentPassword,
+                newPassword: securityForm.newPassword
             });
-            showToast("Password updated securely! Next sign-in will require your new password.");
-        }, 600);
+            setIsSavingSecurity(false);
+            if (res.success) {
+                setSecurityForm({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                });
+                showToast(res.message || "Password updated securely! Next sign-in will require your new password.");
+            } else {
+                setSecurityError(res.message || "Failed to update password.");
+            }
+        } catch (err) {
+            setIsSavingSecurity(false);
+            setSecurityError(err.message || "Failed to update password.");
+        }
     };
 
     const isCustomerPortal = user.role === "Customer" || window.location.pathname.startsWith("/customer");
@@ -272,6 +379,41 @@ export default function Profile() {
                             </div>
                         </div>
 
+                        {/* Quick Navigation to Customer Modules */}
+                        {isCustomerPortal && (
+                            <div className="profile-quick-nav-group">
+                                <span className="profile-quick-nav-title">STOREFRONT SHORTCUTS</span>
+                                
+                                <Link to="/customer/orders" className="btn-profile-quick-link">
+                                    <div className="btn-quick-link-left">
+                                        <ShoppingBag size={16} />
+                                        <span>Your Orders</span>
+                                    </div>
+                                    {orders.length > 0 && (
+                                        <span className="profile-quick-badge">{orders.length}</span>
+                                    )}
+                                </Link>
+
+                                <Link to="/customer/cart" className="btn-profile-quick-link">
+                                    <div className="btn-quick-link-left">
+                                        <ShoppingCart size={16} />
+                                        <span>Shopping Cart</span>
+                                    </div>
+                                    {cartCount > 0 && (
+                                        <span className="profile-quick-badge">{cartCount}</span>
+                                    )}
+                                </Link>
+
+                                <Link to="/customer/products" className="btn-profile-quick-link">
+                                    <div className="btn-quick-link-left">
+                                        <Package size={16} />
+                                        <span>Browse Products</span>
+                                    </div>
+                                    <ChevronRight size={14} className="text-muted" />
+                                </Link>
+                            </div>
+                        )}
+
                         {/* Action Buttons */}
                         <div className="profile-card-action-links">
                             <Link to={dashboardLink} className="btn-profile-dash-link">
@@ -316,6 +458,28 @@ export default function Profile() {
                                 <Lock size={16} />
                                 <span>Password &amp; Security</span>
                             </button>
+
+                            {isCustomerPortal && (
+                                <button
+                                    type="button"
+                                    className={`profile-tab-pill-btn ${activeTab === "orders" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("orders")}
+                                >
+                                    <ShoppingBag size={16} />
+                                    <span>Recent Orders ({orders.length})</span>
+                                </button>
+                            )}
+
+                            {isCustomerPortal && (
+                                <button
+                                    type="button"
+                                    className={`profile-tab-pill-btn ${activeTab === "wishlist" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("wishlist")}
+                                >
+                                    <Heart size={16} />
+                                    <span>Saved Wishlist ({wishlistItems.length})</span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Tab 1: Personal Info Form */}
@@ -569,6 +733,144 @@ export default function Profile() {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        )}
+
+                        {/* Tab 4: Recent Orders */}
+                        {isCustomerPortal && activeTab === "orders" && (
+                            <div className="profile-tab-pane-content">
+                                <div className="pane-intro-row-flex">
+                                    <div>
+                                        <h3 className="form-box-title">Recent Order History</h3>
+                                        <p className="form-box-sub">Track and monitor your verified purchases and receipts.</p>
+                                    </div>
+                                    <Link to="/customer/orders" className="btn-view-all-orders-link">
+                                        <span>View Full Orders Hub</span>
+                                        <ChevronRight size={14} />
+                                    </Link>
+                                </div>
+
+                                {orders.length === 0 ? (
+                                    <div className="profile-tab-empty-state">
+                                        <div className="empty-icon-circle">
+                                            <ShoppingBag size={32} />
+                                        </div>
+                                        <h4>No Orders Placed Yet</h4>
+                                        <p>When you place orders, they will appear here with live tracking and receipts.</p>
+                                        <Link to="/customer/products" className="btn-tab-cta">
+                                            Start Shopping
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="profile-recent-orders-list">
+                                        {orders.slice(0, 4).map((ord, idx) => (
+                                            <div key={idx} className="profile-mini-order-card">
+                                                <div className="profile-mini-order-header">
+                                                    <div className="mini-ord-left">
+                                                        <span className="mini-ord-code">{ord.orderId}</span>
+                                                        <span className="mini-ord-date">{ord.date}</span>
+                                                    </div>
+                                                    <span className={`status-pill ${String(ord.status).toLowerCase().includes("deliver") ? "status-success" : "status-processing"}`}>
+                                                        {ord.status || "Processing"}
+                                                    </span>
+                                                </div>
+
+                                                <div className="profile-mini-order-body">
+                                                    <div className="mini-ord-items">
+                                                        {ord.items && ord.items.map((it, itemIdx) => (
+                                                            <div key={itemIdx} className="mini-ord-item-line">
+                                                                <span className="mini-it-qty">{it.quantity || 1}x</span>
+                                                                <span className="mini-it-name">{it.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="mini-ord-total">
+                                                        <span className="mini-ord-total-label">Total:</span>
+                                                        <span className="mini-ord-total-val">₦ {Number(ord.totalAmount || 0).toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="profile-mini-order-footer">
+                                                    <Link to="/customer/orders" className="btn-mini-ord-receipt">
+                                                        <FileText size={14} />
+                                                        <span>Track &amp; View Receipt</span>
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Tab 5: Saved Wishlist */}
+                        {isCustomerPortal && activeTab === "wishlist" && (
+                            <div className="profile-tab-pane-content">
+                                <div className="pane-intro-row">
+                                    <h3 className="form-box-title">Saved Wishlist &amp; Favorites</h3>
+                                    <p className="form-box-sub">Items you have saved for later. Move them directly to your cart with 1-click.</p>
+                                </div>
+
+                                {wishlistItems.length === 0 ? (
+                                    <div className="profile-tab-empty-state">
+                                        <div className="empty-icon-circle text-rose">
+                                            <Heart size={32} />
+                                        </div>
+                                        <h4>Your Wishlist is Empty</h4>
+                                        <p>Click the heart icon on any product in our catalog to save items here.</p>
+                                        <Link to="/customer/products" className="btn-tab-cta">
+                                            Browse Products
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="profile-wishlist-grid">
+                                        {wishlistItems.map((item, idx) => (
+                                            <div key={idx} className="profile-wishlist-card">
+                                                <div className="wishlist-card-thumb">
+                                                    {item.image ? (
+                                                        <img src={item.image} alt={item.name} />
+                                                    ) : (
+                                                        <div className="wishlist-thumb-placeholder">
+                                                            <Package size={24} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="wishlist-card-details">
+                                                    <span className="wishlist-card-cat">{item.categoryName || "Product"}</span>
+                                                    <h4 className="wishlist-card-title">{item.name}</h4>
+                                                    <div className="wishlist-card-price">
+                                                        ₦ {Number(item.price || 0).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                                <div className="wishlist-card-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-wishlist-add-cart"
+                                                        onClick={() => {
+                                                            addToCart(item, 1);
+                                                            showToast(`Added "${item.name}" to your cart!`);
+                                                        }}
+                                                        title="Move to Shopping Cart"
+                                                    >
+                                                        <ShoppingCart size={15} />
+                                                        <span>Add to Cart</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-wishlist-remove"
+                                                        onClick={() => {
+                                                            removeFromWishlist(item.id);
+                                                            showToast(`Removed "${item.name}" from wishlist.`);
+                                                        }}
+                                                        title="Remove from Wishlist"
+                                                    >
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

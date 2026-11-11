@@ -222,6 +222,22 @@ export default function CustomerLayout() {
                                     <i className="bi bi-grid-1x2-fill"></i> Dashboard
                                 </NavLink>
                                 <NavLink
+                                    to="/customer/products"
+                                    className={({ isActive }) =>
+                                        `header-pill-btn ${isActive ? "active" : ""}`
+                                    }
+                                >
+                                    <i className="bi bi-box-seam"></i> Products
+                                </NavLink>
+                                <NavLink
+                                    to="/customer/orders"
+                                    className={({ isActive }) =>
+                                        `header-pill-btn ${isActive ? "active" : ""}`
+                                    }
+                                >
+                                    <i className="bi bi-bag-check"></i> Orders
+                                </NavLink>
+                                <NavLink
                                     to="/customer/settings"
                                     className={({ isActive }) =>
                                         `header-pill-btn ${isActive ? "active" : ""}`

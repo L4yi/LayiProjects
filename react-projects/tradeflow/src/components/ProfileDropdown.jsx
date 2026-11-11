@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
+import { getCartCount } from "../utils/cart";
 import authService from "../services/authService";
 
 export default function ProfileDropdown({ isOpen, onClose, isCustomer = false }) {
     const [user, setUser] = useState(getSessionUser());
+    const [cartCount, setCartCount] = useState(getCartCount());
 
     useEffect(() => {
-        const handleUpdate = () => {
+        const handleSessionUpdate = () => {
             setUser(getSessionUser());
         };
-        window.addEventListener("tradeflow_session_update", handleUpdate);
-        return () => window.removeEventListener("tradeflow_session_update", handleUpdate);
+        const handleCartUpdate = () => {
+            setCartCount(getCartCount());
+        };
+
+        window.addEventListener("tradeflow_session_update", handleSessionUpdate);
+        window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+
+        return () => {
+            window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+            window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+        };
     }, []);
 
     if (!isOpen) return null;
@@ -30,8 +41,10 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
 
     const customerNavLinks = [
         { to: "/customer/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
+        { to: "/customer/products", icon: "bi bi-box-seam", label: "Products" },
         { to: "/customer/categories", icon: "bi bi-tags", label: "Categories" },
-        { to: "/customer/cart", icon: "bi bi-cart3", label: "Shopping Cart" },
+        { to: "/customer/orders", icon: "bi bi-bag-check", label: "Your Orders" },
+        { to: "/customer/cart", icon: "bi bi-cart3", label: "Shopping Cart", badge: cartCount > 0 ? cartCount : null },
         { to: "/customer/settings", icon: "bi bi-gear", label: "Settings" }
     ];
 
@@ -59,8 +72,25 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
                         className="profile-menu-link"
                         onClick={onClose}
                     >
-                        <i className={item.icon}></i>
-                        <span>{item.label}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                            <i className={item.icon}></i>
+                            <span>{item.label}</span>
+                        </div>
+                        {item.badge && (
+                            <span 
+                                className="cart-badge-count" 
+                                style={{ 
+                                    position: "static", 
+                                    marginLeft: "auto",
+                                    fontSize: "11px",
+                                    minWidth: "18px",
+                                    height: "18px",
+                                    padding: "0 6px"
+                                }}
+                            >
+                                {item.badge}
+                            </span>
+                        )}
                     </Link>
                 ))}
             </div>
