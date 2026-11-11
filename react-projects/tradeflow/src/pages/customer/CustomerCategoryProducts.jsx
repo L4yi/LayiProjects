@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
 import { PageSkeleton } from "../../components/common";
-import categoryService from "../../services/categoryService";
+import categoryService, { getStoredCategoryImage } from "../../services/categoryService";
 import productService from "../../services/productService";
 
 const VERIFIED_FALLBACK_CATEGORIES = [
@@ -12,7 +12,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Mobile Devices & phones",
         badge: "ACTIVE",
         description: "Mobile Devices & phones",
-        image: null
+        image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80"
     },
     {
         id: "CAT20261109082647",
@@ -20,7 +20,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Health & Beauty",
         badge: "ACTIVE",
         description: "Personal care products including skincare, haircare, supplements and hygiene essentials.",
-        image: null
+        image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80"
     },
     {
         id: "CAT20261109082603",
@@ -28,7 +28,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Office Supplies",
         badge: "ACTIVE",
         description: "Stationery, printing materials, office furniture and equipment.",
-        image: null
+        image: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=800&q=80"
     },
     {
         id: "CAT20261109082511",
@@ -36,7 +36,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Clothing & Apparel",
         badge: "ACTIVE",
         description: "Men and women fashion items including tops, trousers, shoes, bags and accessories.",
-        image: null
+        image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80"
     },
     {
         id: "CAT20261109082439",
@@ -44,7 +44,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Groceries",
         badge: "ACTIVE",
         description: "Everyday food items and household consumables.",
-        image: null
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
     },
     {
         id: "CAT20261109082340",
@@ -52,7 +52,7 @@ const VERIFIED_FALLBACK_CATEGORIES = [
         name: "Electronics",
         badge: "ACTIVE",
         description: "Devices and gadgets including phones, laptops, and accessories.",
-        image: null
+        image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=80"
     }
 ];
 
@@ -65,7 +65,7 @@ const VERIFIED_FALLBACK_PRODUCTS = [
         rating: 5,
         price: 185000,
         oldPrice: 212750,
-        image: ""
+        image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800&q=80"
     }
 ];
 
@@ -88,14 +88,17 @@ export default function CustomerCategoryProducts() {
 
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data) && catRes.value.data.length > 0) {
                     setCategories(catRes.value.data.map(cat => {
+                        const id = String(cat.categories_id || cat.categoryId || cat.id);
                         const name = cat.categories_name || cat.category_name || cat.name || "Category";
+                        const storedImg = getStoredCategoryImage(id, name);
+                        const finalImg = (cat.image_url || cat.image || cat.imageUrl || storedImg || "").trim();
                         return {
-                            id: String(cat.categories_id || cat.categoryId || cat.id),
+                            id,
                             title: name,
-                            name: name,
+                            name,
                             badge: cat.status_name || "Active",
                             description: cat.description || "Verified catalog collection",
-                            image: cat.image || null
+                            image: finalImg || null
                         };
                     }));
                 } else {
@@ -194,7 +197,14 @@ export default function CustomerCategoryProducts() {
                 </div>
                 <div className="hero-image-side">
                     {currentCat.image && (
-                        <img src={currentCat.image} alt={cleanCategoryName} className="hero-cat-img" />
+                        <img
+                            src={currentCat.image}
+                            alt={cleanCategoryName}
+                            className="hero-cat-img"
+                            onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                            }}
+                        />
                     )}
                 </div>
             </div>

@@ -550,7 +550,7 @@ export const customerService = {
         }
     },
 
-    // Dedicated customer profile update endpoint (customer/customer/update-customer.php with reliable fallback)
+    // Dedicated customer profile update endpoint using the admin update method so changes immediately reflect on the admin portal
     async customerUpdateProfile({ customerId, currentEmail, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
         let validCustomerId = (customerId || "").toString().trim();
 
@@ -592,45 +592,17 @@ export const customerService = {
         const validRoleId = (roleId && Number(roleId) >= 1 && Number(roleId) <= 17) ? String(roleId) : "1";
         const validStatusId = (statusId && String(statusId) !== "0" && String(statusId).trim() !== "") ? String(statusId) : "1";
 
-        const formData = new FormData();
-        formData.append("customerId", validCustomerId);
-        formData.append("titleId", validTitleId);
-        formData.append("firstName", (firstName || "").trim());
-        formData.append("lastName", (lastName || "").trim());
-        formData.append("emailAddress", (emailAddress || "").trim());
-        formData.append("phoneNumber", (phoneNumber || "").trim());
-        formData.append("address", (address || "").trim());
-        formData.append("roleId", validRoleId);
-        formData.append("statusId", validStatusId);
+        const formattedAddress = (address || "").trim() || [city, state, landmark].filter(Boolean).join(", ") || "Lagos, Nigeria";
 
-        if (city) formData.append("city", city.trim());
-        if (state) formData.append("state", state.trim());
-        if (landmark) formData.append("landmark", landmark.trim());
-
-        // 1. Try customer/customer/update-customer.php first
-        try {
-            const response = await api.post("customer/customer/update-customer.php", formData);
-            if (response.data?.success === true) {
-                return {
-                    success: true,
-                    message: response.data.message || "CUSTOMER UPDATED SUCCESSFULLY",
-                    data: response.data.data
-                };
-            }
-            console.warn("customer/customer/update-customer.php returned:", response.data?.message);
-        } catch (err) {
-            console.warn("customer/customer/update-customer.php request failed:", err);
-        }
-
-        // 2. Seamlessly fall back to admin/customer/update-customer.php
+        // Directly invoke updateCustomer (admin/customer/update-customer.php) as requested by user
         return await this.updateCustomer({
             customerId: validCustomerId,
             titleId: validTitleId,
-            firstName,
-            lastName,
-            emailAddress,
-            phoneNumber,
-            address,
+            firstName: (firstName || "").trim(),
+            lastName: (lastName || "").trim(),
+            emailAddress: (emailAddress || "").trim(),
+            phoneNumber: (phoneNumber || "").trim(),
+            address: formattedAddress,
             roleId: validRoleId,
             statusId: validStatusId
         });

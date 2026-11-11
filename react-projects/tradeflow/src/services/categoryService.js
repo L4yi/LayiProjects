@@ -191,20 +191,18 @@ export const categoryService = {
     async createCategory(categoryData) {
         try {
             const formData = new FormData();
-            const name = categoryData.categoryName || categoryData.name || "";
-            const desc = categoryData.description || categoryData.notes || name || "Category description";
-            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
-            const image = (categoryData.image || categoryData.imageUrl || categoryData.categoryImage || categoryData.category_image || "").trim();
+            const name = (categoryData.categoryName || categoryData.name || "").trim();
+            const desc = (categoryData.description || categoryData.notes || "").trim() || `${name} catalog and verified products.`;
+            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status) || "1";
+            const image = (categoryData.imageUrl || categoryData.image || categoryData.categoryImage || categoryData.category_image || "").trim();
 
             formData.append("categoryName", name);
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
-            if (image) {
-                formData.append("image", image);
-                formData.append("imageUrl", image);
-                formData.append("categoryImage", image);
-                formData.append("category_image", image);
-            }
+            formData.append("imageUrl", image);
+            formData.append("image", image);
+            formData.append("categoryImage", image);
+            formData.append("category_image", image);
 
             const response = await api.post("admin/categories/create-category.php", formData);
             const resData = response.data;
@@ -228,20 +226,20 @@ export const categoryService = {
         try {
             const formData = new FormData();
             const id = categoryData.categoryId || categoryData.categories_id || categoryData.id || categoryData.code || "";
-            const name = categoryData.categoryName || categoryData.name || "";
-            const desc = categoryData.description || categoryData.notes || name || "Category description";
-            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status);
-            const image = (categoryData.image || categoryData.imageUrl || categoryData.categoryImage || categoryData.category_image || "").trim();
+            const name = (categoryData.categoryName || categoryData.name || "").trim();
+            const desc = (categoryData.description || categoryData.notes || "").trim() || `${name} catalog and verified products.`;
+            const statusId = categoryData.statusId || setupService.getStatusId(categoryData.status) || "1";
+            const image = (categoryData.imageUrl || categoryData.image || categoryData.categoryImage || categoryData.category_image || "").trim();
 
             formData.append("categoryId", id);
             formData.append("categoryName", name);
             formData.append("description", desc);
             formData.append("statusId", String(statusId));
+            formData.append("imageUrl", image);
+            formData.append("image", image);
+            formData.append("categoryImage", image);
+            formData.append("category_image", image);
             if (image) {
-                formData.append("image", image);
-                formData.append("imageUrl", image);
-                formData.append("categoryImage", image);
-                formData.append("category_image", image);
                 setStoredCategoryImage(id, name, image);
             }
 

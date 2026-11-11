@@ -8,6 +8,14 @@ const DEFAULT_CATEGORY_STATUSES = [
     { status_id: "2", status_name: "INACTIVE" }
 ];
 
+const SUGGESTED_CATEGORY_IMAGES = [
+    { label: "Phones & Gadgets", url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80" },
+    { label: "Electronics", url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=80" },
+    { label: "Office Supplies", url: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=800&q=80" },
+    { label: "Groceries", url: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80" },
+    { label: "Health & Beauty", url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80" }
+];
+
 // Slide drawer specifically for adding or editing a product category.
 export default function CategorySlideDrawer({
     isOpen,
@@ -86,11 +94,16 @@ export default function CategorySlideDrawer({
         const catName = (formData.name || formData.categoryName || "").trim();
         if (!catName) newErrors.name = true;
 
+        const imgUrl = (formData.image || formData.imageUrl || "").trim();
+        if (!imgUrl) newErrors.imageUrl = true;
+
+        const effectiveDesc = (formData.description || formData.notes || "").trim() || `${catName} verified catalog items and products.`;
         const effectiveStatusId = formData.statusId ? String(formData.statusId) : "1";
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            setLocalError("Please enter a category name.");
+            if (!catName) setLocalError("Please enter a category name.");
+            else if (!imgUrl) setLocalError("Category Image URL is required by the server to create or update.");
             return;
         }
 
@@ -101,6 +114,10 @@ export default function CategorySlideDrawer({
                 ...formData,
                 name: catName,
                 categoryName: catName,
+                description: effectiveDesc,
+                notes: effectiveDesc,
+                imageUrl: imgUrl,
+                image: imgUrl,
                 statusId: effectiveStatusId
             });
         }
@@ -163,19 +180,38 @@ export default function CategorySlideDrawer({
 
                 {/* Category Image URL */}
                 <div className="drawer-form-group">
-                    <label className="drawer-label">Category Image URL</label>
+                    <label className="drawer-label">
+                        Category Image URL <span className="text-red-500 font-bold">*</span>
+                    </label>
                     <input
                         type="url"
-                        className="drawer-input"
-                        placeholder="e.g. https://example.com/images/category.jpg"
+                        className={`drawer-input ${errors.imageUrl ? "is-invalid" : ""}`}
+                        placeholder="e.g. https://images.unsplash.com/photo-..."
                         value={formData.image || formData.imageUrl || ""}
                         onChange={(e) => {
                             handleChange("image", e.target.value);
                             handleChange("imageUrl", e.target.value);
                         }}
                     />
+                    {/* Quick Preset Buttons */}
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                        <span className="text-xs text-slate-400 self-center mr-1">Presets:</span>
+                        {SUGGESTED_CATEGORY_IMAGES.map((preset) => (
+                            <button
+                                key={preset.label}
+                                type="button"
+                                className="px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors"
+                                onClick={() => {
+                                    handleChange("image", preset.url);
+                                    handleChange("imageUrl", preset.url);
+                                }}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
                     {Boolean(formData.image || formData.imageUrl) && (
-                        <div className="drawer-media-preview-wrap">
+                        <div className="drawer-media-preview-wrap mt-2">
                             <img
                                 src={formData.image || formData.imageUrl}
                                 alt="Category Preview"
