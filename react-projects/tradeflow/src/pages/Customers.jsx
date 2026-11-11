@@ -18,6 +18,8 @@ export default function Customers() {
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+    const [customerToDelete, setCustomerToDelete] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Sync search parameter from URL
     useEffect(() => {
@@ -138,13 +140,19 @@ export default function Customers() {
         }
     };
 
-    const handleDeleteCustomer = async (cust) => {
-        const customerId = cust.id || cust.customerId;
-        if (!customerId) return;
-        const name = cust.name || `${cust.firstName || ""} ${cust.lastName || ""}`.trim() || customerId;
-        if (!window.confirm(`Are you sure you want to delete customer "${name}"?`)) return;
+    const handleRequestDelete = (cust) => {
+        setCustomerToDelete(cust);
+        setShowDeleteConfirm(true);
+    };
 
+    const handleConfirmDelete = async () => {
+        if (!customerToDelete) return;
+        const customerId = customerToDelete.id || customerToDelete.customerId;
+        const name = customerToDelete.name || `${customerToDelete.firstName || ""} ${customerToDelete.lastName || ""}`.trim() || customerId;
+
+        setShowDeleteConfirm(false);
         setIsLoading(true);
+
         try {
             const res = await customerService.deleteCustomer(customerId);
             if (res.success) {
@@ -168,6 +176,7 @@ export default function Customers() {
                 message: e.message || "An error occurred while deleting the customer."
             });
         } finally {
+            setCustomerToDelete(null);
             setShowSuccessModal(true);
             setIsLoading(false);
         }
@@ -297,7 +306,7 @@ export default function Customers() {
                                                 <button
                                                     type="button"
                                                     className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleDeleteCustomer(cust)}
+                                                    onClick={() => handleRequestDelete(cust)}
                                                     title="Delete Customer"
                                                 >
                                                     <i className="bi bi-trash"></i>
@@ -325,6 +334,24 @@ export default function Customers() {
                 onSave={handleSaveCustomer}
             />
 
+            {/* Custom Delete Confirmation Modal */}
+            <StatusModal
+                isOpen={showDeleteConfirm}
+                type="delete"
+                title="Delete Customer Account?"
+                message={`Are you sure you want to permanently delete customer "${customerToDelete?.name || 'this customer'}"? This action cannot be undone.`}
+                showCancel={true}
+                cancelButtonText="Cancel"
+                confirmButtonText="Yes, Delete"
+                confirmVariant="danger"
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setCustomerToDelete(null);
+                }}
+            />
+
+            {/* Success / Result Feedback Modal */}
             <StatusModal
                 isOpen={showSuccessModal}
                 type={modalData.type || "success"}

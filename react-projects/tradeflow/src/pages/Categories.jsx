@@ -18,6 +18,8 @@ export default function Categories() {
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+    const [catToDelete, setCatToDelete] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Sync search from URL
     useEffect(() => {
@@ -142,18 +144,23 @@ export default function Categories() {
         }
     };
 
-    const handleDeleteCategory = async (cat) => {
-        const catId = cat.id || cat.code || cat.categoryId;
-        if (!catId) return;
+    const handleRequestDelete = (cat) => {
+        setCatToDelete(cat);
+        setShowDeleteConfirm(true);
+    };
 
-        if (!window.confirm(`Are you sure you want to delete category "${cat.name}"?`)) return;
+    const handleConfirmDelete = async () => {
+        if (!catToDelete) return;
+        const catId = catToDelete.id || catToDelete.code || catToDelete.categoryId;
+        const name = catToDelete.name || "this category";
 
+        setShowDeleteConfirm(false);
         const result = await categoryService.deleteCategory(catId);
         if (result?.success) {
             setModalData({
                 type: "success",
                 title: "CATEGORY DELETED SUCCESSFULLY!",
-                message: result.message || `Category "${cat.name}" was removed successfully.`
+                message: result.message || `Category "${name}" was removed successfully.`
             });
             setShowSuccessModal(true);
             await loadCategories();
@@ -161,10 +168,11 @@ export default function Categories() {
             setModalData({
                 type: "error",
                 title: "DELETE FAILED",
-                message: result?.message || "Unable to delete category  ."
+                message: result?.message || "Unable to delete category."
             });
             setShowSuccessModal(true);
         }
+        setCatToDelete(null);
     };
 
     const displayCats = categoriesList.filter((c) => {
@@ -286,7 +294,7 @@ export default function Categories() {
                                                 <button
                                                     type="button"
                                                     className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleDeleteCategory(cat)}
+                                                    onClick={() => handleRequestDelete(cat)}
                                                     title="Delete Category"
                                                 >
                                                     <i className="bi bi-trash"></i>
@@ -312,6 +320,23 @@ export default function Categories() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveCategory}
+            />
+
+            {/* Custom Delete Confirmation Modal */}
+            <StatusModal
+                isOpen={showDeleteConfirm}
+                type="delete"
+                title="Delete Category?"
+                message={`Are you sure you want to permanently delete category "${catToDelete?.name || 'this category'}"? This action cannot be undone.`}
+                showCancel={true}
+                cancelButtonText="Cancel"
+                confirmButtonText="Yes, Delete"
+                confirmVariant="danger"
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setCatToDelete(null);
+                }}
             />
 
             <StatusModal

@@ -20,6 +20,8 @@ export default function Orders() {
     const [searchQuery, setSearchQuery] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+    const [orderToDelete, setOrderToDelete] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const loadOrders = async () => {
         setIsLoading(true);
@@ -132,11 +134,16 @@ export default function Orders() {
         }
     };
 
-    const handleDeleteOrder = async (order) => {
-        const orderId = order.id || order.orderId || order.code;
-        if (!orderId) return;
-        if (!window.confirm(`Are you sure you want to delete order "${orderId}"?`)) return;
+    const handleRequestDelete = (order) => {
+        setOrderToDelete(order);
+        setShowDeleteConfirm(true);
+    };
 
+    const handleConfirmDelete = async () => {
+        if (!orderToDelete) return;
+        const orderId = orderToDelete.id || orderToDelete.orderId || orderToDelete.code;
+
+        setShowDeleteConfirm(false);
         setIsLoading(true);
         try {
             const res = await orderService.deleteOrder(orderId);
@@ -161,6 +168,7 @@ export default function Orders() {
                 message: e.message || "An error occurred while deleting the order."
             });
         } finally {
+            setOrderToDelete(null);
             setShowSuccessModal(true);
             setIsLoading(false);
         }
@@ -309,9 +317,8 @@ export default function Orders() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-edit"
                                                     className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleDeleteOrder(order)}
+                                                    onClick={() => handleRequestDelete(order)}
                                                     title="Delete Order"
                                                 >
                                                     <i className="bi bi-trash"></i>
@@ -337,6 +344,23 @@ export default function Orders() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveOrder}
+            />
+
+            {/* Custom Delete Confirmation Modal */}
+            <StatusModal
+                isOpen={showDeleteConfirm}
+                type="delete"
+                title="Delete Order?"
+                message={`Are you sure you want to permanently delete order #${orderToDelete?.id || orderToDelete?.orderId || 'this order'}? This action cannot be undone.`}
+                showCancel={true}
+                cancelButtonText="Cancel"
+                confirmButtonText="Yes, Delete"
+                confirmVariant="danger"
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setOrderToDelete(null);
+                }}
             />
 
             <StatusModal

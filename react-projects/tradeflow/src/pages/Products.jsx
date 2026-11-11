@@ -47,6 +47,8 @@ export default function Products() {
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
+    const [prodToDelete, setProdToDelete] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Sync search query from URL search parameters
     useEffect(() => {
@@ -202,18 +204,23 @@ export default function Products() {
         }
     };
 
-    const handleDeleteProduct = async (prod) => {
-        const prodId = prod.id || prod.code || prod.productId;
-        if (!prodId) return;
+    const handleRequestDelete = (prod) => {
+        setProdToDelete(prod);
+        setShowDeleteConfirm(true);
+    };
 
-        if (!window.confirm(`Are you sure you want to delete product "${prod.name}"?`)) return;
+    const handleConfirmDelete = async () => {
+        if (!prodToDelete) return;
+        const prodId = prodToDelete.id || prodToDelete.code || prodToDelete.productId;
+        const name = prodToDelete.name || "this product";
 
+        setShowDeleteConfirm(false);
         const res = await productService.deleteProduct(prodId);
         if (res?.success) {
             setModalData({
                 type: "success",
                 title: "PRODUCT DELETED SUCCESSFULLY!",
-                message: res.message || `Product "${prod.name}" was removed from database.`
+                message: res.message || `Product "${name}" was removed from database.`
             });
             setShowSuccessModal(true);
             await loadProducts();
@@ -225,6 +232,7 @@ export default function Products() {
             });
             setShowSuccessModal(true);
         }
+        setProdToDelete(null);
     };
 
     const filteredProds = productsList.filter(p => {
@@ -395,7 +403,7 @@ export default function Products() {
                                                 <button
                                                     type="button"
                                                     className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleDeleteProduct(prod)}
+                                                    onClick={() => handleRequestDelete(prod)}
                                                     title="Delete Product"
                                                 >
                                                     <i className="bi bi-trash"></i>
@@ -422,6 +430,23 @@ export default function Products() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveProduct}
+            />
+
+            {/* Custom Delete Confirmation Modal */}
+            <StatusModal
+                isOpen={showDeleteConfirm}
+                type="delete"
+                title="Delete Product?"
+                message={`Are you sure you want to permanently delete product "${prodToDelete?.name || 'this product'}"? This action cannot be undone.`}
+                showCancel={true}
+                cancelButtonText="Cancel"
+                confirmButtonText="Yes, Delete"
+                confirmVariant="danger"
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setProdToDelete(null);
+                }}
             />
 
             <StatusModal
