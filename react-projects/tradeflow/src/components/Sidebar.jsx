@@ -93,6 +93,9 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
                             <span className="user-email" id="dashboardUserEmail">
                                 {user?.email || ""}
                             </span>
+                            <span className="user-role-badge" style={{ fontSize: "10.5px", fontWeight: "700", color: "#10b981", letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                                {user?.role || "Staff"}
+                            </span>
                         </div>
                     </Link>
                     <Link to="/signin" className="logout-icon-btn" title="Sign Out" onClick={onClose}>

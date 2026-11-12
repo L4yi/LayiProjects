@@ -45,6 +45,10 @@ export const authService = {
                 const lastName = serverUser.lastName || serverUser.last_name || "";
                 const fullName = `${firstName} ${lastName}`.trim() || serverUser.emailAddress || serverUser.email_address || cleanEmail;
 
+                const rawRoleId = String(serverUser.roleId || serverUser.role_id || "").trim();
+                const rawRoleName = serverUser.roleName || serverUser.role_name || setupService.getRoleName(rawRoleId) || "STAFF";
+                const normalizedRoleId = rawRoleId || setupService.getRoleId(rawRoleName);
+
                 const userData = {
                     staffId: serverUser.staffId || serverUser.staff_id,
                     id: serverUser.staffId || serverUser.staff_id,
@@ -56,9 +60,9 @@ export const authService = {
                     phone: serverUser.phoneNumber || serverUser.phone_number || "",
                     phoneNumber: serverUser.phoneNumber || serverUser.phone_number || "",
                     address: serverUser.address || "",
-                    role: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
-                    roleName: serverUser.roleName || serverUser.role_name || "SUPER ADMIN",
-                    roleId: serverUser.roleId || serverUser.role_id || setupService.getRoleId(),
+                    role: rawRoleName,
+                    roleName: rawRoleName,
+                    roleId: normalizedRoleId,
                     status: serverUser.statusName || serverUser.status_name || "ACTIVE",
                     statusName: serverUser.statusName || serverUser.status_name || "ACTIVE",
                     statusId: serverUser.statusId || serverUser.status_id || setupService.getStatusId(),

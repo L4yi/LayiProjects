@@ -59,7 +59,7 @@ export default function Staffs() {
     const [drawerTitle, setDrawerTitle] = useState("Edit Staff Details");
     const [filterRole, setFilterRole] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
-    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
+    const [rolesList, setRolesList] = useState(() => setupService.getStaffRoles(setupService.getCachedRoles()));
     const [statusesList, setStatusesList] = useState(setupService.getCachedStatuses());
     const [isSaving, setIsSaving] = useState(false);
     const [drawerError, setDrawerError] = useState("");
@@ -101,7 +101,7 @@ export default function Staffs() {
         // Fetch roles from backend setup endpoint for the role filter dropdown
         setupService.fetchAllRoles().then(res => {
             if (res.success && Array.isArray(res.data)) {
-                setRolesList(res.data);
+                setRolesList(setupService.getStaffRoles(res.data));
             }
         });
         // Fetch statuses from backend setup endpoint for the status filter dropdown

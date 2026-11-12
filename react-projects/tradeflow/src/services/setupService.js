@@ -195,10 +195,20 @@ export const setupService = {
         return statuses.filter(s => txnIds.includes(String(s.status_id)));
     },
 
-    // Staff organizational roles (all roles 1-18, excluding customer #19)
+    // Staff organizational roles: Strictly restricted to STAFF (#1), ADMIN (#2), and SUPER ADMIN (#3)
     getStaffRoles(list) {
         const roles = list || cachedRoles || [];
-        return roles.filter(r => String(r.role_id) !== "19" && !r.role_name?.toLowerCase().includes("customer"));
+        const allowedIds = ["1", "2", "3"];
+        const filtered = roles.filter(r => 
+            allowedIds.includes(String(r.role_id)) ||
+            ["staff", "admin", "super admin"].includes(String(r.role_name || "").toLowerCase().trim())
+        );
+        if (filtered.length > 0) return filtered;
+        return [
+            { role_id: "1", role_name: "STAFF" },
+            { role_id: "2", role_name: "ADMIN" },
+            { role_id: "3", role_name: "SUPER ADMIN" }
+        ];
     },
 
     // Customer tier roles strictly restricted to Customer role only
@@ -214,29 +224,35 @@ export const setupService = {
     },
 
     // Look up a role id by its name from the backend roles list.
-    // If the input is already a number/id, it returns it directly.
-    // Otherwise it searches cached roles for a matching name.
-    getRoleId(roleName, fallback = "") {
-        if (!roleName) return fallback || cachedRoles?.[0]?.role_id || "";
-        // If it's already an ID like "2" or 2, just return it as a string
+    // 1: STAFF, 2: ADMIN, 3: SUPER ADMIN, 19: Customer
+    getRoleId(roleName, fallback = "1") {
+        if (!roleName) return fallback;
+        const clean = String(roleName).toLowerCase().trim();
+        if (clean === "1" || clean === "staff") return "1";
+        if (clean === "2" || clean === "admin") return "2";
+        if (clean === "3" || clean === "super admin" || clean === "superadmin") return "3";
+        if (clean === "19" || clean === "customer") return "19";
         if (!isNaN(roleName)) return String(roleName);
-        if (String(roleName).toLowerCase() === "customer") return "19";
         if (cachedRoles && cachedRoles.length > 0) {
             const found = cachedRoles.find(
-                (r) => (r.role_name || "").toLowerCase() === String(roleName).toLowerCase()
+                (r) => (r.role_name || "").toLowerCase().trim() === clean
             );
             if (found?.role_id) return String(found.role_id);
         }
-        return fallback || cachedRoles?.[0]?.role_id || "";
+        return fallback;
     },
 
     // Look up a role name using its id from the backend roles list
-    getRoleName(roleId, fallback = "") {
+    getRoleName(roleId, fallback = "STAFF") {
         if (!roleId) return fallback;
-        if (String(roleId) === "19") return "Customer";
+        const sId = String(roleId).trim();
+        if (sId === "1") return "STAFF";
+        if (sId === "2") return "ADMIN";
+        if (sId === "3") return "SUPER ADMIN";
+        if (sId === "19") return "Customer";
         if (cachedRoles && cachedRoles.length > 0) {
             const found = cachedRoles.find(
-                (r) => String(r.role_id) === String(roleId)
+                (r) => String(r.role_id) === sId
             );
             if (found?.role_name) return found.role_name;
         }

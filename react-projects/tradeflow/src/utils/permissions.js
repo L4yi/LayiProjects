@@ -2,10 +2,10 @@ import { getSessionUser } from "./session";
 
 /**
  * Normalizes user role string or roleId from session.
- * Roles in database:
- * - 1: Super Admin / Admin
- * - 2: Manager
- * - 3-18: Operational Staff roles (Sales, Inventory, Cashier, etc.)
+ * Exact backend database roles:
+ * - 1: STAFF
+ * - 2: ADMIN
+ * - 3: SUPER ADMIN
  * - 19: Customer
  */
 export function getNormalizedRole(user = null) {
@@ -15,17 +15,20 @@ export function getNormalizedRole(user = null) {
     const roleName = String(sessionUser.role || sessionUser.roleName || "").toLowerCase().trim();
     const roleId = String(sessionUser.roleId || sessionUser.role_id || "").trim();
 
-    if (roleId === "1" || roleName.includes("super admin") || roleName === "admin") {
+    if (roleId === "3" || roleName.includes("super admin") || roleName.includes("superadmin")) {
         return "SUPER_ADMIN";
     }
-    if (roleId === "2" || roleName.includes("manager")) {
-        return "MANAGER";
+    if (roleId === "2" || roleName === "admin" || (roleName.includes("admin") && !roleName.includes("super"))) {
+        return "ADMIN";
+    }
+    if (roleId === "1" || roleName === "staff" || roleName.includes("staff")) {
+        return "STAFF";
     }
     if (roleId === "19" || roleName.includes("customer")) {
         return "CUSTOMER";
     }
 
-    // Default to STAFF for all other employee roles (roles 3 through 18)
+    // Default to STAFF
     return "STAFF";
 }
 
@@ -33,8 +36,9 @@ export function isSuperAdmin(user = null) {
     return getNormalizedRole(user) === "SUPER_ADMIN";
 }
 
-export function isManager(user = null) {
-    return getNormalizedRole(user) === "MANAGER";
+export function isAdmin(user = null) {
+    const role = getNormalizedRole(user);
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function isStaff(user = null) {
@@ -46,60 +50,60 @@ export function isCustomer(user = null) {
 }
 
 /**
- * Staff Module Permission Checks:
- * - Staffs Management: Super Admin / Admin only
- * - Customers: Super Admin, Admin & Manager only (Staffs cannot see customer info)
- * - Transactions: Super Admin, Admin & Manager only (Staffs cannot see transactions)
- * - Reports: Super Admin, Admin & Manager only (Staffs cannot see reports)
- * - Products & Categories CRUD: Only Super Admin and Manager can Add, Edit, Delete (Staffs are view-only)
+ * Role-Based Access Controls:
+ * - Staffs Management: Super Admin & Admin only (Staffs cannot access)
+ * - Customers: Super Admin & Admin only (Staffs cannot see customer info)
+ * - Transactions: Super Admin & Admin only (Staffs cannot see transactions)
+ * - Reports: Super Admin & Admin only (Staffs cannot see reports)
+ * - Products & Categories CRUD: Only Super Admin and Admin can Add, Edit, Delete (Staffs are view-only)
  * - Customer Edit: Disabled for all (Admin can view, add, delete, but NO edit)
+ * - Orders: Super Admin, Admin, and Staff can view, add, and confirm orders
  */
 
 export function canAccessStaffs(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canAccessCustomers(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN" || role === "MANAGER";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canAccessTransactions(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN" || role === "MANAGER";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canAccessReports(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN" || role === "MANAGER";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canManageCatalog(user = null) {
     const role = getNormalizedRole(user);
-    // Only Super Admin and Manager can create, edit, or delete products and categories
-    return role === "SUPER_ADMIN" || role === "MANAGER";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canEditCustomer() {
-    // Admin and all roles can only view / add / delete customers, NO edit
+    // Admins and all roles can only view / add / delete customers, NO edit
     return false;
 }
 
 export function canDeleteCustomer(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN";
+    return role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 export function canConfirmOrders(user = null) {
     const role = getNormalizedRole(user);
-    return role === "SUPER_ADMIN" || role === "MANAGER" || role === "STAFF";
+    return role === "SUPER_ADMIN" || role === "ADMIN" || role === "STAFF";
 }
 
 export default {
     getNormalizedRole,
     isSuperAdmin,
-    isManager,
+    isAdmin,
     isStaff,
     isCustomer,
     canAccessStaffs,

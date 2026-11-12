@@ -15,7 +15,7 @@ export default function StaffSlideDrawer({
 }) {
     const [formData, setFormData] = useState({});
     const [titlesList, setTitlesList] = useState(setupService.getCachedTitles());
-    const [rolesList, setRolesList] = useState(setupService.getCachedRoles());
+    const [rolesList, setRolesList] = useState(() => setupService.getStaffRoles(setupService.getCachedRoles()));
     const [statusesList, setStatusesList] = useState(() => setupService.getActiveInactiveStatuses(setupService.getCachedStatuses()));
     const [errors, setErrors] = useState({});
     const [localError, setLocalError] = useState("");
@@ -29,7 +29,7 @@ export default function StaffSlideDrawer({
                 setupService.fetchAllStatus()
             ]);
             if (tRes.success && Array.isArray(tRes.data)) setTitlesList(tRes.data);
-            if (rRes.success && Array.isArray(rRes.data)) setRolesList(rRes.data);
+            if (rRes.success && Array.isArray(rRes.data)) setRolesList(setupService.getStaffRoles(rRes.data));
             if (sRes.success && Array.isArray(sRes.data)) setStatusesList(setupService.getActiveInactiveStatuses(sRes.data));
         };
         loadSetup();
@@ -42,11 +42,11 @@ export default function StaffSlideDrawer({
             const titleId = initialData.titleId
                 ? String(initialData.titleId)
                 : (isEdit && initialData.title ? setupService.getTitleId(initialData.title) : "");
-            const roleId = initialData.roleId
-                ? String(initialData.roleId)
+            const roleId = (initialData.roleId || initialData.role_id)
+                ? String(initialData.roleId || initialData.role_id)
                 : (isEdit && initialData.role ? setupService.getRoleId(initialData.role) : "");
-            const statusId = initialData.statusId
-                ? String(initialData.statusId)
+            const statusId = (initialData.statusId || initialData.status_id)
+                ? String(initialData.statusId || initialData.status_id)
                 : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
             setFormData({
                 ...initialData,
