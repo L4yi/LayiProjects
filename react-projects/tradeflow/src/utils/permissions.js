@@ -12,19 +12,26 @@ export function getNormalizedRole(user = null) {
     const sessionUser = user || getSessionUser();
     if (!sessionUser) return "GUEST";
 
-    const roleName = String(sessionUser.role || sessionUser.roleName || "").toLowerCase().trim();
     const roleId = String(sessionUser.roleId || sessionUser.role_id || "").trim();
+    const roleName = String(sessionUser.role || sessionUser.roleName || "").toLowerCase().trim();
 
-    if (roleId === "3" || roleName.includes("super admin") || roleName.includes("superadmin")) {
+    // 1. Authoritative check by numeric roleId from MySQL database
+    if (roleId === "3") return "SUPER_ADMIN";
+    if (roleId === "2") return "ADMIN";
+    if (roleId === "1") return "STAFF";
+    if (roleId === "19") return "CUSTOMER";
+
+    // 2. Fallback check by role name string
+    if (roleName.includes("super admin") || roleName.includes("superadmin")) {
         return "SUPER_ADMIN";
     }
-    if (roleId === "2" || roleName === "admin" || (roleName.includes("admin") && !roleName.includes("super"))) {
+    if (roleName === "admin" || (roleName.includes("admin") && !roleName.includes("super"))) {
         return "ADMIN";
     }
-    if (roleId === "1" || roleName === "staff" || roleName.includes("staff")) {
+    if (roleName === "staff" || roleName.includes("staff")) {
         return "STAFF";
     }
-    if (roleId === "19" || roleName.includes("customer")) {
+    if (roleName.includes("customer")) {
         return "CUSTOMER";
     }
 

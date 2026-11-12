@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { StaffSlideDrawer } from "../components/drawers";
 import staffService from "../services/staffService";
 import setupService from "../services/setupService";
+import { getSessionUser, setSessionUser } from "../utils/session";
 import { StatusModal, TableCard, PageHeader, LoadingSpinner } from "../components/common";
 
 export const mapServerStaff = (s) => {
@@ -204,6 +205,18 @@ export default function Staffs() {
         if (result?.success) {
             setDrawerOpen(false);
             loadStaffs();
+
+            const activeUser = getSessionUser();
+            const editedStaffId = String(formData.staffId || formData.id || "").trim();
+            const editedEmail = (formData.email || formData.emailAddress || "").toLowerCase().trim();
+            if (activeUser && (activeUser.staffId === editedStaffId || activeUser.email?.toLowerCase() === editedEmail)) {
+                setSessionUser({
+                    ...activeUser,
+                    ...formData,
+                    roleId: formData.roleId,
+                    role: formData.role
+                });
+            }
 
             if (isNewStaff) {
                 setModalData({
