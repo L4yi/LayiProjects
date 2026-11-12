@@ -63,7 +63,7 @@ export default function CustomerLayout() {
                 <aside className={`customer-sidebar ${isSidebarOpen ? "open" : ""}`} id="customerSidebar">
                     <div className="customer-sidebar-top">
                         <div className="sidebar-header">
-                            <BrandLogo to="/customer/dashboard" onClick={closeSidebar} subtitle="Storefront" />
+                            <BrandLogo to="/customer/dashboard" onClick={closeSidebar} />
                             <div className="sidebar-header-actions">
                                 <button
                                     type="button"

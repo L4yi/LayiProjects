@@ -2,30 +2,20 @@
   <defs>
     <linearGradient id="tfBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#143526"/>
-      <stop offset="100%" stop-color="#0a1d15"/>
-    </linearGradient>
-    <linearGradient id="tfEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399"/>
-      <stop offset="100%" stop-color="#10b981"/>
-    </linearGradient>
-    <linearGradient id="tfMint" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a7f3d0"/>
-      <stop offset="100%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#091b13"/>
     </linearGradient>
   </defs>
 
   <!-- Squircle container -->
   <rect width="48" height="48" rx="12" fill="url(#tfBg)"/>
-  <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="#10b981" stroke-opacity="0.25"/>
+  <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="#10b981" stroke-opacity="0.3"/>
 
-  <!-- Top Trade Flow Crossbeam ("T") -->
-  <path d="M10 14.5C10 12.567 11.567 11 13.5 11H34.5C36.433 11 38 12.567 38 14.5C38 16.433 36.433 18 34.5 18H13.5C11.567 18 10 16.433 10 14.5Z" fill="url(#tfEmerald)"/>
+  <!-- Letter 'T' in Pure White -->
+  <rect x="5" y="9" width="17" height="5.6" rx="2.8" fill="#FFFFFF"/>
+  <rect x="10.7" y="9" width="5.6" height="30" rx="2.8" fill="#FFFFFF"/>
 
-  <!-- Fluid Continuous Trade Loop ("TF" Spine & Upward Flow) -->
-  <path d="M21 18V29C21 32.3137 23.6863 35 27 35C30.3137 35 33 32.3137 33 29V28" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Forward Flow Chevron ("F" Central Branch) -->
-  <path d="M21 24.5H32.5C34.433 24.5 36 26.067 36 28C36 29.933 34.433 31.5 32.5 31.5H28" stroke="url(#tfMint)" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <circle cx="14" cy="14.5" r="2" fill="#143526"/>
+  <!-- Letter 'F' in Radiant Mint with Forward Arrow -->
+  <rect x="26" y="9" width="5.6" height="30" rx="2.8" fill="#34D399"/>
+  <rect x="26" y="9" width="17" height="5.6" rx="2.8" fill="#34D399"/>
+  <path d="M26 21.6H36.4L41.6 24.3L36.4 27H26V21.6Z" fill="#34D399"/>
 </svg>
