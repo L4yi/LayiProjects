@@ -1,46 +1,57 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logoImg from "../../assets/tradeflow-logo.png";
+import markImg from "../../assets/tradeflow-mark.png";
 
 /**
- * Modern, bold TradeFlow vector logo mark:
- * A distinctive "TF" lettermark in crisp white and radiant mint with forward trade motion,
- * unmistakably representing TradeFlow.
+ * Official TradeFlow vector mark icon
  */
-export function TradeFlowIcon({ size = 22, className = "" }) {
+export function TradeFlowIcon({ size = 26, className = "" }) {
     return (
-        <svg
-            viewBox="0 0 24 24"
+        <img
+            src={markImg}
+            alt="TradeFlow Mark"
             width={size}
             height={size}
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={className}
-        >
-            {/* Letter 'T' in crisp pure white */}
-            <rect x="2.5" y="4.5" width="8.5" height="2.8" rx="1.4" style={{ fill: "#FFFFFF" }} />
-            <rect x="5.35" y="4.5" width="2.8" height="15" rx="1.4" style={{ fill: "#FFFFFF" }} />
-
-            {/* Letter 'F' in radiant mint with forward trade motion */}
-            <rect x="13" y="4.5" width="2.8" height="15" rx="1.4" style={{ fill: "#34D399" }} />
-            <rect x="13" y="4.5" width="8.5" height="2.8" rx="1.4" style={{ fill: "#34D399" }} />
-            {/* Middle crossbar with dynamic forward trade arrow */}
-            <path d="M13 10.8H18.2L20.8 12.15L18.2 13.5H13V10.8Z" style={{ fill: "#34D399" }} />
-        </svg>
+            className={`tradeflow-brand-mark ${className}`}
+            style={{ objectFit: "contain", display: "inline-block" }}
+        />
     );
 }
 
+/**
+ * Official TradeFlow brand logo lockup:
+ * Uses the exact bespoke brand mark and custom typography supplied by TradeFlow.
+ */
 export default function BrandLogo({
     to = "/dashboard",
     onClick,
     showText = true,
-    className = ""
+    className = "",
+    variant = "full", // "full" or "mark"
+    height = 30
 }) {
+    if (variant === "mark" || !showText) {
+        return (
+            <Link to={to} className={`solara-logo tradeflow-brand-link ${className}`} onClick={onClick}>
+                <img
+                    src={markImg}
+                    alt="TradeFlow"
+                    style={{ height: `${height}px`, width: "auto", objectFit: "contain" }}
+                    className="tradeflow-brand-mark-img"
+                />
+            </Link>
+        );
+    }
+
     return (
-        <Link to={to} className={`solara-logo ${className}`} onClick={onClick}>
-            <div className="brand-logo-icon">
-                <TradeFlowIcon size={22} />
-            </div>
-            {showText && <span className="brand-title">TradeFlow</span>}
+        <Link to={to} className={`solara-logo tradeflow-brand-link ${className}`} onClick={onClick}>
+            <img
+                src={logoImg}
+                alt="TradeFlow"
+                style={{ height: `${height}px`, width: "auto", objectFit: "contain" }}
+                className="tradeflow-brand-logo-img"
+            />
         </Link>
     );
 }

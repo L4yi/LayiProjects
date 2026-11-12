@@ -808,6 +808,28 @@ html, body {
     line-height: 1 !important;
 }
 
+.tradeflow-brand-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    text-decoration: none !important;
+}
+
+.tradeflow-brand-logo-img {
+    height: 32px !important;
+    width: auto !important;
+    max-height: 36px !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+.tradeflow-brand-mark-img {
+    height: 28px !important;
+    width: auto !important;
+    max-height: 30px !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
 .brand-logo-icon {
     width: 34px !important;
     height: 34px !important;
