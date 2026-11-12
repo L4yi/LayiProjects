@@ -235,7 +235,7 @@ export default function Profile() {
                             return matchId || matchEmail || matchName;
                         })
                         .map(o => ({
-                            orderId: o.code || o.orderId || `TF-ORD-${o.id}`,
+                            orderId: o.code || o.orderId || o.id,
                             date: o.createdAt || "Recent",
                             status: o.status || "Processing",
                             totalAmount: Number(o.price || o.amount || 0),
@@ -1036,54 +1036,6 @@ export default function Profile() {
                                             <Check size={16} />
                                             <span>Save Payment Preference</span>
                                         </button>
-                                    </div>
-                                </div>
-
-                                {/* Verified TradeFlow Bank Details Card */}
-                                <div className="bank-details-highlight-card">
-                                    <div className="bank-header-row">
-                                        <div className="bank-brand-title">
-                                            <Building2 size={18} />
-                                            <span>TradeFlow Central Treasury Account</span>
-                                        </div>
-                                        <span className="bank-verified-tag">VERIFIED BUSINESS</span>
-                                    </div>
-
-                                    <div className="bank-details-grid">
-                                        <div className="bank-meta-item">
-                                            <span className="bank-meta-label">Bank Name</span>
-                                            <span className="bank-meta-val">{OFFICIAL_BANK_DETAILS.bankName}</span>
-                                        </div>
-
-                                        <div className="bank-meta-item">
-                                            <span className="bank-meta-label">Beneficiary Account Name</span>
-                                            <span className="bank-meta-val">{OFFICIAL_BANK_DETAILS.accountName}</span>
-                                        </div>
-
-                                        <div className="bank-meta-item">
-                                            <span className="bank-meta-label">Account Number (Click to copy)</span>
-                                            <div className="bank-acc-copy-row">
-                                                <span className="bank-acc-large-num">{OFFICIAL_BANK_DETAILS.accountNumber}</span>
-                                                <button 
-                                                    type="button" 
-                                                    className="btn-copy-acc-num"
-                                                    onClick={handleCopyBankAcc}
-                                                    title="Copy account number"
-                                                >
-                                                    {copiedBank ? (
-                                                        <>
-                                                            <Check size={13} />
-                                                            <span>Copied!</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy size={13} />
-                                                            <span>Copy</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
 

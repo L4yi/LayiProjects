@@ -82,6 +82,15 @@ export default function CustomerCheckout() {
     const [formErrors, setFormErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderConfirmed, setOrderConfirmed] = useState(null);
+    const [copiedBank, setCopiedBank] = useState(false);
+
+    const handleCopyBankAcc = () => {
+        try {
+            navigator.clipboard.writeText(OFFICIAL_BANK_DETAILS.accountNumber);
+            setCopiedBank(true);
+            setTimeout(() => setCopiedBank(false), 2500);
+        } catch (_) {}
+    };
 
     useEffect(() => {
         const items = getCartItems();
@@ -131,7 +140,7 @@ export default function CustomerCheckout() {
 
         setIsSubmitting(true);
 
-        const orderId = `TF-ORD-${Date.now().toString().slice(-8)}`;
+        const fallbackOrderId = `ORD${Date.now()}`;
         const totalAmount = subtotal + selectedDelivery.price;
         const totalCount = cartItems.reduce((acc, i) => acc + (i.quantity || 1), 0);
 
@@ -175,11 +184,24 @@ export default function CustomerCheckout() {
                     }
                 }
             }
+
+            // If create-order did not return orderId in payload, query latest order for this customer
+            if (!backendAssignedOrderId) {
+                const latestRes = await orderService.fetchAllOrders();
+                if (latestRes.success && Array.isArray(latestRes.data) && latestRes.data.length > 0) {
+                    const matchOrder = latestRes.data.find(o => String(o.customerId) === String(customerId));
+                    if (matchOrder && (matchOrder.orderId || matchOrder.code || matchOrder.id)) {
+                        backendAssignedOrderId = matchOrder.orderId || matchOrder.code || matchOrder.id;
+                    } else if (latestRes.data[0]?.orderId) {
+                        backendAssignedOrderId = latestRes.data[0].orderId;
+                    }
+                }
+            }
         } catch (_) {
             // Non-blocking fallback
         }
 
-        const finalOrderId = backendAssignedOrderId || orderId;
+        const finalOrderId = backendAssignedOrderId || fallbackOrderId;
 
         const completedOrder = {
             orderId: finalOrderId,
@@ -518,23 +540,50 @@ export default function CustomerCheckout() {
                         </div>
 
                         {selectedPayment === "bank_transfer" && (
-                            <div className="bank-transfer-details-box">
-                                <div className="transfer-header">
-                                    <i className="bi bi-info-circle-fill"></i>
-                                    <span>Make payment into our verified TradeFlow account:</span>
+                            <div className="bank-transfer-details-box checkout-treasury-box">
+                                <div className="transfer-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        <i className="bi bi-shield-check" style={{ color: "#10b981", fontSize: "18px" }}></i>
+                                        <strong style={{ color: "#143526", fontSize: "14px" }}>TradeFlow Central Treasury Account</strong>
+                                    </div>
+                                    <span style={{ fontSize: "10px", fontWeight: "700", color: "#047857", backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", padding: "2px 8px", borderRadius: "12px", letterSpacing: "0.4px" }}>VERIFIED BUSINESS</span>
                                 </div>
+                                <p style={{ fontSize: "12px", color: "#64748b", margin: "6px 0 14px" }}>
+                                    Transfer your order total to our corporate account below. Your order will be confirmed immediately upon settlement.
+                                </p>
                                 <div className="transfer-data-grid">
                                     <div>
                                         <span className="lbl">Bank Name:</span>
                                         <strong>{OFFICIAL_BANK_DETAILS.bankName}</strong>
                                     </div>
                                     <div>
-                                        <span className="lbl">Account Name:</span>
+                                        <span className="lbl">Beneficiary Account Name:</span>
                                         <strong>{OFFICIAL_BANK_DETAILS.accountName}</strong>
                                     </div>
-                                    <div>
+                                    <div className="acc-num-col">
                                         <span className="lbl">Account Number:</span>
-                                        <strong className="font-mono text-emerald">{OFFICIAL_BANK_DETAILS.accountNumber}</strong>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <strong className="font-mono text-emerald" style={{ fontSize: "16px", letterSpacing: "0.5px" }}>{OFFICIAL_BANK_DETAILS.accountNumber}</strong>
+                                            <button
+                                                type="button"
+                                                onClick={handleCopyBankAcc}
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    padding: "3px 10px",
+                                                    fontSize: "11px",
+                                                    fontWeight: "600",
+                                                    borderRadius: "4px",
+                                                    border: "1px solid #143526",
+                                                    backgroundColor: "#143526",
+                                                    color: "#ffffff",
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                {copiedBank ? "Copied!" : "Copy"}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

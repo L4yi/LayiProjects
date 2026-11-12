@@ -6,6 +6,7 @@ import categoryService from "../services/categoryService";
 import productService from "../services/productService";
 import orderService from "../services/orderService";
 import customerService from "../services/customerService";
+import transactionService from "../services/transactionService";
 
 export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
@@ -22,12 +23,13 @@ export default function Dashboard() {
         const loadDashboardData = async () => {
             setIsLoading(true);
             try {
-                const [staffRes, catRes, prodRes, ordRes, custRes] = await Promise.allSettled([
+                const [staffRes, catRes, prodRes, ordRes, custRes, txnRes] = await Promise.allSettled([
                     staffService.fetchAllStaff(),
                     categoryService.fetchAllCategories(),
                     productService.fetchAllProducts(),
                     orderService.fetchAllOrders(),
-                    customerService.fetchAllCustomers()
+                    customerService.fetchAllCustomers(),
+                    transactionService.fetchAllTransactions()
                 ]);
 
                 if (staffRes.status === "fulfilled" && staffRes.value?.success && Array.isArray(staffRes.value?.data)) {
@@ -52,15 +54,18 @@ export default function Dashboard() {
 
                 if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value?.data)) {
                     setOrderCount(ordRes.value.data.length);
-                    const mappedTxns = ordRes.value.data.slice(0, 5).map(o => ({
-                        id: o.id || o.code,
-                        code: o.code || `#ORD-${o.id}`,
-                        date: o.date || "Recent",
-                        status: o.status || "Paid",
-                        statusDot: (o.status || "").toLowerCase().includes("fail") ? "red" : (o.status || "").toLowerCase().includes("pend") ? "yellow" : "green",
-                        amount: o.price || o.amount || 0
+                }
+
+                if (txnRes.status === "fulfilled" && txnRes.value?.success && Array.isArray(txnRes.value?.data)) {
+                    const mappedTxns = txnRes.value.data.slice(0, 5).map(t => ({
+                        id: t.id,
+                        code: t.code,
+                        date: t.date || "Recent",
+                        status: t.status,
+                        statusDot: t.status === "Refunded" ? "red" : "green",
+                        amount: t.amount || 0
                     }));
-                   
+                    setRecentTransactions(mappedTxns);
                 }
 
                 if (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value?.data)) {

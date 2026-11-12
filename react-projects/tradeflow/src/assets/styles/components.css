@@ -816,70 +816,116 @@
 /* --------------------------------------------------------------------------
    11. Product Table Clean Spacing & Column Proportions
    -------------------------------------------------------------------------- */
+.solara-data-table {
+    min-width: 920px !important;
+}
+
 .products-table {
     width: 100% !important;
-    table-layout: auto !important;
+    min-width: 1020px !important;
+    table-layout: fixed !important;
 }
 
 .products-table th,
 .products-table td {
-    padding: 12px 10px !important;
-    white-space: nowrap !important;
+    padding: 12px 12px !important;
+    vertical-align: middle !important;
 }
 
 .products-table .th-sn,
 .products-table .col-sn {
-    width: 44px !important;
+    width: 48px !important;
+    min-width: 48px !important;
     text-align: center !important;
 }
 
 .products-table .th-name,
 .products-table .col-prod-name {
-    min-width: 170px !important;
-    max-width: 250px !important;
+    width: 270px !important;
+    min-width: 270px !important;
 }
 
 .products-table .product-table-cell {
-    min-width: 160px !important;
-    max-width: 240px !important;
+    width: 100% !important;
+    min-width: 250px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 12px !important;
+}
+
+.products-table .prod-tbl-info {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+}
+
+.products-table .prod-tbl-title {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.products-table .prod-tbl-sub {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
 }
 
 .products-table .th-id,
 .products-table .col-prod-id {
-    width: 135px !important;
+    width: 165px !important;
+    min-width: 165px !important;
+    font-family: monospace, ui-monospace, sans-serif !important;
     font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
 }
 
 .products-table .th-category,
 .products-table .col-category {
-    width: 135px !important;
+    width: 155px !important;
+    min-width: 155px !important;
     font-size: 13px !important;
+    white-space: nowrap !important;
 }
 
 .products-table .th-price,
 .products-table .col-price {
-    width: 90px !important;
+    width: 115px !important;
+    min-width: 115px !important;
     font-weight: 600 !important;
+    white-space: nowrap !important;
 }
 
 .products-table .th-stock,
 .products-table .col-stock {
-    width: 55px !important;
+    width: 65px !important;
+    min-width: 65px !important;
     text-align: center !important;
 }
 
 .products-table .th-status,
 .products-table .col-status {
-    width: 90px !important;
+    width: 105px !important;
+    min-width: 105px !important;
     text-align: center !important;
 }
 
 .products-table .th-action,
 .products-table .col-action {
-    width: 140px !important;
+    width: 145px !important;
+    min-width: 145px !important;
     text-align: right !important;
     padding-right: 14px !important;
 }
@@ -893,4 +939,53 @@
 .products-table .action-btn-group .action-pill-btn {
     padding: 5px 12px !important;
     font-size: 11.5px !important;
+}
+
+/* --------------------------------------------------------------------------
+   12. Order & Transaction Status Action Buttons
+   -------------------------------------------------------------------------- */
+.btn-order-action-delivered {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 5px 10px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: 1px solid #10b981 !important;
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.btn-order-action-delivered:hover {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-order-action-refunded {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 5px 10px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: 1px solid #f59e0b !important;
+    background-color: #fffbeb !important;
+    color: #b45309 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+.btn-order-action-refunded:hover {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2) !important;
 }

@@ -93,7 +93,7 @@ export default function CustomerOrders() {
                             const prodImage = matchedProd?.image || matchedProd?.imageUrl || matchedProd?.image_url || "";
 
                             return {
-                                orderId: o.code || o.orderId || `TF-ORD-${o.id}`,
+                                orderId: o.code || o.orderId || o.id,
                                 backendOrderId: o.orderId || o.code || o.id,
                                 rawStatus,
                                 date: o.createdAt || "Recent",

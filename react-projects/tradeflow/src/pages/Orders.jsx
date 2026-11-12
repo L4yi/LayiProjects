@@ -70,9 +70,9 @@ export default function Orders() {
             productName: "",
             price: "",
             amount: "",
-            paymentMethod: "",
-            status: "",
-            statusId: "",
+            paymentMethod: "Bank Transfer",
+            status: "Processing",
+            statusId: "4",
             notes: ""
         });
         setDrawerTitle("Create New Order Request");
@@ -88,8 +88,8 @@ export default function Orders() {
         const orderId = selectedOrder?.id || selectedOrder?.orderId || selectedOrder?.code || orderData.id || orderData.orderId || orderData.code;
         const customerId = orderData.customerId || orderData.customer_id || selectedOrder?.customerId || selectedOrder?.customer_id;
         const productId = orderData.productId || orderData.product_id || selectedOrder?.productId || selectedOrder?.product_id;
-        // Look up status ID from backend setup data or use what the drawer passed
-        const statusId = orderData.statusId || setupService.getStatusId(orderData.status);
+        // Default to status ID 4 (PROCESSING)
+        const statusId = orderData.statusId || setupService.getStatusId(orderData.status) || "4";
 
         if (!customerId || !productId) {
             setIsSaving(false);
@@ -134,12 +134,12 @@ export default function Orders() {
         }
     };
 
-    const handleQuickConfirmOrder = async (order) => {
+    const handleMarkDelivered = async (order) => {
         const orderId = order.id || order.orderId || order.code;
         const customerId = order.customerId || order.customer_id;
         const productId = order.productId || order.product_id;
-        // Status ID 5 = SUCCESSFUL (Confirmed fulfillment in database setup)
-        const statusId = "5";
+        // Status ID 10 = Done / Delivered (Fulfillment completed in database setup)
+        const statusId = "10";
 
         setIsLoading(true);
         try {
@@ -156,7 +156,7 @@ export default function Orders() {
                     const local = JSON.parse(localStorage.getItem("tradeflow_orders") || "[]");
                     const updated = local.map(o => {
                         if (o.orderId === orderId || o.backendOrderId === orderId) {
-                            return { ...o, status: "Confirmed", rawStatus: "SUCCESSFUL" };
+                            return { ...o, status: "Delivered", rawStatus: "Done" };
                         }
                         return o;
                     });
@@ -166,13 +166,13 @@ export default function Orders() {
                 await loadOrders();
                 setModalData({
                     type: "success",
-                    title: "ORDER CONFIRMED SUCCESSFULLY!",
-                    message: `Order #${orderId} has been confirmed on the backend and status updated to SUCCESSFUL.`
+                    title: "ORDER MARKED AS DELIVERED!",
+                    message: `Order #${orderId} is now marked as Delivered and has been moved to Transactions.`
                 });
             } else {
                 setModalData({
                     type: "warning",
-                    title: "CONFIRMATION FAILED",
+                    title: "UPDATE FAILED",
                     message: res.message || "Failed to update order status on server."
                 });
             }
@@ -180,7 +180,60 @@ export default function Orders() {
             setModalData({
                 type: "error",
                 title: "NETWORK ERROR",
-                message: "Unable to reach server to confirm order."
+                message: "Unable to reach server to update order status."
+            });
+        } finally {
+            setShowSuccessModal(true);
+            setIsLoading(false);
+        }
+    };
+
+    const handleMarkRefunded = async (order) => {
+        const orderId = order.id || order.orderId || order.code;
+        const customerId = order.customerId || order.customer_id;
+        const productId = order.productId || order.product_id;
+        // Status ID 13 = Reverse / Refunded in database setup
+        const statusId = "13";
+
+        setIsLoading(true);
+        try {
+            const res = await orderService.updateOrder({
+                orderId,
+                customerId,
+                productId,
+                statusId
+            });
+
+            if (res.success) {
+                try {
+                    const local = JSON.parse(localStorage.getItem("tradeflow_orders") || "[]");
+                    const updated = local.map(o => {
+                        if (o.orderId === orderId || o.backendOrderId === orderId) {
+                            return { ...o, status: "Refunded", rawStatus: "Reverse" };
+                        }
+                        return o;
+                    });
+                    localStorage.setItem("tradeflow_orders", JSON.stringify(updated));
+                } catch (_) {}
+
+                await loadOrders();
+                setModalData({
+                    type: "success",
+                    title: "ORDER MARKED AS REFUNDED!",
+                    message: `Order #${orderId} has been marked as Refunded / Reversed in the system.`
+                });
+            } else {
+                setModalData({
+                    type: "warning",
+                    title: "REFUND UPDATE FAILED",
+                    message: res.message || "Failed to record refund on server."
+                });
+            }
+        } catch (err) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: "Unable to reach server to process refund."
             });
         } finally {
             setShowSuccessModal(true);
@@ -355,30 +408,56 @@ export default function Orders() {
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`status-badge-pill ${(order.status || "processing").toLowerCase()}`}>
-                                                {order.status || "Processing"}
-                                            </span>
+                                            {(() => {
+                                                const sId = String(order.statusId || "");
+                                                const sLower = (order.status || "").toLowerCase();
+                                                let label = order.status || "Processing";
+                                                let pillClass = "processing";
+
+                                                if (sId === "10" || sLower === "done" || sLower.includes("deliver")) {
+                                                    label = "Delivered";
+                                                    pillClass = "successful";
+                                                } else if (sId === "5" || sLower.includes("success")) {
+                                                    label = "Delivered";
+                                                    pillClass = "successful";
+                                                } else if (sId === "13" || sLower === "reverse" || sLower.includes("refund")) {
+                                                    label = "Refunded";
+                                                    pillClass = "failed";
+                                                } else if (sId === "12" || sLower.includes("cancel")) {
+                                                    label = "Cancelled";
+                                                    pillClass = "failed";
+                                                }
+
+                                                return (
+                                                    <span className={`status-badge-pill ${pillClass}`}>
+                                                        {label}
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td>
                                             <div className="action-btn-group">
-                                                {String(order.statusId) !== "5" && !["successful", "done", "delivered", "confirmed"].includes((order.status || "").toLowerCase()) && (
-                                                    <button
-                                                        type="button"
-                                                        className="action-pill-btn"
-                                                        onClick={() => handleQuickConfirmOrder(order)}
-                                                        title="Confirm Order"
-                                                        style={{
-                                                            backgroundColor: "#143526",
-                                                            color: "#ffffff",
-                                                            borderColor: "#143526",
-                                                            display: "inline-flex",
-                                                            alignItems: "center",
-                                                            gap: "4px"
-                                                        }}
-                                                    >
-                                                        <i className="bi bi-check2-circle"></i>
-                                                        Confirm
-                                                    </button>
+                                                {!["10", "5", "13", "12"].includes(String(order.statusId)) && !["successful", "done", "delivered", "confirmed", "refunded", "reverse", "canceled"].includes((order.status || "").toLowerCase()) && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-order-action-delivered"
+                                                            onClick={() => handleMarkDelivered(order)}
+                                                            title="Mark as Delivered & Move to Transactions"
+                                                        >
+                                                            <i className="bi bi-truck"></i>
+                                                            <span>Delivered</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-order-action-refunded"
+                                                            onClick={() => handleMarkRefunded(order)}
+                                                            title="Mark as Refunded"
+                                                        >
+                                                            <i className="bi bi-arrow-counterclockwise"></i>
+                                                            <span>Refund</span>
+                                                        </button>
+                                                    </>
                                                 )}
                                                 <button
                                                     type="button"

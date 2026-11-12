@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TransactionSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
-import orderService from "../services/orderService";
+import transactionService from "../services/transactionService";
 import setupService from "../services/setupService";
 
 export default function Transactions() {
@@ -17,14 +17,23 @@ export default function Transactions() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
 
-    // Check for transaction records and load backend statuses
+    // Load fulfilled and refunded transactions synchronized with the backend
     const loadTransactions = async () => {
         setIsLoading(true);
         setHasNetworkError(false);
-        // Note: The backend developer confirmed that transactions API endpoint is not yet created.
-        // We set transactionsList to empty so the UI shows an honest, clean pending state.
-        setTransactionsList([]);
-        setIsLoading(false);
+        try {
+            const res = await transactionService.fetchAllTransactions();
+            if (res.success && Array.isArray(res.data)) {
+                setTransactionsList(res.data);
+            } else {
+                setTransactionsList([]);
+            }
+        } catch (_) {
+            setHasNetworkError(true);
+            setTransactionsList([]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -83,7 +92,7 @@ export default function Transactions() {
     };
 
     const filteredTxns = transactionsList.filter((t) => {
-        const matchesStatus = !statusFilter || String(t.statusId || "") === String(statusFilter);
+        const matchesStatus = !statusFilter || String(t.statusId || "") === String(statusFilter) || (t.status || "").toLowerCase().includes(statusFilter.toLowerCase());
         const q = searchQuery.trim().toLowerCase();
         const matchesSearch = !q ||
             (t.customer && t.customer.toLowerCase().includes(q)) ||
@@ -174,7 +183,7 @@ export default function Transactions() {
                         title="Transaction History"
                         subtitle="Verified customer checkouts, gateway references, and amounts"
                         isEmpty={filteredTxns.length === 0}
-                        emptyMessage="Transaction History unavailable rn"
+                        emptyMessage="No settled transactions recorded yet. Delivered and refunded orders will automatically appear here."
                     >
                         <table className="solara-data-table">
                             <thead>

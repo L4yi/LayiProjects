@@ -44,16 +44,16 @@ export default function OrderSlideDrawer({
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
             const isEdit = Boolean(initialData.id || initialData.orderId || initialData.code);
-            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "");
+            const statusId = initialData.statusId ? String(initialData.statusId) : (isEdit && initialData.status ? setupService.getStatusId(initialData.status) : "4");
             setFormData({
                 ...initialData,
-                statusId: statusId || ""
+                statusId: statusId || "4"
             });
         } else {
             setFormData({
                 customerId: "",
                 productId: "",
-                statusId: "",
+                statusId: "4",
                 price: "",
                 amount: ""
             });
