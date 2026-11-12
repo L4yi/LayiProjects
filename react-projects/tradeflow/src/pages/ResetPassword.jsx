@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import authService from "../services/authService";
-import { InputField, StatusModal, Button } from "../components/common";
+import { InputField, StatusModal, Button, BrandLogo } from "../components/common";
 import featureImg from "../assets/all-images/body-images/solara-card-feature.png";
 
 export default function ResetPassword() {
@@ -77,14 +77,7 @@ export default function ResetPassword() {
                         <div className="form-container">
                             <div className="form-content">
                                 <div className="inner-form">
-                                    <Link to="/" className="solara-logo">
-                                        <div className="brand-logo-icon">
-                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                            </svg>
-                                        </div>
-                                        <span className="brand-title">TradeFlow</span>
-                                    </Link>
+                                    <BrandLogo to="/" />
 
                                     <div className="form-header">
                                         <h2>Reset Password</h2>

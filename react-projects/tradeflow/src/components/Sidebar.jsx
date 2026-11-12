@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
+import { BrandLogo } from "./common";
 import { getSessionUser } from "../utils/session";
 import { 
     canAccessStaffs, 
@@ -34,14 +35,7 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
         <aside className={`sidebar ${isOpen ? "open" : ""}`} id="sidebar">
             <div className="sidebar-top">
                 <div className="sidebar-header">
-                    <Link to="/dashboard" className="solara-logo" onClick={onClose}>
-                        <div className="brand-logo-icon">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                            </svg>
-                        </div>
-                        <span className="brand-title">TradeFlow</span>
-                    </Link>
+                    <BrandLogo to="/dashboard" onClick={onClose} />
                     <div className="sidebar-header-actions">
                         <button
                             type="button"

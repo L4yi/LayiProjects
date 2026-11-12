@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { setSessionUser } from "../../utils/session";
 import customerService from "../../services/customerService";
+import { BrandLogo } from "../../components/common";
 
 export default function CustomerSignUp() {
     const navigate = useNavigate();
@@ -101,14 +102,7 @@ export default function CustomerSignUp() {
                     <div className="form-container customer-auth-container">
                         <div className="form-content">
                             <div className="inner-form">
-                                <Link to="/" className="solara-logo">
-                                    <div className="brand-logo-icon">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                        </svg>
-                                    </div>
-                                    <span className="brand-title">TradeFlow</span>
-                                </Link>
+                                <BrandLogo to="/" />
 
                                 <div className="form-header">
                                     <div className="portal-indicator-pill">

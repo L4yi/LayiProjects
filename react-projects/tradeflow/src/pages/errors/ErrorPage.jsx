@@ -15,6 +15,7 @@ import {
     ChevronUp
 } from "lucide-react";
 import { getSessionUser } from "../../utils/session";
+import { BrandLogo } from "../../components/common";
 
 const ERROR_CONFIGS = {
     400: {
@@ -91,14 +92,7 @@ export default function ErrorPage({ code: propCode, title: propTitle, subtitle: 
         <div className="tradeflow-error-page">
             {/* Top Brand Header */}
             <header className="error-page-header">
-                <Link to={homeRoute} className="error-brand-logo">
-                    <div className="brand-logo-icon">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                    </div>
-                    <span className="brand-name">TradeFlow</span>
-                </Link>
+                <BrandLogo to={homeRoute} />
                 <div className="error-header-right">
                     <span className="system-status-indicator">
                         <span className="status-dot"></span> System Online

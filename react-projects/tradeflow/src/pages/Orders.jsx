@@ -461,14 +461,6 @@ export default function Orders() {
                                                 )}
                                                 <button
                                                     type="button"
-                                                    className="action-pill-btn"
-                                                    onClick={() => handleOpenEdit(order)}
-                                                    title="View Details"
-                                                >
-                                                    View Details
-                                                </button>
-                                                <button
-                                                    type="button"
                                                     className="btn-edit btn-table-action-delete"
                                                     onClick={() => handleRequestDelete(order)}
                                                     title="Delete Order"
