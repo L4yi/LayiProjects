@@ -14,7 +14,8 @@ export default function BaseDrawerShell({
     errorMessage = "",
     onSubmit,
     children,
-    saveButtonText = "Save Changes"
+    saveButtonText = "Save Changes",
+    readOnly = false
 }) {
     if (!isOpen) return null;
 
@@ -42,7 +43,7 @@ export default function BaseDrawerShell({
                 {/* Subtitle helper bar */}
                 <div className="drawer-subtitle-bar">
                     <p>
-                        You are about to modify <strong>{entityType}</strong>. {subtitle}
+                        You are {readOnly ? "viewing" : "about to modify"} <strong>{entityType}</strong>. {subtitle}
                     </p>
                 </div>
 
@@ -55,7 +56,7 @@ export default function BaseDrawerShell({
                 )}
 
                 {/* Form container with scrollable body and docked bottom footer */}
-                <form className="drawer-main-form" noValidate onSubmit={onSubmit}>
+                <form className="drawer-main-form" noValidate onSubmit={readOnly ? (e) => { e.preventDefault(); onClose(); } : onSubmit}>
                     <div className="drawer-body-scroll">
                         {children}
                     </div>
@@ -67,24 +68,26 @@ export default function BaseDrawerShell({
                             className="btn-drawer-cancel"
                             onClick={onClose}
                         >
-                            Cancel
+                            {readOnly ? "Close" : "Cancel"}
                         </button>
-                        <button
-                            type="submit"
-                            className={`btn-drawer-save ${isSaving ? "is-saving" : ""}`}
-                            disabled={isSaving}
-                        >
-                            {isSaving ? (
-                                <span>
-                                    <i className="bi bi-arrow-repeat spin drawer-spin-icon"></i>
-                                    Saving...
-                                </span>
-                            ) : (
-                                <span>
-                                    <i className="bi bi-check2-circle"></i> {saveButtonText}
-                                </span>
-                            )}
-                        </button>
+                        {!readOnly && (
+                            <button
+                                type="submit"
+                                className={`btn-drawer-save ${isSaving ? "is-saving" : ""}`}
+                                disabled={isSaving}
+                            >
+                                {isSaving ? (
+                                    <span>
+                                        <i className="bi bi-arrow-repeat spin drawer-spin-icon"></i>
+                                        Saving...
+                                    </span>
+                                ) : (
+                                    <span>
+                                        <i className="bi bi-check2-circle"></i> {saveButtonText}
+                                    </span>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>

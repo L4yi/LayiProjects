@@ -12,10 +12,12 @@ import {
     ChevronRight, 
     Search,
     MapPin,
-    CreditCard
+    CreditCard,
+    RefreshCw
 } from "lucide-react";
 import { getSessionUser } from "../../utils/session";
 import orderService from "../../services/orderService";
+import productService from "../../services/productService";
 
 export default function CustomerOrders() {
     const sessionUser = getSessionUser();
@@ -29,7 +31,7 @@ export default function CustomerOrders() {
         const loadOrders = async () => {
             setIsLoading(true);
             try {
-                // Read local checkout orders first
+                // Read local checkout orders
                 let localOrders = [];
                 try {
                     localOrders = JSON.parse(localStorage.getItem("tradeflow_orders") || "[]");
@@ -37,60 +39,123 @@ export default function CustomerOrders() {
                     console.warn("Could not read local tradeflow_orders:", e);
                 }
 
-                // Fetch backend orders
-                const res = await orderService.fetchAllOrders();
-                let backendOrders = [];
-                if (res.success && Array.isArray(res.data)) {
-                    const currentId = String(sessionUser?.customerId || sessionUser?.id || "");
-                    const currentEmail = (sessionUser?.email || "").toLowerCase().trim();
-                    const currentName = (sessionUser?.name || "").toLowerCase().trim();
+                // Concurrently fetch backend orders and products from database
+                const [ordersRes, productsRes] = await Promise.all([
+                    orderService.fetchAllOrders(),
+                    productService.fetchAllProducts().catch(() => ({ data: [] }))
+                ]);
 
-                    backendOrders = res.data
-                        .filter(o => {
-                            if (!currentId && !currentEmail) return true;
-                            const matchId = currentId && String(o.customerId) === currentId;
-                            const matchEmail = currentEmail && (o.email || "").toLowerCase().trim() === currentEmail;
-                            const matchName = currentName && (o.customerName || "").toLowerCase().trim() === currentName;
-                            return matchId || matchEmail || matchName;
-                        })
-                        .map(o => ({
-                            orderId: o.code || o.orderId || `TF-ORD-${o.id}`,
-                            date: o.createdAt || "Recent",
-                            status: o.status || "Processing",
-                            totalAmount: Number(o.price || o.amount || 0),
-                            itemCount: 1,
-                            items: [
-                                {
-                                    name: o.productName || "Product",
-                                    price: Number(o.price || o.amount || 0),
-                                    quantity: 1,
-                                    image: ""
-                                }
-                            ],
-                            shippingDetails: {
-                                fullName: o.customerName || sessionUser?.name || "Customer",
-                                address: o.address || sessionUser?.address || "Abeokuta, Ogun State",
-                                phone: o.phone || sessionUser?.phone || ""
-                            },
-                            deliveryOption: {
-                                title: "Standard Delivery"
-                            },
-                            paymentMethod: {
-                                title: "Verified Order Payment"
-                            }
-                        }));
+                // Map products by ID and lowercase name for fast image & detail resolution
+                const productsMap = new Map();
+                if (productsRes.success && Array.isArray(productsRes.data)) {
+                    productsRes.data.forEach(p => {
+                        const pid = String(p.id || p.productId || p.product_id || "");
+                        if (pid) productsMap.set(pid, p);
+                        if (p.name) productsMap.set(p.name.toLowerCase().trim(), p);
+                        if (p.productName) productsMap.set(p.productName.toLowerCase().trim(), p);
+                    });
                 }
 
-                // Combine and de-duplicate by orderId
+                let backendOrders = [];
+                if (ordersRes.success && Array.isArray(ordersRes.data)) {
+                    const currentId = String(sessionUser?.customerId || sessionUser?.id || "").trim();
+                    const currentEmail = (sessionUser?.email || "").toLowerCase().trim();
+                    const currentPhone = (sessionUser?.phone || "").replace(/\D/g, "");
+                    const currentName = (sessionUser?.name || "").toLowerCase().trim();
+
+                    backendOrders = ordersRes.data
+                        .filter(o => {
+                            if (!currentId && !currentEmail) return true;
+                            const matchId = currentId && String(o.customerId || "").trim() === currentId;
+                            const matchEmail = currentEmail && (o.email || "").toLowerCase().trim() === currentEmail;
+                            const matchPhone = currentPhone && (o.phone || "").replace(/\D/g, "") === currentPhone;
+                            const matchName = currentName && (o.customerName || "").toLowerCase().trim() === currentName;
+                            return matchId || matchEmail || matchPhone || matchName;
+                        })
+                        .map(o => {
+                            const rawStatus = (o.status || o.statusName || "Processing").trim();
+                            const lowerStatus = rawStatus.toLowerCase();
+
+                            // Normalize status for customer presentation
+                            let displayStatus = rawStatus;
+                            if (lowerStatus.includes("success") || lowerStatus === "5" || lowerStatus.includes("confirm")) {
+                                displayStatus = "Confirmed";
+                            } else if (lowerStatus.includes("deliver") || lowerStatus.includes("done") || lowerStatus === "10") {
+                                displayStatus = "Delivered";
+                            } else if (lowerStatus.includes("cancel") || lowerStatus === "12") {
+                                displayStatus = "Cancelled";
+                            } else if (lowerStatus.includes("process") || lowerStatus === "4" || lowerStatus === "1" || lowerStatus.includes("pending")) {
+                                displayStatus = "Processing";
+                            }
+
+                            // Match product image
+                            const matchedProd = productsMap.get(String(o.productId)) || productsMap.get((o.productName || "").toLowerCase().trim());
+                            const prodImage = matchedProd?.image || matchedProd?.imageUrl || matchedProd?.image_url || "";
+
+                            return {
+                                orderId: o.code || o.orderId || `TF-ORD-${o.id}`,
+                                backendOrderId: o.orderId || o.code || o.id,
+                                rawStatus,
+                                date: o.createdAt || "Recent",
+                                status: displayStatus,
+                                totalAmount: Number(o.price || o.amount || 0),
+                                itemCount: 1,
+                                items: [
+                                    {
+                                        name: o.productName || matchedProd?.name || "Product",
+                                        price: Number(o.price || o.amount || 0),
+                                        quantity: 1,
+                                        image: prodImage
+                                    }
+                                ],
+                                shippingDetails: {
+                                    fullName: o.customerName || sessionUser?.name || "Customer",
+                                    address: o.address || sessionUser?.address || "Abeokuta, Ogun State",
+                                    phone: o.phone || sessionUser?.phone || ""
+                                },
+                                deliveryOption: {
+                                    title: "Standard Delivery"
+                                },
+                                paymentMethod: {
+                                    title: "Verified Order Payment"
+                                }
+                            };
+                        });
+                }
+
+                // De-duplicate: Backend orders are the single source of truth for order status
                 const orderMap = new Map();
-                localOrders.forEach(o => orderMap.set(o.orderId, o));
-                backendOrders.forEach(o => {
-                    if (!orderMap.has(o.orderId)) {
-                        orderMap.set(o.orderId, o);
+                backendOrders.forEach(bo => {
+                    orderMap.set(bo.orderId, bo);
+                    if (bo.backendOrderId) orderMap.set(bo.backendOrderId, bo);
+                });
+
+                // Merge local checkout orders (updating status if already synced to backend)
+                localOrders.forEach(lo => {
+                    if (orderMap.has(lo.orderId)) {
+                        const bo = orderMap.get(lo.orderId);
+                        orderMap.set(lo.orderId, {
+                            ...lo,
+                            status: bo.status,
+                            rawStatus: bo.rawStatus,
+                            backendOrderId: bo.backendOrderId
+                        });
+                    } else if (lo.backendOrderId && orderMap.has(lo.backendOrderId)) {
+                        const bo = orderMap.get(lo.backendOrderId);
+                        orderMap.set(lo.backendOrderId, {
+                            ...lo,
+                            status: bo.status,
+                            rawStatus: bo.rawStatus,
+                            orderId: bo.orderId
+                        });
+                    } else {
+                        orderMap.set(lo.orderId, lo);
                     }
                 });
 
-                setOrders(Array.from(orderMap.values()));
+                // Dedup into final list
+                const finalOrders = Array.from(new Set(orderMap.values()));
+                setOrders(finalOrders);
             } catch (err) {
                 console.error("Error loading orders:", err);
             } finally {
@@ -107,8 +172,8 @@ export default function CustomerOrders() {
         if (selectedTab !== "all") {
             result = result.filter(o => {
                 const s = (o.status || "").toLowerCase();
-                if (selectedTab === "processing") return s.includes("process") || s.includes("pending") || s.includes("confirm");
-                if (selectedTab === "delivered") return s.includes("deliver") || s.includes("complete");
+                if (selectedTab === "processing") return s.includes("process") || s.includes("pending");
+                if (selectedTab === "delivered") return s.includes("deliver") || s.includes("complete") || s.includes("confirm") || s.includes("success") || s.includes("done");
                 if (selectedTab === "cancelled") return s.includes("cancel");
                 return true;
             });
@@ -201,11 +266,9 @@ export default function CustomerOrders() {
 
                 {/* Orders Content */}
                 {isLoading ? (
-                    <div className="orders-loading-wrap">
-                        <div className="spinner-border text-success" role="status">
-                            <span className="visually-hidden">Loading orders...</span>
-                        </div>
-                        <p>Loading your orders...</p>
+                    <div className="orders-loading-container">
+                        <div className="orders-spinner-ring" />
+                        <p className="orders-loading-text">Loading your orders...</p>
                     </div>
                 ) : filteredOrders.length > 0 ? (
                     <div className="customer-orders-list">

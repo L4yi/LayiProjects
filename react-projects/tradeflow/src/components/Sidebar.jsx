@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { getSessionUser } from "../utils/session";
+import { 
+    canAccessStaffs, 
+    canAccessCustomers, 
+    canAccessTransactions, 
+    canAccessReports 
+} from "../utils/permissions";
 
 export default function Sidebar({ isOpen, onToggle, onClose }) {
     const [user, setUser] = useState(getSessionUser());
@@ -14,15 +20,15 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
     }, []);
 
     const navItems = [
-        { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard" },
-        { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs" },
-        { to: "/categories", icon: "bi bi-tags", label: "Categories" },
-        { to: "/products", icon: "bi bi-box-seam", label: "Products" },
-        { to: "/customers", icon: "bi bi-people", label: "Customers" },
-        { to: "/orders", icon: "bi bi-cart-check", label: "Orders" },
-        { to: "/transactions", icon: "bi bi-credit-card-2-front", label: "Transactions" },
-        { to: "/report", icon: "bi bi-bar-chart-line", label: "Report" },
-    ];
+        { to: "/dashboard", icon: "bi bi-grid-1x2-fill", label: "Dashboard", visible: true },
+        { to: "/staffs", icon: "bi bi-person-badge", label: "Staffs", visible: canAccessStaffs(user) },
+        { to: "/categories", icon: "bi bi-tags", label: "Categories", visible: true },
+        { to: "/products", icon: "bi bi-box-seam", label: "Products", visible: true },
+        { to: "/customers", icon: "bi bi-people", label: "Customers", visible: canAccessCustomers(user) },
+        { to: "/orders", icon: "bi bi-cart-check", label: "Orders", visible: true },
+        { to: "/transactions", icon: "bi bi-credit-card-2-front", label: "Transactions", visible: canAccessTransactions(user) },
+        { to: "/report", icon: "bi bi-bar-chart-line", label: "Report", visible: canAccessReports(user) },
+    ].filter(item => item.visible);
 
     return (
         <aside className={`sidebar ${isOpen ? "open" : ""}`} id="sidebar">

@@ -134,6 +134,60 @@ export default function Orders() {
         }
     };
 
+    const handleQuickConfirmOrder = async (order) => {
+        const orderId = order.id || order.orderId || order.code;
+        const customerId = order.customerId || order.customer_id;
+        const productId = order.productId || order.product_id;
+        // Status ID 5 = SUCCESSFUL (Confirmed fulfillment in database setup)
+        const statusId = "5";
+
+        setIsLoading(true);
+        try {
+            const res = await orderService.updateOrder({
+                orderId,
+                customerId,
+                productId,
+                statusId
+            });
+
+            if (res.success) {
+                // Also update local storage if tradeflow_orders has it
+                try {
+                    const local = JSON.parse(localStorage.getItem("tradeflow_orders") || "[]");
+                    const updated = local.map(o => {
+                        if (o.orderId === orderId || o.backendOrderId === orderId) {
+                            return { ...o, status: "Confirmed", rawStatus: "SUCCESSFUL" };
+                        }
+                        return o;
+                    });
+                    localStorage.setItem("tradeflow_orders", JSON.stringify(updated));
+                } catch (_) {}
+
+                await loadOrders();
+                setModalData({
+                    type: "success",
+                    title: "ORDER CONFIRMED SUCCESSFULLY!",
+                    message: `Order #${orderId} has been confirmed on the backend and status updated to SUCCESSFUL.`
+                });
+            } else {
+                setModalData({
+                    type: "warning",
+                    title: "CONFIRMATION FAILED",
+                    message: res.message || "Failed to update order status on server."
+                });
+            }
+        } catch (err) {
+            setModalData({
+                type: "error",
+                title: "NETWORK ERROR",
+                message: "Unable to reach server to confirm order."
+            });
+        } finally {
+            setShowSuccessModal(true);
+            setIsLoading(false);
+        }
+    };
+
     const handleRequestDelete = (order) => {
         setOrderToDelete(order);
         setShowDeleteConfirm(true);
@@ -307,6 +361,25 @@ export default function Orders() {
                                         </td>
                                         <td>
                                             <div className="action-btn-group">
+                                                {String(order.statusId) !== "5" && !["successful", "done", "delivered", "confirmed"].includes((order.status || "").toLowerCase()) && (
+                                                    <button
+                                                        type="button"
+                                                        className="action-pill-btn"
+                                                        onClick={() => handleQuickConfirmOrder(order)}
+                                                        title="Confirm Order"
+                                                        style={{
+                                                            backgroundColor: "#143526",
+                                                            color: "#ffffff",
+                                                            borderColor: "#143526",
+                                                            display: "inline-flex",
+                                                            alignItems: "center",
+                                                            gap: "4px"
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-check2-circle"></i>
+                                                        Confirm
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     className="action-pill-btn"

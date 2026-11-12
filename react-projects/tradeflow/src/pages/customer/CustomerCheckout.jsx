@@ -5,6 +5,7 @@ import { getSessionUser } from "../../utils/session";
 import { getDefaultPaymentMethod, OFFICIAL_BANK_DETAILS } from "../../utils/payment";
 import orderService from "../../services/orderService";
 import setupService from "../../services/setupService";
+import customerService from "../../services/customerService";
 
 const DELIVERY_OPTIONS = [
     {
@@ -134,24 +135,55 @@ export default function CustomerCheckout() {
         const totalAmount = subtotal + selectedDelivery.price;
         const totalCount = cartItems.reduce((acc, i) => acc + (i.quantity || 1), 0);
 
-        // Attempt backend sync for each product in the cart
-        const customerId = sessionUser?.customerId || sessionUser?.id || "CUST-GUEST";
+        // Resolve or create a verified Customer ID in the database
+        let customerId = sessionUser?.customerId || sessionUser?.id;
+        if (!customerId || customerId === "CUST-GUEST") {
+            try {
+                const custRes = await customerService.fetchAllCustomers();
+                if (custRes.success && Array.isArray(custRes.data)) {
+                    const match = custRes.data.find(c => 
+                        (c.emailAddress || c.email || "").toLowerCase().trim() === formData.email.toLowerCase().trim()
+                    );
+                    if (match) {
+                        customerId = match.id || match.customerId;
+                    }
+                }
+            } catch (err) {
+                console.warn("Customer lookup failed:", err);
+            }
+        }
+
+        // Fallback default customer account if not authenticated
+        if (!customerId || customerId === "CUST-GUEST") {
+            customerId = "CUST20261111143445"; // Default verified customer account
+        }
+
+        // Place order directly in MySQL backend database
+        let backendAssignedOrderId = null;
         try {
             for (const item of cartItems) {
-                if (item.id) {
-                    await orderService.createOrder({
+                const prodId = item.id || item.productId || item.product_id;
+                if (prodId) {
+                    const res = await orderService.createOrder({
                         customerId: String(customerId),
-                        productId: String(item.id),
-                        statusId: "1" // Processing
+                        productId: String(prodId),
+                        statusId: "4" // 4 = PROCESSING in database setup
                     }).catch(() => null);
+
+                    if (res?.success && (res.data?.orderId || res.data?.id)) {
+                        backendAssignedOrderId = res.data.orderId || res.data.id;
+                    }
                 }
             }
         } catch (_) {
             // Non-blocking fallback
         }
 
+        const finalOrderId = backendAssignedOrderId || orderId;
+
         const completedOrder = {
-            orderId,
+            orderId: finalOrderId,
+            backendOrderId: backendAssignedOrderId,
             date: new Date().toLocaleDateString("en-NG", {
                 year: "numeric",
                 month: "short",
@@ -167,7 +199,7 @@ export default function CustomerCheckout() {
             deliveryOption: selectedDelivery,
             paymentMethod: PAYMENT_METHODS.find(p => p.id === selectedPayment) || PAYMENT_METHODS[0],
             shippingDetails: { ...formData },
-            status: "Order Confirmed & Processing"
+            status: "Processing"
         };
 
         // Persist to user's order history

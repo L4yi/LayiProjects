@@ -5,6 +5,7 @@ import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../component
 import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 import setupService from "../services/setupService";
+import { canManageCatalog } from "../utils/permissions";
 
 function ProductTableThumb({ src, alt }) {
     const [failed, setFailed] = useState(false);
@@ -309,14 +310,16 @@ export default function Products() {
                                     ))}
                                 </select>
                             </div>
-                            <button
-                                type="button"
-                                className="btn-add-entity"
-                                onClick={handleOpenAdd}
-                                title="Add Product"
-                            >
-                                <i className="bi bi-plus-lg"></i> Add Product
-                            </button>
+                            {canManageCatalog() && (
+                                <button
+                                    type="button"
+                                    className="btn-add-entity"
+                                    onClick={handleOpenAdd}
+                                    title="Add Product"
+                                >
+                                    <i className="bi bi-plus-lg"></i> Add Product
+                                </button>
+                            )}
                         </>
                     }
                 />
@@ -386,28 +389,33 @@ export default function Products() {
                                         </td>
                                         <td className="col-action">
                                             <div className="action-btn-group">
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit"
-                                                    onClick={() => handleOpenEdit(prod)}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="action-pill-btn"
-                                                    onClick={() => handleOpenEdit(prod)}
-                                                >
-                                                    View
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleRequestDelete(prod)}
-                                                    title="Delete Product"
-                                                >
-                                                    <i className="bi bi-trash"></i>
-                                                </button>
+                                                {canManageCatalog() ? (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-edit"
+                                                            onClick={() => handleOpenEdit(prod)}
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-edit btn-table-action-delete"
+                                                            onClick={() => handleRequestDelete(prod)}
+                                                            title="Delete Product"
+                                                        >
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className="action-pill-btn"
+                                                        onClick={() => handleOpenEdit(prod)}
+                                                    >
+                                                        View Details
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -430,6 +438,7 @@ export default function Products() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveProduct}
+                readOnly={!canManageCatalog()}
             />
 
             {/* Custom Delete Confirmation Modal */}

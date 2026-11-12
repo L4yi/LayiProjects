@@ -25,7 +25,8 @@ export default function CategorySlideDrawer({
     initialData = {},
     isSaving = false,
     errorMessage = "",
-    onSave
+    onSave,
+    readOnly = false
 }) {
     const [formData, setFormData] = useState({});
     const [statusesList, setStatusesList] = useState(() => {
@@ -134,6 +135,7 @@ export default function CategorySlideDrawer({
             isSaving={isSaving}
             errorMessage={errorMessage || localError}
             onSubmit={handleSubmit}
+            readOnly={readOnly}
         >
             <div className="drawer-flat-form">
                 {/* Category Name */}

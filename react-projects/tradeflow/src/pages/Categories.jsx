@@ -4,6 +4,8 @@ import { CategorySlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import categoryService, { inferCategoryIcon } from "../services/categoryService";
 import setupService from "../services/setupService";
+import { getSessionUser } from "../utils/session";
+import { canManageCatalog } from "../utils/permissions";
 
 export default function Categories() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -214,13 +216,15 @@ export default function Categories() {
                                 )}
                             </div>
 
-                            <button
-                                type="button"
-                                className="btn-add-entity"
-                                onClick={handleOpenAdd}
-                            >
-                                <i className="bi bi-plus-lg"></i> Add Category
-                            </button>
+                            {canManageCatalog() && (
+                                <button
+                                    type="button"
+                                    className="btn-add-entity"
+                                    onClick={handleOpenAdd}
+                                >
+                                    <i className="bi bi-plus-lg"></i> Add Category
+                                </button>
+                            )}
                         </>
                     }
                 />
@@ -267,9 +271,9 @@ export default function Categories() {
                                         <td>
                                             <div
                                                 className="category-name-cell"
-                                                onClick={() => handleOpenEdit(cat)}
-                                                style={{ cursor: "pointer" }}
-                                                title="Click to view/edit category"
+                                                onClick={() => canManageCatalog() && handleOpenEdit(cat)}
+                                                style={{ cursor: canManageCatalog() ? "pointer" : "default" }}
+                                                title={canManageCatalog() ? "Click to view/edit category" : cat.name}
                                             >
                                                 <div className="category-icon-box">
                                                     {cat.image ? (
@@ -291,14 +295,18 @@ export default function Categories() {
                                         <td className="col-cat-id">{cat.code}</td>
                                         <td>
                                             <div className="action-btn-group">
-                                                <button
-                                                    type="button"
-                                                    className="btn-edit btn-table-action-delete"
-                                                    onClick={() => handleRequestDelete(cat)}
-                                                    title="Delete Category"
-                                                >
-                                                    <i className="bi bi-trash"></i>
-                                                </button>
+                                                {canManageCatalog() ? (
+                                                    <button
+                                                        type="button"
+                                                        className="btn-edit btn-table-action-delete"
+                                                        onClick={() => handleRequestDelete(cat)}
+                                                        title="Delete Category"
+                                                    >
+                                                        <i className="bi bi-trash"></i>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-muted" style={{ fontSize: "12px" }}>View Only</span>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -320,6 +328,7 @@ export default function Categories() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveCategory}
+                readOnly={!canManageCatalog()}
             />
 
             {/* Custom Delete Confirmation Modal */}

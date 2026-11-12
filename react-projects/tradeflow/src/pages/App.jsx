@@ -28,6 +28,14 @@ import CustomerCheckout from "./customer/CustomerCheckout";
 import CustomerSignIn from "./customer/CustomerSignIn";
 import CustomerSignUp from "./customer/CustomerSignUp";
 
+import RoleRouteGuard from "../components/auth/RoleRouteGuard";
+import { 
+  canAccessStaffs, 
+  canAccessCustomers, 
+  canAccessTransactions, 
+  canAccessReports 
+} from "../utils/permissions";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -119,7 +127,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/staffs",
-        element: <Staffs />
+        element: (
+          <RoleRouteGuard permissionCheck={canAccessStaffs}>
+            <Staffs />
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/categories",
@@ -131,7 +143,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/customers",
-        element: <Customers />
+        element: (
+          <RoleRouteGuard permissionCheck={canAccessCustomers}>
+            <Customers />
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/orders",
@@ -139,11 +155,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "/transactions",
-        element: <Transactions />
+        element: (
+          <RoleRouteGuard permissionCheck={canAccessTransactions}>
+            <Transactions />
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/report",
-        element: <Report />
+        element: (
+          <RoleRouteGuard permissionCheck={canAccessReports}>
+            <Report />
+          </RoleRouteGuard>
+        )
       }
     ]
   },
