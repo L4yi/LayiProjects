@@ -17,13 +17,17 @@ export default function CustomerUserBanner() {
             <div className="banner-left-info">
                 <div className="banner-avatar-wrap">
                     <div className="customer-banner-initials-circle">
-                        {user.initials}
+                        {user.profileImage || user.avatar ? (
+                            <img src={user.profileImage || user.avatar} alt={user.name} className="customer-banner-avatar-img" />
+                        ) : (
+                            user.initials
+                        )}
                     </div>
                 </div>
                 <div className="banner-details">
                     <h3 className="banner-user-name">{user.name}</h3>
                     <p className="banner-user-dept">
-                        Account Tier: <span>{user.role || "Verified Customer"}</span>
+                        Account Tier: <span className="tier-badge-verified">Verified Customer</span>
                     </p>
                     <p className="banner-login-date">
                         <i className="bi bi-clock-history"></i> Last Login Date - {user.lastLogin || "2026-10-04 08:30 AM"}

@@ -55,7 +55,11 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
         <div className="profile-dropdown-card" onClick={(e) => e.stopPropagation()}>
             <div className="profile-card-header">
                 <div className="profile-initial-badge">
-                    {user?.initials || (isCustomer ? "CU" : "SU")}
+                    {user?.profileImage || user?.avatar ? (
+                        <img src={user.profileImage || user.avatar} alt={user.name} className="dropdown-avatar-img" />
+                    ) : (
+                        user?.initials || (isCustomer ? "CU" : "SU")
+                    )}
                 </div>
                 <div className="profile-user-info">
                     <div className="profile-user-name">{user?.name || (isCustomer ? "Customer" : "Staff Member")}</div>

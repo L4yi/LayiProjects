@@ -601,8 +601,8 @@ export const customerService = {
 
         // Ensure titleId is valid in title_tab (default to 1 = Mr)
         const validTitleId = (titleId && String(titleId) !== "0" && String(titleId).trim() !== "") ? String(titleId) : "1";
-        // Ensure roleId is a valid role between 1 and 17 from role_tab (staff/customer role = 1)
-        const validRoleId = (roleId && Number(roleId) >= 1 && Number(roleId) <= 17) ? String(roleId) : "1";
+        // Canonical customer role is 19
+        const validRoleId = String(roleId || "19");
         const validStatusId = (statusId && String(statusId) !== "0" && String(statusId).trim() !== "") ? String(statusId) : "1";
 
         const formattedAddress = (address || "").trim() || [city, state, landmark].filter(Boolean).join(", ") || "Lagos, Nigeria";

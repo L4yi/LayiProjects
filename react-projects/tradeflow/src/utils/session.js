@@ -14,38 +14,42 @@ export function getSessionUser() {
             const parsed = JSON.parse(stored);
             const name = parsed.name || `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim() || parsed.email || "Staff User";
 
-            // Authoritative role normalization:
+            // Authoritative role & customer identity normalization:
             // 1: STAFF, 2: ADMIN, 3: SUPER ADMIN, 19: Customer
             const rId = String(parsed.roleId || parsed.role_id || "").trim();
             const rName = String(parsed.role || parsed.roleName || "").toUpperCase().trim();
+            const hasCustomerId = Boolean(parsed.customerId || parsed.customer_id);
+            const isCustomer = hasCustomerId || parsed.isCustomer === true || rId === "19" || rName.includes("CUSTOMER");
+
             let role = "STAFF";
             let roleId = "1";
 
-            if (rId === "1") {
-                role = "STAFF";
-                roleId = "1";
-            } else if (rId === "2") {
-                role = "ADMIN";
-                roleId = "2";
-            } else if (rId === "3") {
-                role = "SUPER ADMIN";
-                roleId = "3";
-            } else if (rId === "19") {
+            if (isCustomer) {
                 role = "Customer";
                 roleId = "19";
-            } else if (rName.includes("SUPER")) {
+            } else if (rId === "3" || rName.includes("SUPER")) {
                 role = "SUPER ADMIN";
                 roleId = "3";
-            } else if (rName.includes("ADMIN")) {
+            } else if (rId === "2" || rName.includes("ADMIN")) {
                 role = "ADMIN";
                 roleId = "2";
-            } else if (rName.includes("CUSTOMER")) {
-                role = "Customer";
-                roleId = "19";
             } else {
                 role = "STAFF";
                 roleId = "1";
             }
+
+            // Restore persistent profile photo from user cache if available
+            const userId = parsed.customerId || parsed.customer_id || parsed.staffId || parsed.staff_id || parsed.id || parsed.email;
+            let cachedPhoto = null;
+            if (userId) {
+                try {
+                    cachedPhoto = localStorage.getItem(`tradeflow_photo_${userId}`);
+                } catch {
+                    // Ignore localStorage read errors
+                }
+            }
+
+            const profileImage = parsed.profileImage || parsed.avatar || parsed.avatarUrl || parsed.image || cachedPhoto || null;
 
             return {
                 ...parsed,
@@ -53,6 +57,10 @@ export function getSessionUser() {
                 role,
                 roleName: role,
                 roleId,
+                isCustomer,
+                profileImage,
+                avatar: profileImage,
+                avatarUrl: profileImage,
                 initials: parsed.initials || getInitials(name)
             };
         }
@@ -66,7 +74,10 @@ export function getSessionUser() {
         initials: "SU",
         role: "STAFF",
         roleName: "STAFF",
-        roleId: "1"
+        roleId: "1",
+        isCustomer: false,
+        profileImage: null,
+        avatar: null
     };
 }
 
@@ -76,34 +87,35 @@ export function setSessionUser(userData) {
         const name = userData.name || `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || userData.email || "Staff User";
         const rId = String(userData.roleId || userData.role_id || "").trim();
         const rName = String(userData.role || userData.roleName || "").toUpperCase().trim();
+        const hasCustomerId = Boolean(userData.customerId || userData.customer_id);
+        const isCustomer = hasCustomerId || userData.isCustomer === true || rId === "19" || rName.includes("CUSTOMER");
 
         let role = "STAFF";
         let roleId = "1";
 
-        if (rId === "1") {
-            role = "STAFF";
-            roleId = "1";
-        } else if (rId === "2") {
-            role = "ADMIN";
-            roleId = "2";
-        } else if (rId === "3") {
-            role = "SUPER ADMIN";
-            roleId = "3";
-        } else if (rId === "19") {
+        if (isCustomer) {
             role = "Customer";
             roleId = "19";
-        } else if (rName.includes("SUPER")) {
+        } else if (rId === "3" || rName.includes("SUPER")) {
             role = "SUPER ADMIN";
             roleId = "3";
-        } else if (rName.includes("ADMIN")) {
+        } else if (rId === "2" || rName.includes("ADMIN")) {
             role = "ADMIN";
             roleId = "2";
-        } else if (rName.includes("CUSTOMER")) {
-            role = "Customer";
-            roleId = "19";
         } else {
             role = "STAFF";
             roleId = "1";
+        }
+
+        const userId = userData.customerId || userData.customer_id || userData.staffId || userData.staff_id || userData.id || userData.email;
+        const profileImage = userData.profileImage || userData.avatar || userData.avatarUrl || userData.image || null;
+
+        if (userId && profileImage) {
+            try {
+                localStorage.setItem(`tradeflow_photo_${userId}`, profileImage);
+            } catch {
+                // Ignore localStorage quota limits
+            }
         }
 
         const updated = {
@@ -112,6 +124,10 @@ export function setSessionUser(userData) {
             role,
             roleName: role,
             roleId,
+            isCustomer,
+            profileImage,
+            avatar: profileImage,
+            avatarUrl: profileImage,
             initials: userData.initials || getInitials(name)
         };
         sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(updated));

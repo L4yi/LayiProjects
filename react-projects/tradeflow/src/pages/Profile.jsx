@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
     User, 
@@ -29,7 +29,9 @@ import {
     Wallet,
     Banknote,
     Plus,
-    X
+    X,
+    Camera,
+    Loader2
 } from "lucide-react";
 import { getSessionUser, setSessionUser } from "../utils/session";
 import { getCartCount, addToCart } from "../utils/cart";
@@ -44,6 +46,7 @@ import {
     getWalletBalance 
 } from "../utils/payment";
 import customerService from "../services/customerService";
+import staffService from "../services/staffService";
 import orderService from "../services/orderService";
 
 export default function Profile() {
@@ -51,6 +54,8 @@ export default function Profile() {
     const [activeTab, setActiveTab] = useState("personal");
     const [savedNotice, setSavedNotice] = useState("");
     const [errors, setErrors] = useState({});
+    const fileInputRef = useRef(null);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     const initialFirst = user.firstName || (user.name ? user.name.split(" ")[0] : "");
     const initialLast = user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "");
@@ -377,6 +382,74 @@ export default function Profile() {
         }
     };
 
+    // Upload & Sync Profile Picture
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Instant local preview
+        const localPreview = URL.createObjectURL(file);
+        setUser((prev) => ({
+            ...prev,
+            profileImage: localPreview,
+            avatar: localPreview,
+            avatarUrl: localPreview
+        }));
+
+        setIsUploadingAvatar(true);
+        try {
+            const targetId = user.staffId || user.customerId || user.id || "1";
+            const res = await staffService.updateProfilePhoto(targetId, file, {
+                staffId: targetId,
+                name: user.name,
+                emailAddress: user.email,
+                phoneNumber: user.phone,
+                address: user.address
+            });
+
+            const finalUrl = res?.imageUrl || localPreview;
+            const updated = setSessionUser({
+                ...user,
+                profileImage: finalUrl,
+                avatar: finalUrl,
+                avatarUrl: finalUrl
+            });
+            setUser(updated);
+            showToast("Profile photo updated successfully!");
+        } catch (err) {
+            console.error("Avatar upload failed:", err);
+            const updated = setSessionUser({
+                ...user,
+                profileImage: localPreview,
+                avatar: localPreview,
+                avatarUrl: localPreview
+            });
+            setUser(updated);
+            showToast("Profile photo saved locally!");
+        } finally {
+            setIsUploadingAvatar(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    // Remove Profile Photo
+    const handleRemoveAvatar = () => {
+        const updated = setSessionUser({
+            ...user,
+            profileImage: null,
+            avatar: null,
+            avatarUrl: null
+        });
+        const userId = user.customerId || user.staffId || user.id || user.email;
+        if (userId) {
+            try {
+                localStorage.removeItem(`tradeflow_photo_${userId}`);
+            } catch {}
+        }
+        setUser(updated);
+        showToast("Profile photo removed.");
+    };
+
     // Save Password Update
     const handleSavePassword = async (e) => {
         e.preventDefault();
@@ -486,8 +559,43 @@ export default function Profile() {
                     {/* Left Side: Identity Card */}
                     <div className="profile-identity-card">
                         <div className="profile-id-header">
-                            <div className="profile-avatar-large">
-                                {user.initials}
+                            <div className="profile-avatar-large-wrap">
+                                <div 
+                                    className="profile-avatar-large" 
+                                    onClick={() => fileInputRef.current?.click()} 
+                                    title="Click to upload profile photo"
+                                >
+                                    {user.profileImage || user.avatar ? (
+                                        <img src={user.profileImage || user.avatar} alt={user.name} className="profile-avatar-img" />
+                                    ) : (
+                                        <span className="profile-avatar-initials">{user.initials}</span>
+                                    )}
+                                    <label className="avatar-upload-badge" title="Change photo" onClick={(e) => e.stopPropagation()}>
+                                        <Camera size={14} />
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/png,image/jpeg,image/webp,image/gif"
+                                            onChange={handleAvatarChange}
+                                            hidden
+                                        />
+                                    </label>
+                                    {isUploadingAvatar && (
+                                        <div className="avatar-upload-spinner-overlay">
+                                            <Loader2 size={24} className="animate-spin text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                                {user.profileImage && (
+                                    <button
+                                        type="button"
+                                        className="btn-remove-avatar"
+                                        onClick={handleRemoveAvatar}
+                                        title="Remove Photo"
+                                    >
+                                        Remove Photo
+                                    </button>
+                                )}
                             </div>
                             
                             <div className="profile-name-edit-wrap">
@@ -502,25 +610,15 @@ export default function Profile() {
                                 </button>
                             </div>
 
-                            <span className="profile-role-badge">{user.role || "Customer"}</span>
-
-                            {/* Activity Stats Summary matching mockup */}
-                            <div className="profile-activity-stats-row">
-                                <div className="stat-stat-col">
-                                    <span className="stat-num">1</span>
-                                    <span className="stat-label">Total reviews</span>
-                                </div>
-                                <div className="stat-divider-line"></div>
-                                <div className="stat-stat-col">
-                                    <span className="stat-num">0</span>
-                                    <span className="stat-label">Helpfuls</span>
-                                </div>
-                            </div>
+                            <span className={`profile-role-badge ${isCustomerPortal || user.isCustomer || user.customerId ? "customer-tier-badge" : "staff-role-badge"}`}>
+                                <ShieldCheck size={13} className="shrink-0" />
+                                <span>{isCustomerPortal || user.isCustomer || user.customerId ? "Verified Customer" : (user.role || "Staff")}</span>
+                            </span>
 
                             {/* Green Privacy Reassurance Pill */}
                             <div className="profile-privacy-note">
                                 <ShieldCheck size={16} className="text-emerald shrink-0" />
-                                <span>Your information and privacy will be kept secure and uncompromised.</span>
+                                <span>Your information and privacy are strictly encrypted and protected.</span>
                             </div>
                         </div>
 
@@ -683,16 +781,19 @@ export default function Profile() {
                                     <div className="form-fields-grid">
                                         <div className="form-group-box">
                                             <label className="field-label">First Name</label>
-                                            <input
-                                                type="text"
-                                                className={`form-control-field ${errors.firstName ? "is-invalid" : ""}`}
-                                                placeholder="e.g. Alexander"
-                                                value={personalForm.firstName || ""}
-                                                onChange={(e) => {
-                                                    setPersonalForm({ ...personalForm, firstName: e.target.value });
-                                                    if (errors.firstName) setErrors(prev => ({ ...prev, firstName: "" }));
-                                                }}
-                                            />
+                                            <div className="form-input-with-icon">
+                                                <User size={16} className="input-field-icon" />
+                                                <input
+                                                    type="text"
+                                                    className={`form-control-field has-icon ${errors.firstName ? "is-invalid" : ""}`}
+                                                    placeholder="e.g. Alexander"
+                                                    value={personalForm.firstName || ""}
+                                                    onChange={(e) => {
+                                                        setPersonalForm({ ...personalForm, firstName: e.target.value });
+                                                        if (errors.firstName) setErrors(prev => ({ ...prev, firstName: "" }));
+                                                    }}
+                                                />
+                                            </div>
                                             {errors.firstName && (
                                                 <span className="inline-error">
                                                     <AlertCircle size={13} /> {errors.firstName}
@@ -702,16 +803,19 @@ export default function Profile() {
 
                                         <div className="form-group-box">
                                             <label className="field-label">Last Name</label>
-                                            <input
-                                                type="text"
-                                                className={`form-control-field ${errors.lastName ? "is-invalid" : ""}`}
-                                                placeholder="e.g. Wright"
-                                                value={personalForm.lastName || ""}
-                                                onChange={(e) => {
-                                                    setPersonalForm({ ...personalForm, lastName: e.target.value });
-                                                    if (errors.lastName) setErrors(prev => ({ ...prev, lastName: "" }));
-                                                }}
-                                            />
+                                            <div className="form-input-with-icon">
+                                                <User size={16} className="input-field-icon" />
+                                                <input
+                                                    type="text"
+                                                    className={`form-control-field has-icon ${errors.lastName ? "is-invalid" : ""}`}
+                                                    placeholder="e.g. Wright"
+                                                    value={personalForm.lastName || ""}
+                                                    onChange={(e) => {
+                                                        setPersonalForm({ ...personalForm, lastName: e.target.value });
+                                                        if (errors.lastName) setErrors(prev => ({ ...prev, lastName: "" }));
+                                                    }}
+                                                />
+                                            </div>
                                             {errors.lastName && (
                                                 <span className="inline-error">
                                                     <AlertCircle size={13} /> {errors.lastName}
@@ -721,16 +825,19 @@ export default function Profile() {
 
                                         <div className="form-group-box">
                                             <label className="field-label">Email Address</label>
-                                            <input
-                                                type="email"
-                                                className={`form-control-field ${errors.email ? "is-invalid" : ""}`}
-                                                placeholder="e.g. customer@example.com"
-                                                value={personalForm.email || ""}
-                                                onChange={(e) => {
-                                                    setPersonalForm({ ...personalForm, email: e.target.value });
-                                                    if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
-                                                }}
-                                            />
+                                            <div className="form-input-with-icon">
+                                                <Mail size={16} className="input-field-icon" />
+                                                <input
+                                                    type="email"
+                                                    className={`form-control-field has-icon ${errors.email ? "is-invalid" : ""}`}
+                                                    placeholder="e.g. customer@example.com"
+                                                    value={personalForm.email || ""}
+                                                    onChange={(e) => {
+                                                        setPersonalForm({ ...personalForm, email: e.target.value });
+                                                        if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                                                    }}
+                                                />
+                                            </div>
                                             {errors.email && (
                                                 <span className="inline-error">
                                                     <AlertCircle size={13} /> {errors.email}
@@ -740,16 +847,19 @@ export default function Profile() {
 
                                         <div className="form-group-box">
                                             <label className="field-label">Phone Number</label>
-                                            <input
-                                                type="tel"
-                                                className={`form-control-field ${errors.phone ? "is-invalid" : ""}`}
-                                                placeholder="e.g. 08108725967"
-                                                value={personalForm.phone || ""}
-                                                onChange={(e) => {
-                                                    setPersonalForm({ ...personalForm, phone: e.target.value });
-                                                    if (errors.phone) setErrors(prev => ({ ...prev, phone: "" }));
-                                                }}
-                                            />
+                                            <div className="form-input-with-icon">
+                                                <Phone size={16} className="input-field-icon" />
+                                                <input
+                                                    type="tel"
+                                                    className={`form-control-field has-icon ${errors.phone ? "is-invalid" : ""}`}
+                                                    placeholder="e.g. 08108725967"
+                                                    value={personalForm.phone || ""}
+                                                    onChange={(e) => {
+                                                        setPersonalForm({ ...personalForm, phone: e.target.value });
+                                                        if (errors.phone) setErrors(prev => ({ ...prev, phone: "" }));
+                                                    }}
+                                                />
+                                            </div>
                                             {errors.phone && (
                                                 <span className="inline-error">
                                                     <AlertCircle size={13} /> {errors.phone}

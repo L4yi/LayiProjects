@@ -78,7 +78,11 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
                 <div className="user-profile-widget">
                     <Link to="/profile" className="user-info-row" title="View Profile" onClick={onClose}>
                         <div className="user-avatar-img" id="dashboardAvatarInitial">
-                            {user?.initials || "SU"}
+                            {user?.profileImage || user?.avatar ? (
+                                <img src={user.profileImage || user.avatar} alt={user.name} className="sidebar-avatar-img" />
+                            ) : (
+                                user?.initials || "SU"
+                            )}
                         </div>
                         <div className="user-text">
                             <span className="user-name" id="dashboardUserName">

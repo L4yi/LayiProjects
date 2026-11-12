@@ -108,7 +108,11 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                         }}
                         title={`${user.name} Profile`}
                     >
-                        <span className="avatar-initial">{user.initials}</span>
+                        {user.profileImage || user.avatar ? (
+                            <img src={user.profileImage || user.avatar} alt={user.name} className="header-avatar-img" />
+                        ) : (
+                            <span className="avatar-initial">{user.initials}</span>
+                        )}
                     </button>
 
                     <ProfileDropdown

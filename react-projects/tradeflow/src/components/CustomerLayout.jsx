@@ -168,7 +168,11 @@ export default function CustomerLayout() {
                         <div className="user-profile-widget">
                             <Link to="/customer/settings" className="user-info-row" title="View Profile" onClick={closeSidebar}>
                                 <div className="user-avatar-img" id="customerAvatarInitial">
-                                    {user.initials}
+                                    {user.profileImage || user.avatar ? (
+                                        <img src={user.profileImage || user.avatar} alt={user.name} className="sidebar-avatar-img" />
+                                    ) : (
+                                        user.initials
+                                    )}
                                 </div>
                                 <div className="user-text">
                                     <span className="user-name" id="customerUserName">
@@ -294,7 +298,11 @@ export default function CustomerLayout() {
                                     }}
                                     title={`${user.name} Profile`}
                                 >
-                                    <span className="avatar-initial">{user.initials}</span>
+                                    {user.profileImage || user.avatar ? (
+                                        <img src={user.profileImage || user.avatar} alt={user.name} className="header-avatar-img" />
+                                    ) : (
+                                        <span className="avatar-initial">{user.initials}</span>
+                                    )}
                                 </button>
 
                                 <ProfileDropdown
