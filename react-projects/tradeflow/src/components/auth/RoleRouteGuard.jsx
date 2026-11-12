@@ -6,7 +6,7 @@ import { getSessionUser } from "../../utils/session";
  * Protects a route based on a permission predicate function.
  * If permission fails, redirects safely to /dashboard.
  */
-export default function RoleRouteGuard({ permissionCheck, children, fallbackTo = "/dashboard" }) {
+export default function RoleRouteGuard({ permissionCheck, children, fallbackTo = "/403" }) {
     const user = getSessionUser();
 
     if (!user) {

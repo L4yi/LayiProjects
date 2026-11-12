@@ -35,6 +35,14 @@ import {
   canAccessTransactions, 
   canAccessReports 
 } from "../utils/permissions";
+import { 
+  ErrorPage, 
+  NotFound404, 
+  ServerError500, 
+  BadRequest400, 
+  Forbidden403, 
+  ServiceUnavailable503 
+} from "./errors";
 
 export const router = createBrowserRouter([
   {
@@ -79,6 +87,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <CustomerLayout />,
+    errorElement: <ServerError500 />,
     children: [
       {
         path: "/customer/dashboard",
@@ -120,6 +129,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <DashboardLayout />,
+    errorElement: <ServerError500 />,
     children: [
       {
         path: "/dashboard",
@@ -172,7 +182,31 @@ export const router = createBrowserRouter([
     ]
   },
   {
+    path: "/404",
+    element: <NotFound404 />
+  },
+  {
+    path: "/500",
+    element: <ServerError500 />
+  },
+  {
+    path: "/400",
+    element: <BadRequest400 />
+  },
+  {
+    path: "/403",
+    element: <Forbidden403 />
+  },
+  {
+    path: "/503",
+    element: <ServiceUnavailable503 />
+  },
+  {
+    path: "/error/:code",
+    element: <ErrorPage />
+  },
+  {
     path: "*",
-    element: <Navigate to="/dashboard" replace />
+    element: <NotFound404 />
   }
 ]);
