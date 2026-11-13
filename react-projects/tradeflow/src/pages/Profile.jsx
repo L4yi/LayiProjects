@@ -387,7 +387,7 @@ export default function Profile() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Instant local preview
+        // Instant local preview for responsive visual feedback
         const localPreview = URL.createObjectURL(file);
         setUser((prev) => ({
             ...prev,
@@ -398,24 +398,42 @@ export default function Profile() {
 
         setIsUploadingAvatar(true);
         try {
-            const targetId = user.staffId || user.customerId || user.id || "1";
-            const res = await staffService.updateProfilePhoto(targetId, file, {
-                staffId: targetId,
-                name: user.name,
-                emailAddress: user.email,
-                phoneNumber: user.phone,
-                address: user.address
-            });
+            const isCustomerUser = user.isCustomer || Boolean(user.customerId);
+            let res;
 
-            const finalUrl = res?.imageUrl || localPreview;
-            const updated = setSessionUser({
-                ...user,
-                profileImage: finalUrl,
-                avatar: finalUrl,
-                avatarUrl: finalUrl
-            });
-            setUser(updated);
-            showToast("Profile photo updated successfully!");
+            if (isCustomerUser) {
+                const customerId = user.customerId || user.id || "";
+                res = await customerService.updateProfilePhoto(customerId, file, {
+                    customerId,
+                    name: user.name,
+                    emailAddress: user.email,
+                    phoneNumber: user.phone,
+                    address: user.address
+                });
+            } else {
+                const staffId = user.staffId || user.id || "1";
+                res = await staffService.updateProfilePhoto(staffId, file, {
+                    staffId,
+                    name: user.name,
+                    emailAddress: user.email,
+                    phoneNumber: user.phone,
+                    address: user.address
+                });
+            }
+
+            if (res?.success) {
+                const finalUrl = res.imageUrl || res.data?.imageUrl || localPreview;
+                const updated = setSessionUser({
+                    ...user,
+                    profileImage: finalUrl,
+                    avatar: finalUrl,
+                    avatarUrl: finalUrl
+                });
+                setUser(updated);
+                showToast("Profile photo updated and saved to account!");
+            } else {
+                throw new Error(res?.message || "Failed to update profile photo on server.");
+            }
         } catch (err) {
             console.error("Avatar upload failed:", err);
             const updated = setSessionUser({
@@ -425,7 +443,7 @@ export default function Profile() {
                 avatarUrl: localPreview
             });
             setUser(updated);
-            showToast("Profile photo saved locally!");
+            showToast(err.message || "Failed to sync photo to server.");
         } finally {
             setIsUploadingAvatar(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

@@ -110,9 +110,13 @@ export function setSessionUser(userData) {
         const userId = userData.customerId || userData.customer_id || userData.staffId || userData.staff_id || userData.id || userData.email;
         const profileImage = userData.profileImage || userData.avatar || userData.avatarUrl || userData.image || null;
 
-        if (userId && profileImage) {
+        if (userId) {
             try {
-                localStorage.setItem(`tradeflow_photo_${userId}`, profileImage);
+                if (profileImage) {
+                    localStorage.setItem(`tradeflow_photo_${userId}`, profileImage);
+                } else {
+                    localStorage.removeItem(`tradeflow_photo_${userId}`);
+                }
             } catch {
                 // Ignore localStorage quota limits
             }

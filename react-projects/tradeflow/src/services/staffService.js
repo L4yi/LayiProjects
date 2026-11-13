@@ -55,7 +55,17 @@ export const staffService = {
             const response = await api.post("admin/staff/fetch-all-staff.php", new FormData());
             const resData = response.data;
             if (resData?.success === true && Array.isArray(resData?.data)) {
-                return resData;
+                const normalizedList = resData.data.map((s) => {
+                    const photo = s.profile_image || s.profileImage || s.imageUrl || s.image || "";
+                    return {
+                        ...s,
+                        profileImage: photo,
+                        avatar: photo,
+                        avatarUrl: photo,
+                        imageUrl: photo
+                    };
+                });
+                return { ...resData, data: normalizedList };
             }
             const msg = String(resData?.message || "").toUpperCase();
             if (msg.includes("NO") && msg.includes("STAFF")) {
@@ -85,7 +95,15 @@ export const staffService = {
             const formData = new FormData();
             formData.append("staffId", String(staffId).trim());
             const response = await api.post("admin/staff/fetch-each-staff.php", formData);
-            return normalizeResponse(response.data, "Staff details retrieved successfully.");
+            const norm = normalizeResponse(response.data, "Staff details retrieved successfully.");
+            if (norm.success && norm.data) {
+                const photo = norm.data.profile_image || norm.data.profileImage || norm.data.imageUrl || norm.data.image || "";
+                norm.data.profileImage = photo;
+                norm.data.avatar = photo;
+                norm.data.avatarUrl = photo;
+                norm.data.imageUrl = photo;
+            }
+            return norm;
         } catch (error) {
             return {
                 success: false,

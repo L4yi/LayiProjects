@@ -10,6 +10,7 @@ function normalizeCustomer(item) {
     const firstName = item.first_name || item.firstName || "";
     const lastName = item.last_name || item.lastName || "";
     const fullName = `${firstName} ${lastName}`.trim() || item.email_address || item.emailAddress || "Customer";
+    const photo = item.profile_image || item.profileImage || item.imageUrl || item.image || item.avatar || "";
 
     return {
         id: item.customer_id || item.customerId || "",
@@ -30,6 +31,10 @@ function normalizeCustomer(item) {
         roleId: item.role_id || item.roleId || "",
         role: item.role_name || item.roleName || "",
         roleName: item.role_name || item.roleName || "",
+        profileImage: photo,
+        avatar: photo,
+        avatarUrl: photo,
+        imageUrl: photo,
         createdAt: item.created_at || item.createdAt || "",
         updatedAt: item.updated_at || item.updatedAt || ""
     };
@@ -241,6 +246,7 @@ export const customerService = {
                 };
             }
 
+            const photo = matched.profileImage || matched.profile_image || matched.imageUrl || matched.image || matched.avatar || "";
             const sessionPayload = {
                 customerId: matched.customerId,
                 id: matched.customerId,
@@ -253,7 +259,11 @@ export const customerService = {
                 role: "Customer",
                 roleId: matched.roleId || setupService.getRoleId("Customer"),
                 status: matched.status || "ACTIVE",
-                statusId: matched.statusId || setupService.getStatusId("Active")
+                statusId: matched.statusId || setupService.getStatusId("Active"),
+                profileImage: photo,
+                avatar: photo,
+                avatarUrl: photo,
+                imageUrl: photo
             };
 
             setSessionUser(sessionPayload);
@@ -334,6 +344,8 @@ export const customerService = {
                 const fullName = `${firstName} ${lastName}`.trim() || cust.emailAddress || cleanEmail;
                 const customerId = cust.customerId || cust.customer_id || cust.id || "";
 
+                const photo = cust.profileImage || cust.imageUrl || cust.image || cust.avatar || cust.profile_image || "";
+
                 const sessionPayload = {
                     customerId,
                     id: customerId,
@@ -347,6 +359,10 @@ export const customerService = {
                     roleId: "19",
                     status: "ACTIVE",
                     statusId: "1",
+                    profileImage: photo,
+                    avatar: photo,
+                    avatarUrl: photo,
+                    imageUrl: photo,
                     lastLogin: cust.lastLoginDate || "Just now"
                 };
 
@@ -619,6 +635,105 @@ export const customerService = {
             roleId: validRoleId,
             statusId: validStatusId
         });
+    },
+
+    // Dual-strategy customer profile photo update pipeline:
+    // 1. Uploads file to admin/upload/upload-image.php (folder: 'profiles', image: file) -> returns { data: { imageUrl } }
+    // 2. Persists imageUrl directly into customer/customer/update-customer.php so it saves to MySQL
+    async updateProfilePhoto(customerId, file, customerDetails = {}) {
+        if (!file) {
+            return { success: false, message: "No image file provided." };
+        }
+
+        const validId = String(customerId || customerDetails.customerId || customerDetails.id || "").trim();
+        if (!validId) {
+            return { success: false, message: "Valid customer ID is required." };
+        }
+
+        // Step 1: Upload image file to server
+        const formData = new FormData();
+        formData.append("folder", "profiles");
+        formData.append("image", file);
+        formData.append("file", file);
+
+        let imageUrl = null;
+        try {
+            const uploadRes = await api.post("admin/upload/upload-image.php", formData);
+            const uploadData = uploadRes.data;
+            imageUrl = uploadData?.data?.imageUrl || uploadData?.imageUrl || uploadData?.data?.url || uploadData?.url;
+
+            if (!imageUrl && uploadData?.success === false) {
+                return {
+                    success: false,
+                    message: uploadData?.message || "Failed to upload image file."
+                };
+            }
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || err.message || "Failed to upload image to server."
+            };
+        }
+
+        if (!imageUrl) {
+            return { success: false, message: "No image URL returned from upload server." };
+        }
+
+        // Step 2: Persist imageUrl to customer profile in MySQL database
+        try {
+            const updateForm = new FormData();
+            updateForm.append("customerId", validId);
+            updateForm.append("customer_id", validId);
+            updateForm.append("profileImage", imageUrl);
+            updateForm.append("imageUrl", imageUrl);
+            updateForm.append("image", imageUrl);
+
+            const firstName = (customerDetails.firstName || customerDetails.name?.split(" ")[0] || "").trim();
+            const lastName = (customerDetails.lastName || customerDetails.name?.split(" ").slice(1).join(" ") || "").trim();
+            const fullName = (customerDetails.fullName || customerDetails.name || `${firstName} ${lastName}`).trim();
+
+            if (firstName) updateForm.append("firstName", firstName);
+            if (lastName) updateForm.append("lastName", lastName);
+            if (fullName) updateForm.append("fullName", fullName);
+            if (customerDetails.email || customerDetails.emailAddress) {
+                updateForm.append("emailAddress", (customerDetails.email || customerDetails.emailAddress).trim());
+            }
+            if (customerDetails.phone || customerDetails.phoneNumber) {
+                updateForm.append("phoneNumber", (customerDetails.phone || customerDetails.phoneNumber).trim());
+            }
+            if (customerDetails.address) {
+                updateForm.append("address", customerDetails.address.trim());
+            }
+
+            let response;
+            try {
+                response = await api.post("customer/customer/update-customer.php", updateForm);
+            } catch {
+                response = await api.post("admin/customer/update-customer.php", updateForm);
+            }
+
+            const resData = response.data;
+            if (resData?.success === true) {
+                return {
+                    success: true,
+                    imageUrl,
+                    data: resData.data,
+                    message: resData.message || "Customer profile photo updated successfully!"
+                };
+            }
+
+            return {
+                success: true,
+                imageUrl,
+                data: resData?.data,
+                message: resData?.message || "Profile photo updated successfully!"
+            };
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || err.message || "Failed to persist profile photo to customer account."
+            };
+        }
     }
 };
 

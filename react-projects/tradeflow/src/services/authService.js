@@ -48,6 +48,7 @@ export const authService = {
                 const rawRoleId = String(serverUser.roleId || serverUser.role_id || "").trim();
                 const rawRoleName = serverUser.roleName || serverUser.role_name || setupService.getRoleName(rawRoleId) || "STAFF";
                 const normalizedRoleId = rawRoleId || setupService.getRoleId(rawRoleName);
+                const photo = serverUser.profileImage || serverUser.profile_image || serverUser.imageUrl || serverUser.image || serverUser.avatar || "";
 
                 const userData = {
                     staffId: serverUser.staffId || serverUser.staff_id,
@@ -66,6 +67,10 @@ export const authService = {
                     status: serverUser.statusName || serverUser.status_name || "ACTIVE",
                     statusName: serverUser.statusName || serverUser.status_name || "ACTIVE",
                     statusId: serverUser.statusId || serverUser.status_id || setupService.getStatusId(),
+                    profileImage: photo,
+                    avatar: photo,
+                    avatarUrl: photo,
+                    imageUrl: photo,
                     lastLogin: serverUser.lastLoginDate || serverUser.last_login_date,
                     createdAt: serverUser.createdAt || serverUser.created_at,
                 };
