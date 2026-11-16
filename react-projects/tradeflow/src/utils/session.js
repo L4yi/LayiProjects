@@ -108,7 +108,18 @@ export function setSessionUser(userData) {
         }
 
         const userId = userData.customerId || userData.customer_id || userData.staffId || userData.staff_id || userData.id || userData.email;
-        const profileImage = userData.profileImage || userData.avatar || userData.avatarUrl || userData.image || null;
+        let profileImage = userData.profileImage;
+        if (profileImage === undefined) {
+            profileImage = userData.avatar ?? userData.avatarUrl ?? userData.image;
+        }
+        if (profileImage === undefined && userId) {
+            try {
+                profileImage = localStorage.getItem(`tradeflow_photo_${userId}`) || null;
+            } catch {
+                profileImage = null;
+            }
+        }
+        profileImage = profileImage || null;
 
         if (userId) {
             try {

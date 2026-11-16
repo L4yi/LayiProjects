@@ -23,7 +23,13 @@ import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
 import CustomerProductDetails from "./customer/CustomerProductDetails";
 import CustomerProducts from "./customer/CustomerProducts";
 import CustomerOrders from "./customer/CustomerOrders";
+import CustomerTrackOrder from "./customer/CustomerTrackOrder";
 import CustomerCart from "./customer/CustomerCart";
+import CustomerWishlist from "./customer/CustomerWishlist";
+import CustomerNotifications from "./customer/CustomerNotifications";
+import CustomerAddresses from "./customer/CustomerAddresses";
+import CustomerPaymentMethods from "./customer/CustomerPaymentMethods";
+import CustomerSupport from "./customer/CustomerSupport";
 import CustomerCheckout from "./customer/CustomerCheckout";
 import CustomerSignIn from "./customer/CustomerSignIn";
 import CustomerSignUp from "./customer/CustomerSignUp";
@@ -106,6 +112,10 @@ export const router = createBrowserRouter([
         element: <CustomerOrders />
       },
       {
+        path: "/customer/track-order",
+        element: <CustomerTrackOrder />
+      },
+      {
         path: "/customer/category/:categoryId",
         element: <CustomerCategoryProducts />
       },
@@ -118,12 +128,32 @@ export const router = createBrowserRouter([
         element: <CustomerCart />
       },
       {
+        path: "/customer/wishlist",
+        element: <CustomerWishlist />
+      },
+      {
+        path: "/customer/notifications",
+        element: <CustomerNotifications />
+      },
+      {
+        path: "/customer/addresses",
+        element: <CustomerAddresses />
+      },
+      {
+        path: "/customer/payment-methods",
+        element: <CustomerPaymentMethods />
+      },
+      {
         path: "/customer/checkout",
         element: <CustomerCheckout />
       },
       {
         path: "/customer/settings",
         element: <Profile />
+      },
+      {
+        path: "/customer/support",
+        element: <CustomerSupport />
       }
     ]
   },

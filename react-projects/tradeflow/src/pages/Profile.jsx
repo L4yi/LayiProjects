@@ -169,6 +169,7 @@ export default function Profile() {
 
             if (liveData) {
                 const fullName = liveData.name || `${liveData.firstName || ""} ${liveData.lastName || ""}`.trim() || currentUser.name;
+                const photo = liveData.profileImage || liveData.avatar || liveData.imageUrl || currentUser.profileImage || currentUser.avatar || null;
                 const updated = setSessionUser({
                     ...currentUser,
                     customerId: liveData.customerId || liveData.id || cid,
@@ -181,7 +182,11 @@ export default function Profile() {
                     address: liveData.address || currentUser.address,
                     titleId: liveData.titleId || "1",
                     roleId: (liveData.roleId && Number(liveData.roleId) <= 17) ? liveData.roleId : "1",
-                    statusId: liveData.statusId || "1"
+                    statusId: liveData.statusId || "1",
+                    profileImage: photo,
+                    avatar: photo,
+                    avatarUrl: photo,
+                    imageUrl: photo
                 });
                 setUser(updated);
                 const uFirst = updated.firstName || (updated.name ? updated.name.split(" ")[0] : "");
@@ -617,7 +622,12 @@ export default function Profile() {
                             </div>
                             
                             <div className="profile-name-edit-wrap">
-                                <h3 className="profile-full-name">{user.name}</h3>
+                                <h3 className="profile-full-name">
+                                    <span>{user.name}</span>
+                                    {(isCustomerPortal || user.isCustomer || user.customerId) && (
+                                        <i className="bi bi-patch-check-fill verified-name-check" title="Verified Customer"></i>
+                                    )}
+                                </h3>
                                 <button
                                     type="button"
                                     className="btn-edit-name-inline"
@@ -628,10 +638,17 @@ export default function Profile() {
                                 </button>
                             </div>
 
-                            <span className={`profile-role-badge ${isCustomerPortal || user.isCustomer || user.customerId ? "customer-tier-badge" : "staff-role-badge"}`}>
-                                <ShieldCheck size={13} className="shrink-0" />
-                                <span>{isCustomerPortal || user.isCustomer || user.customerId ? "Verified Customer" : (user.role || "Staff")}</span>
-                            </span>
+                            {isCustomerPortal || user.isCustomer || user.customerId ? (
+                                <span className="verified-badge-pill mb-16" title="Verified Customer Account">
+                                    <i className="bi bi-patch-check-fill verified-badge-icon"></i>
+                                    <span>VERIFIED CUSTOMER</span>
+                                </span>
+                            ) : (
+                                <span className="profile-role-badge staff-role-badge mb-16">
+                                    <ShieldCheck size={13} className="shrink-0" />
+                                    <span>{user.role || "Staff"}</span>
+                                </span>
+                            )}
 
                             {/* Green Privacy Reassurance Pill */}
                             <div className="profile-privacy-note">

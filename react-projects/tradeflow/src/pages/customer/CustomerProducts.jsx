@@ -5,12 +5,32 @@ import { PageSkeleton } from "../../components/common";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 
+function formatProduct(p) {
+    const directImg = p.image || p.imageUrl || p.product_image || p.productImage || p.image_url;
+    const priceNum = Number(p.product_price || p.price || 0);
+    return {
+        id: String(p.product_id || p.productId || p.id),
+        name: p.product_name || p.name || "Product",
+        categoryId: String(p.categories_id || p.category_id || p.categoryId || ""),
+        categoryName: p.categories_name || p.category_name || "Catalog",
+        priceNum,
+        price: `₦ ${priceNum.toLocaleString()}`,
+        oldPrice: priceNum > 0 ? `₦ ${Math.round(priceNum * 1.15).toLocaleString()}` : "",
+        rating: 5,
+        reviewsCount: 12,
+        image: directImg || "",
+        badge: "In Stock"
+    };
+}
+
 export default function CustomerProducts() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+    const [isSearching, setIsSearching] = useState(false);
+    const [backendSearchResults, setBackendSearchResults] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortBy, setSortBy] = useState("featured");
 
@@ -31,23 +51,7 @@ export default function CustomerProducts() {
                 ]);
 
                 if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data)) {
-                    setProducts(prodRes.value.data.map(p => {
-                        const directImg = p.image || p.imageUrl || p.product_image || p.productImage || p.image_url;
-                        const priceNum = Number(p.product_price || p.price || 0);
-                        return {
-                            id: String(p.product_id || p.productId || p.id),
-                            name: p.product_name || p.name || "Product",
-                            categoryId: String(p.categories_id || p.category_id || p.categoryId || ""),
-                            categoryName: p.categories_name || p.category_name || "Catalog",
-                            priceNum,
-                            price: `₦ ${priceNum.toLocaleString()}`,
-                            oldPrice: priceNum > 0 ? `₦ ${Math.round(priceNum * 1.15).toLocaleString()}` : "",
-                            rating: 5,
-                            reviewsCount: 12,
-                            image: directImg || "",
-                            badge: "In Stock"
-                        };
-                    }));
+                    setProducts(prodRes.value.data.map(formatProduct));
                 }
 
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
@@ -66,16 +70,53 @@ export default function CustomerProducts() {
         loadCatalog();
     }, []);
 
+    // Query the backend search endpoint with debounce whenever search query changes
+    useEffect(() => {
+        const query = searchQuery.trim();
+        if (!query) {
+            setBackendSearchResults(null);
+            setIsSearching(false);
+            return;
+        }
+
+        let isMounted = true;
+        setIsSearching(true);
+        const timer = setTimeout(async () => {
+            try {
+                // Call live backend endpoint: admin/product/search-product.php
+                const res = await productService.searchProduct(query);
+                if (!isMounted) return;
+                if (res.success && Array.isArray(res.data)) {
+                    setBackendSearchResults(res.data.map(formatProduct));
+                } else {
+                    setBackendSearchResults([]);
+                }
+            } catch (err) {
+                console.error("Backend search failed:", err);
+                if (isMounted) setBackendSearchResults(null); // graceful fallback to local filter
+            } finally {
+                if (isMounted) setIsSearching(false);
+            }
+        }, 300);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timer);
+        };
+    }, [searchQuery]);
+
     const filteredProducts = useMemo(() => {
-        let result = [...products];
+        // Use backend search results if available, otherwise full product list
+        const source = backendSearchResults !== null ? backendSearchResults : products;
+        let result = [...source];
 
         // Filter by category
         if (selectedCategory !== "all") {
             result = result.filter(p => p.categoryId === selectedCategory || p.categoryName.toLowerCase() === selectedCategory.toLowerCase());
         }
 
-        // Filter by search query
-        if (searchQuery.trim()) {
+        // Fallback client filter if backend search result hasn't resolved yet
+        if (backendSearchResults === null && searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             result = result.filter(p =>
                 p.name.toLowerCase().includes(q) ||
@@ -93,10 +134,11 @@ export default function CustomerProducts() {
         }
 
         return result;
-    }, [products, selectedCategory, searchQuery, sortBy]);
+    }, [products, backendSearchResults, selectedCategory, searchQuery, sortBy]);
 
     const handleClearFilters = () => {
         setSearchQuery("");
+        setBackendSearchResults(null);
         setSelectedCategory("all");
         setSortBy("featured");
         setSearchParams({});
@@ -128,19 +170,31 @@ export default function CustomerProducts() {
 
                     <div className="catalog-search-sort-group">
                         <div className="catalog-search-wrap">
-                            <i className="bi bi-search"></i>
+                            {isSearching ? (
+                                <span className="spinner-border spinner-border-sm" style={{ width: "14px", height: "14px", color: "#143526" }} role="status" aria-hidden="true"></span>
+                            ) : (
+                                <i className="bi bi-search"></i>
+                            )}
                             <input
                                 type="text"
                                 className="catalog-search-input"
-                                placeholder="Search products..."
+                                placeholder="Search products (queries live backend)..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSearchQuery(val);
+                                    if (val.trim()) {
+                                        setSearchParams({ search: val.trim() });
+                                    } else {
+                                        setSearchParams({});
+                                    }
+                                }}
                             />
                             {searchQuery && (
                                 <button
                                     type="button"
                                     className="clear-search-btn"
-                                    onClick={() => setSearchQuery("")}
+                                    onClick={handleClearFilters}
                                     title="Clear search"
                                 >
                                     <i className="bi bi-x-circle-fill"></i>
@@ -164,6 +218,25 @@ export default function CustomerProducts() {
                         </div>
                     </div>
                 </div>
+
+                {/* Active Backend Search Pill / Status Bar */}
+                {searchQuery.trim() && (
+                    <div className="active-search-status-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", margin: "14px 0", fontSize: "13px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <i className="bi bi-check-circle-fill" style={{ color: "#10b981", fontSize: "14px" }}></i>
+                            <span>
+                                Live backend search results for <strong>"{searchQuery}"</strong> ({filteredProducts.length} product{filteredProducts.length === 1 ? "" : "s"} found)
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleClearFilters}
+                            style={{ background: "none", border: "none", color: "#10b981", fontWeight: 600, cursor: "pointer", fontSize: "12px", textDecoration: "underline" }}
+                        >
+                            Reset Search
+                        </button>
+                    </div>
+                )}
 
                 {/* Category Filter Pills Bar */}
                 <div className="category-pills-filter-bar">

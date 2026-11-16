@@ -102,3 +102,16 @@ export function getWalletBalance() {
     }
     return 25000; // Preset ₦25,000 store credit / promotional balance for active customer
 }
+
+// Add funds to customer wallet
+export function addWalletFunds(amount) {
+    const current = getWalletBalance();
+    const updated = current + Number(amount || 0);
+    try {
+        localStorage.setItem(WALLET_BALANCE_KEY, String(updated));
+        window.dispatchEvent(new CustomEvent("tradeflow_wallet_balance_update", { detail: updated }));
+    } catch (e) {
+        console.warn("Could not save wallet balance:", e);
+    }
+    return updated;
+}

@@ -193,10 +193,22 @@ export const productService = {
 
     async searchProduct(searchContent) {
         try {
+            const trimmed = (searchContent || "").trim();
+            if (!trimmed) {
+                return {
+                    success: true,
+                    message: "EMPTY_SEARCH",
+                    data: []
+                };
+            }
             const formData = new FormData();
-            formData.append("searchContent", (searchContent || "").trim());
+            formData.append("searchContent", trimmed);
             const response = await api.post("admin/product/search-product.php", formData);
-            return normalizeResponse(response.data, "PRODUCTS SEARCHED SUCCESSFULLY");
+            const norm = normalizeResponse(response.data, "PRODUCTS SEARCHED SUCCESSFULLY");
+            return {
+                ...norm,
+                data: Array.isArray(norm.data) ? norm.data : []
+            };
         } catch (error) {
             return {
                 success: false,

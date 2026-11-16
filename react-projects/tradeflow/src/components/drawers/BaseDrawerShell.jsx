@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
+import {
+    Drawer,
+    DrawerBackdrop,
+    DrawerContent,
+    DrawerTitle,
+    DrawerDescription
+} from "@ui-sdk/react/drawer";
 
-// Reusable drawer shell component.
-// Provides the dark overlay backdrop, animated drawer panel, header gradient,
-// close button, error banner, and bottom Cancel/Save action buttons.
+// Reusable drawer shell component powered by @ui-sdk/react headless primitives.
+// Retains TradeFlow's design system: dark backdrop overlay, slide-in panel,
+// header gradient, responsive mobile layout, error banner, and docked bottom footer.
 export default function BaseDrawerShell({
     isOpen,
     onClose,
@@ -17,18 +24,41 @@ export default function BaseDrawerShell({
     saveButtonText = "Save Changes",
     readOnly = false
 }) {
+    // Keyboard Escape listener as an accessible fallback
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onClose?.();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div className="drawer-overlay" onClick={onClose}>
-            <div className="admin-slide-drawer" onClick={(e) => e.stopPropagation()}>
+        <Drawer
+            open={isOpen}
+            side="right"
+            onOpenChange={(open) => {
+                if (!open) {
+                    onClose?.();
+                }
+            }}
+        >
+            <DrawerBackdrop className="drawer-overlay" onClick={onClose} />
+            <DrawerContent className="admin-slide-drawer">
                 {/* Top header bar with gradient and close button */}
                 <div className="drawer-header-gradient">
                     <div className="drawer-header-left">
                         <div className="drawer-header-icon">
                             <i className={icon}></i>
                         </div>
-                        <h3 className="drawer-title">{title}</h3>
+                        <DrawerTitle className="drawer-title" style={{ margin: 0 }}>
+                            {title}
+                        </DrawerTitle>
                     </div>
                     <button
                         type="button"
@@ -42,9 +72,11 @@ export default function BaseDrawerShell({
 
                 {/* Subtitle helper bar */}
                 <div className="drawer-subtitle-bar">
-                    <p>
-                        You are {readOnly ? "viewing" : "about to modify"} <strong>{entityType}</strong>. {subtitle}
-                    </p>
+                    <DrawerDescription asChild>
+                        <p style={{ margin: 0 }}>
+                            You are {readOnly ? "viewing" : "about to modify"} <strong>{entityType}</strong>. {subtitle}
+                        </p>
+                    </DrawerDescription>
                 </div>
 
                 {/* Optional error banner */}
@@ -56,7 +88,11 @@ export default function BaseDrawerShell({
                 )}
 
                 {/* Form container with scrollable body and docked bottom footer */}
-                <form className="drawer-main-form" noValidate onSubmit={readOnly ? (e) => { e.preventDefault(); onClose(); } : onSubmit}>
+                <form
+                    className="drawer-main-form"
+                    noValidate
+                    onSubmit={readOnly ? (e) => { e.preventDefault(); onClose?.(); } : onSubmit}
+                >
                     <div className="drawer-body-scroll">
                         {children}
                     </div>
@@ -90,7 +126,7 @@ export default function BaseDrawerShell({
                         )}
                     </div>
                 </form>
-            </div>
-        </div>
+            </DrawerContent>
+        </Drawer>
     );
 }

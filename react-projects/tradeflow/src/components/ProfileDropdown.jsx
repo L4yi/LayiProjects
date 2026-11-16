@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Menu, MenuContent, MenuItem } from "@ui-sdk/react/menu";
 import { getSessionUser } from "../utils/session";
 import { getCartCount } from "../utils/cart";
 import authService from "../services/authService";
@@ -24,6 +25,18 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
             window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
         };
     }, []);
+
+    // Escape listener and outside click handling
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onClose?.();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -52,66 +65,71 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
     const logoutDestination = isCustomer ? "/customer/signin" : "/signin";
 
     return (
-        <div className="profile-dropdown-card" onClick={(e) => e.stopPropagation()}>
-            <div className="profile-card-header">
-                <div className="profile-initial-badge">
-                    {user?.profileImage || user?.avatar ? (
-                        <img src={user.profileImage || user.avatar} alt={user.name} className="dropdown-avatar-img" />
-                    ) : (
-                        user?.initials || (isCustomer ? "CU" : "SU")
-                    )}
-                </div>
-                <div className="profile-user-info">
-                    <div className="profile-user-name">{user?.name || (isCustomer ? "Customer" : "Staff Member")}</div>
-                    <div className="profile-user-email">{user?.email || (isCustomer ? "customer@tradeflow.com" : "staff@tradeflow.com")}</div>
-                    {user?.phone && <div className="profile-user-phone">{user.phone}</div>}
-                </div>
-            </div>
-
-            <div className="profile-card-menu">
-                {navLinks.map((item, idx) => (
-                    <Link
-                        key={idx}
-                        to={item.to}
-                        className="profile-menu-link"
-                        onClick={onClose}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
-                            <i className={item.icon}></i>
-                            <span>{item.label}</span>
-                        </div>
-                        {item.badge && (
-                            <span 
-                                className="cart-badge-count" 
-                                style={{ 
-                                    position: "static", 
-                                    marginLeft: "auto",
-                                    fontSize: "11px",
-                                    minWidth: "18px",
-                                    height: "18px",
-                                    padding: "0 6px"
-                                }}
-                            >
-                                {item.badge}
-                            </span>
+        <Menu open={isOpen} onOpenChange={(open) => { if (!open) onClose?.(); }}>
+            <MenuContent className="profile-dropdown-card" onClick={(e) => e.stopPropagation()}>
+                <div className="profile-card-header">
+                    <div className="profile-initial-badge">
+                        {user?.profileImage || user?.avatar ? (
+                            <img src={user.profileImage || user.avatar} alt={user.name} className="dropdown-avatar-img" />
+                        ) : (
+                            user?.initials || (isCustomer ? "CU" : "SU")
                         )}
-                    </Link>
-                ))}
-            </div>
+                    </div>
+                    <div className="profile-user-info">
+                        <div className="profile-user-name">{user?.name || (isCustomer ? "Customer" : "Staff Member")}</div>
+                        <div className="profile-user-email">{user?.email || (isCustomer ? "customer@tradeflow.com" : "staff@tradeflow.com")}</div>
+                        {user?.phone && <div className="profile-user-phone">{user.phone}</div>}
+                    </div>
+                </div>
 
-            <div className="profile-card-footer">
-                <Link
-                    to={logoutDestination}
-                    className="profile-logout-pill-btn"
-                    onClick={() => {
-                        authService.logout();
-                        onClose();
-                    }}
-                >
-                    <i className="bi bi-box-arrow-right"></i>
-                    <span>Log-Out</span>
-                </Link>
-            </div>
-        </div>
+                <div className="profile-card-menu">
+                    {navLinks.map((item, idx) => (
+                        <MenuItem key={idx} value={item.to} asChild>
+                            <Link
+                                to={item.to}
+                                className="profile-menu-link"
+                                onClick={onClose}
+                            >
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+                                    <i className={item.icon}></i>
+                                    <span>{item.label}</span>
+                                </div>
+                                {item.badge && (
+                                    <span 
+                                        className="cart-badge-count" 
+                                        style={{ 
+                                            position: "static", 
+                                            marginLeft: "auto",
+                                            fontSize: "11px",
+                                            minWidth: "18px",
+                                            height: "18px",
+                                            padding: "0 6px"
+                                        }}
+                                    >
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </Link>
+                        </MenuItem>
+                    ))}
+                </div>
+
+                <div className="profile-card-footer">
+                    <MenuItem value="logout" asChild>
+                        <Link
+                            to={logoutDestination}
+                            className="profile-logout-pill-btn"
+                            onClick={() => {
+                                authService.logout();
+                                onClose?.();
+                            }}
+                        >
+                            <i className="bi bi-box-arrow-right"></i>
+                            <span>Log-Out</span>
+                        </Link>
+                    </MenuItem>
+                </div>
+            </MenuContent>
+        </Menu>
     );
 }

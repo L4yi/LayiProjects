@@ -115,6 +115,25 @@ export default function CustomerSlideDrawer({
             onSubmit={handleSubmit}
         >
             <div className="drawer-flat-form">
+                {(formData.profileImage || formData.avatar || formData.imageUrl) && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "#f8fafc", borderRadius: "8px", marginBottom: "16px", border: "1px solid #e2e8f0" }}>
+                        <img
+                            src={formData.profileImage || formData.avatar || formData.imageUrl}
+                            alt={formData.name || "Customer"}
+                            style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #143526" }}
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                        <div>
+                            <div style={{ fontWeight: 600, fontSize: "14px", color: "#0f172a" }}>
+                                {formData.name || `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Customer"}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>
+                                {formData.customerId || formData.id ? `#${formData.customerId || formData.id} • ` : ""}Profile Photo Saved
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Title */}
                 <div className="drawer-form-group">
                     <label className="drawer-label">Title</label>

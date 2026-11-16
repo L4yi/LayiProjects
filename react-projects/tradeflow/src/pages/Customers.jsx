@@ -285,9 +285,20 @@ export default function Customers() {
                                             <div className="customer-name-box">
                                                 <div
                                                     className="cust-avatar"
-                                                    style={{ backgroundColor: "#143526" }}
+                                                    style={{ backgroundColor: "#143526", overflow: "hidden" }}
                                                 >
-                                                    {cust.initials || (cust.name || "CU").substring(0, 2).toUpperCase()}
+                                                    {(cust.profileImage || cust.avatar || cust.imageUrl) ? (
+                                                        <img
+                                                            src={cust.profileImage || cust.avatar || cust.imageUrl}
+                                                            alt={cust.name}
+                                                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = "none";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        cust.initials || (cust.name || "CU").substring(0, 2).toUpperCase()
+                                                    )}
                                                 </div>
                                                 <div className="cust-text-wrap">
                                                     <span className="cust-text">{cust.name}</span>

@@ -1,0 +1,183 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getWishlistItems, removeFromWishlist, clearWishlist } from "../../utils/wishlist";
+import { addToCart } from "../../utils/cart";
+import { PageHeader } from "../../components/common";
+
+export default function CustomerWishlist() {
+    const navigate = useNavigate();
+    const [wishlist, setWishlist] = useState(getWishlistItems());
+    const [toastMessage, setToastMessage] = useState("");
+
+    useEffect(() => {
+        const handleWishlistUpdate = () => {
+            setWishlist(getWishlistItems());
+        };
+        window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+        return () => window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+    }, []);
+
+    const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(""), 3000);
+    };
+
+    const handleMoveToCart = (item) => {
+        addToCart(item, 1);
+        removeFromWishlist(item.id);
+        setWishlist(getWishlistItems());
+        showToast(`Moved "${item.name}" to your shopping cart!`);
+    };
+
+    const handleRemove = (id, name) => {
+        removeFromWishlist(id);
+        setWishlist(getWishlistItems());
+        showToast(`Removed "${name}" from your wishlist.`);
+    };
+
+    const handleClearAll = () => {
+        if (window.confirm("Are you sure you want to clear your entire wishlist?")) {
+            clearWishlist();
+            setWishlist([]);
+            showToast("Your wishlist has been cleared.");
+        }
+    };
+
+    return (
+        <div className="customer-page-container">
+            {/* Breadcrumb Navigation */}
+            <div className="product-breadcrumb-bar">
+                <Link to="/customer/dashboard">Home</Link>
+                <span>&gt;</span>
+                <span className="current-crumb">Wishlist</span>
+            </div>
+
+            {/* Notification Toast */}
+            {toastMessage && (
+                <div className="wishlist-toast-alert animate-fadeIn">
+                    <i className="bi bi-check-circle-fill"></i>
+                    <span>{toastMessage}</span>
+                    <button type="button" onClick={() => setToastMessage("")}>
+                        <i className="bi bi-x"></i>
+                    </button>
+                </div>
+            )}
+
+            {/* Header Card */}
+            <div className="customer-panel-card mb-24">
+                <div className="panel-card-header">
+                    <div className="panel-title-group">
+                        <div className="panel-accent-icon green-accent">
+                            <i className="bi bi-heart-fill text-rose"></i>
+                        </div>
+                        <div>
+                            <h2 className="panel-title">Saved Wishlist &amp; Favorites</h2>
+                            <p className="panel-subtitle">
+                                You have {wishlist.length} item{wishlist.length === 1 ? "" : "s"} saved for later purchase
+                            </p>
+                        </div>
+                    </div>
+
+                    {wishlist.length > 0 && (
+                        <div className="panel-header-actions">
+                            <button
+                                type="button"
+                                className="btn-clear-wishlist"
+                                onClick={handleClearAll}
+                            >
+                                <i className="bi bi-trash3"></i>
+                                <span>Clear Wishlist</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Wishlist Items Grid */}
+                {wishlist.length > 0 ? (
+                    <div className="customer-products-grid">
+                        {wishlist.map((item) => (
+                            <div key={item.id} className="wishlist-product-card">
+                                <div className="wishlist-card-media">
+                                    <Link to={`/customer/product/${item.id}`} className="wishlist-img-link">
+                                        {item.image ? (
+                                            <img
+                                                src={item.image}
+                                                alt={item.name}
+                                                className="wishlist-card-img"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div className="wishlist-img-fallback" style={{ display: item.image ? 'none' : 'flex' }}>
+                                            <i className="bi bi-box-seam"></i>
+                                        </div>
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        className="btn-wishlist-remove"
+                                        onClick={() => handleRemove(item.id, item.name)}
+                                        title="Remove from Wishlist"
+                                    >
+                                        <i className="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+
+                                <div className="wishlist-card-body">
+                                    <span className="wishlist-category-tag">{item.subtitle || item.categoryName || "Catalog Item"}</span>
+                                    <h4 className="wishlist-product-title">
+                                        <Link to={`/customer/product/${item.id}`}>{item.name}</Link>
+                                    </h4>
+
+                                    <div className="wishlist-rating-row">
+                                        <div className="stars-group">
+                                            {[...Array(5)].map((_, i) => (
+                                                <i key={i} className="bi bi-star-fill star-gold"></i>
+                                            ))}
+                                        </div>
+                                        <span className="rating-score">(5.0)</span>
+                                    </div>
+
+                                    <div className="wishlist-price-row">
+                                        <span className="wishlist-current-price">
+                                            {typeof item.price === "number" ? `₦ ${item.price.toLocaleString()}` : item.price}
+                                        </span>
+                                        {item.oldPrice && (
+                                            <span className="wishlist-old-price">
+                                                {typeof item.oldPrice === "number" ? `₦ ${item.oldPrice.toLocaleString()}` : item.oldPrice}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="wishlist-actions-bar">
+                                        <button
+                                            type="button"
+                                            className="btn-move-to-cart"
+                                            onClick={() => handleMoveToCart(item)}
+                                        >
+                                            <i className="bi bi-cart-plus"></i>
+                                            <span>Move to Cart</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="wishlist-empty-state">
+                        <div className="wishlist-empty-icon-circle">
+                            <i className="bi bi-heart"></i>
+                        </div>
+                        <h3>Your wishlist is currently empty</h3>
+                        <p>Explore our catalog, discover deals, and tap the heart icon on any product to save it here for later.</p>
+                        <Link to="/customer/products" className="btn-explore-catalog">
+                            <i className="bi bi-bag-check"></i>
+                            <span>Explore All Products</span>
+                        </Link>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

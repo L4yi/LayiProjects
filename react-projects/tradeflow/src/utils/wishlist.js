@@ -56,6 +56,12 @@ export function removeFromWishlist(productId) {
     return updated;
 }
 
+// Clear all items from the wishlist
+export function clearWishlist() {
+    setWishlistItems([]);
+    return [];
+}
+
 // Check if a product exists in user's wishlist
 export function isInWishlist(productId) {
     if (!productId) return false;
