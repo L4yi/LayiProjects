@@ -59,6 +59,8 @@ const INITIAL_NOTIFICATIONS = [
 export default function CustomerNotifications() {
     const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
     const [activeFilter, setActiveFilter] = useState("all");
+    const [isMarkingAll, setIsMarkingAll] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -68,7 +70,11 @@ export default function CustomerNotifications() {
     });
 
     const handleMarkAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setIsMarkingAll(true);
+        setTimeout(() => {
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setIsMarkingAll(false);
+        }, 250);
     };
 
     const handleToggleRead = (id) => {
@@ -76,7 +82,11 @@ export default function CustomerNotifications() {
     };
 
     const handleDeleteNotification = (id) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setDeletingId(id);
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+            setDeletingId(null);
+        }, 200);
     };
 
     return (
@@ -114,9 +124,14 @@ export default function CustomerNotifications() {
                                 type="button"
                                 className="btn-mark-all-read"
                                 onClick={handleMarkAllRead}
+                                disabled={isMarkingAll}
                             >
-                                <i className="bi bi-check2-all"></i>
-                                <span>Mark All as Read</span>
+                                {isMarkingAll ? (
+                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                ) : (
+                                    <i className="bi bi-check2-all"></i>
+                                )}
+                                <span>{isMarkingAll ? "Marking..." : "Mark All as Read"}</span>
                             </button>
                         </div>
                     )}
@@ -199,9 +214,14 @@ export default function CustomerNotifications() {
                                             type="button"
                                             className="btn-delete-notif"
                                             onClick={() => handleDeleteNotification(n.id)}
+                                            disabled={deletingId === n.id}
                                             title="Delete notification"
                                         >
-                                            <i className="bi bi-trash3"></i>
+                                            {deletingId === n.id ? (
+                                                <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
+                                            ) : (
+                                                <i className="bi bi-trash3"></i>
+                                            )}
                                         </button>
                                     </div>
                                 </div>

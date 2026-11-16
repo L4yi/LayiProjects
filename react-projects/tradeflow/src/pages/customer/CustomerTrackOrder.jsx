@@ -157,7 +157,17 @@ export default function CustomerTrackOrder() {
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
                             <button type="submit" className="btn-track-submit" disabled={isLoading}>
-                                {isLoading ? "Searching..." : "Track Package"}
+                                {isLoading ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" style={{ width: "13px", height: "13px", marginRight: "6px" }} role="status"></span>
+                                        <span>Tracking...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="bi bi-crosshair2" style={{ marginRight: "4px" }}></i>
+                                        <span>Track Package</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </form>

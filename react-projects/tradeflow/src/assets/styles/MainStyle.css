@@ -13904,6 +13904,128 @@ input.table-filter-search-input,
     color: #10b981 !important;
 }
 
+/* ==========================================================================
+   CUSTOMER PRIMARY BUTTONS & INTERACTIVE FEEDBACK
+   ========================================================================== */
+.panel-header-actions .btn-add-entity,
+.btn-add-entity,
+.btn-customer-primary,
+.btn-track-submit,
+.btn-modal-save,
+.btn-submit-ticket,
+.btn-cart-checkout {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 10px 20px !important;
+    background: #143526 !important;
+    color: #ffffff !important;
+    font-family: inherit !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 9px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 6px rgba(20, 53, 38, 0.2) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-decoration: none !important;
+}
+
+.panel-header-actions .btn-add-entity:hover,
+.btn-add-entity:hover,
+.btn-customer-primary:hover,
+.btn-track-submit:hover,
+.btn-modal-save:hover,
+.btn-submit-ticket:hover,
+.btn-cart-checkout:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.panel-header-actions .btn-add-entity:active,
+.btn-add-entity:active,
+.btn-customer-primary:active,
+.btn-track-submit:active,
+.btn-modal-save:active,
+.btn-submit-ticket:active,
+.btn-cart-checkout:active,
+.btn-clear-wishlist:active,
+.btn-move-to-cart:active,
+.btn-set-default:active,
+.btn-mark-all-read:active {
+    transform: translateY(1px) scale(0.98) !important;
+}
+
+/* Global button disabled feedback */
+button:disabled,
+.btn-modal-save:disabled,
+.btn-track-submit:disabled,
+.btn-submit-ticket:disabled,
+.btn-add-entity:disabled {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================================================
+   CUSTOMER SIDEBAR PROFILE & LOGOUT CLEANUP
+   ========================================================================== */
+.sidebar-menu-separator {
+    height: 1px !important;
+    background: #e2e8f0 !important;
+    margin: 12px 14px !important;
+}
+
+.cust-my-profile-nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.cust-my-profile-nav .nav-profile-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.cust-my-profile-nav .nav-profile-avatar-thumb {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #e2e8f0 !important;
+    flex-shrink: 0 !important;
+}
+
+.cust-my-profile-nav .nav-profile-avatar-thumb img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.cust-my-profile-nav .nav-profile-avatar-thumb i {
+    font-size: 15px !important;
+    color: #64748b !important;
+}
+
+.cust-my-profile-nav .nav-profile-arrow {
+    font-size: 18px !important;
+    color: #94a3b8 !important;
+    transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.cust-my-profile-nav:hover .nav-profile-arrow,
+.cust-my-profile-nav.active .nav-profile-arrow {
+    transform: translateX(3px) !important;
+    color: #10b981 !important;
+}
+
 
 
 

@@ -8,6 +8,9 @@ export default function CustomerWishlist() {
     const navigate = useNavigate();
     const [wishlist, setWishlist] = useState(getWishlistItems());
     const [toastMessage, setToastMessage] = useState("");
+    const [movingId, setMovingId] = useState(null);
+    const [removingId, setRemovingId] = useState(null);
+    const [isClearing, setIsClearing] = useState(false);
 
     useEffect(() => {
         const handleWishlistUpdate = () => {
@@ -23,24 +26,34 @@ export default function CustomerWishlist() {
     };
 
     const handleMoveToCart = (item) => {
-        addToCart(item, 1);
-        removeFromWishlist(item.id);
-        setWishlist(getWishlistItems());
-        showToast(`Moved "${item.name}" to your shopping cart!`);
+        setMovingId(item.id);
+        setTimeout(() => {
+            addToCart(item, 1);
+            removeFromWishlist(item.id);
+            setWishlist(getWishlistItems());
+            setMovingId(null);
+            showToast(`Moved "${item.name}" to your shopping cart!`);
+        }, 250);
     };
 
     const handleRemove = (id, name) => {
-        removeFromWishlist(id);
-        setWishlist(getWishlistItems());
-        showToast(`Removed "${name}" from your wishlist.`);
+        setRemovingId(id);
+        setTimeout(() => {
+            removeFromWishlist(id);
+            setWishlist(getWishlistItems());
+            setRemovingId(null);
+            showToast(`Removed "${name}" from your wishlist.`);
+        }, 200);
     };
 
     const handleClearAll = () => {
-        if (window.confirm("Are you sure you want to clear your entire wishlist?")) {
+        setIsClearing(true);
+        setTimeout(() => {
             clearWishlist();
             setWishlist([]);
+            setIsClearing(false);
             showToast("Your wishlist has been cleared.");
-        }
+        }, 250);
     };
 
     return (
@@ -84,9 +97,14 @@ export default function CustomerWishlist() {
                                 type="button"
                                 className="btn-clear-wishlist"
                                 onClick={handleClearAll}
+                                disabled={isClearing}
                             >
-                                <i className="bi bi-trash3"></i>
-                                <span>Clear Wishlist</span>
+                                {isClearing ? (
+                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                ) : (
+                                    <i className="bi bi-trash3"></i>
+                                )}
+                                <span>{isClearing ? "Clearing..." : "Clear Wishlist"}</span>
                             </button>
                         </div>
                     )}
@@ -118,9 +136,14 @@ export default function CustomerWishlist() {
                                         type="button"
                                         className="btn-wishlist-remove"
                                         onClick={() => handleRemove(item.id, item.name)}
+                                        disabled={removingId === item.id}
                                         title="Remove from Wishlist"
                                     >
-                                        <i className="bi bi-trash3"></i>
+                                        {removingId === item.id ? (
+                                            <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
+                                        ) : (
+                                            <i className="bi bi-trash3"></i>
+                                        )}
                                     </button>
                                 </div>
 
@@ -155,9 +178,19 @@ export default function CustomerWishlist() {
                                             type="button"
                                             className="btn-move-to-cart"
                                             onClick={() => handleMoveToCart(item)}
+                                            disabled={movingId === item.id}
                                         >
-                                            <i className="bi bi-cart-plus"></i>
-                                            <span>Move to Cart</span>
+                                            {movingId === item.id ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                                    <span>Moving...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="bi bi-cart-plus"></i>
+                                                    <span>Move to Cart</span>
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>

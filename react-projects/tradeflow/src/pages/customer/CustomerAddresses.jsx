@@ -40,6 +40,9 @@ export default function CustomerAddresses() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAddressId, setEditingAddressId] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [settingDefaultId, setSettingDefaultId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
     const [formData, setFormData] = useState({
         label: "Home",
         recipientName: user.name || "omo Layi",
@@ -62,27 +65,33 @@ export default function CustomerAddresses() {
     };
 
     const handleSetDefault = (id) => {
-        setAddresses(prev => prev.map(a => {
-            const isTarget = a.id === id;
-            if (isTarget) {
-                // Update active user session address
-                const newFullAddr = `${a.street}, ${a.city}, ${a.state}`;
-                setSessionUser({ address: newFullAddr });
-            }
-            return { ...a, isDefault: isTarget };
-        }));
-        showToast("Default delivery address updated.");
+        setSettingDefaultId(id);
+        setTimeout(() => {
+            setAddresses(prev => prev.map(a => {
+                const isTarget = a.id === id;
+                if (isTarget) {
+                    // Update active user session address
+                    const newFullAddr = `${a.street}, ${a.city}, ${a.state}`;
+                    setSessionUser({ address: newFullAddr });
+                }
+                return { ...a, isDefault: isTarget };
+            }));
+            setSettingDefaultId(null);
+            showToast("Default delivery address updated.");
+        }, 250);
     };
 
     const handleDeleteAddress = (id) => {
         if (addresses.length <= 1) {
-            alert("You must keep at least one delivery address on file.");
+            showToast("You must keep at least one delivery address on file.");
             return;
         }
-        if (window.confirm("Are you sure you want to delete this address?")) {
+        setDeletingId(id);
+        setTimeout(() => {
             setAddresses(prev => prev.filter(a => a.id !== id));
+            setDeletingId(null);
             showToast("Address deleted successfully.");
-        }
+        }, 250);
     };
 
     const handleOpenAddModal = () => {
@@ -118,42 +127,45 @@ export default function CustomerAddresses() {
     const handleSubmitAddress = (e) => {
         e.preventDefault();
         if (!formData.street.trim()) {
-            alert("Please enter a valid street address.");
+            showToast("Please enter a valid street address.");
             return;
         }
 
-        if (editingAddressId) {
-            // Update existing
-            setAddresses(prev => prev.map(a => {
-                if (a.id === editingAddressId) {
-                    return {
-                        ...a,
-                        ...formData
-                    };
-                }
-                if (formData.isDefault) {
-                    return { ...a, isDefault: false };
-                }
-                return a;
-            }));
-            showToast("Address updated successfully.");
-        } else {
-            // Add new
-            const newId = `ADDR${Date.now()}`;
-            const newAddr = {
-                id: newId,
-                ...formData
-            };
-            if (formData.isDefault) {
-                setAddresses(prev => [...prev.map(a => ({ ...a, isDefault: false })), newAddr]);
-                setSessionUser({ address: `${formData.street}, ${formData.city}, ${formData.state}` });
+        setIsSaving(true);
+        setTimeout(() => {
+            if (editingAddressId) {
+                // Update existing
+                setAddresses(prev => prev.map(a => {
+                    if (a.id === editingAddressId) {
+                        return {
+                            ...a,
+                            ...formData
+                        };
+                    }
+                    if (formData.isDefault) {
+                        return { ...a, isDefault: false };
+                    }
+                    return a;
+                }));
+                showToast("Address updated successfully.");
             } else {
-                setAddresses(prev => [...prev, newAddr]);
+                // Add new
+                const newId = `ADDR${Date.now()}`;
+                const newAddr = {
+                    id: newId,
+                    ...formData
+                };
+                if (formData.isDefault) {
+                    setAddresses(prev => [...prev.map(a => ({ ...a, isDefault: false })), newAddr]);
+                    setSessionUser({ address: `${formData.street}, ${formData.city}, ${formData.state}` });
+                } else {
+                    setAddresses(prev => [...prev, newAddr]);
+                }
+                showToast("New address added successfully.");
             }
-            showToast("New address added successfully.");
-        }
-
-        setIsModalOpen(false);
+            setIsSaving(false);
+            setIsModalOpen(false);
+        }, 350);
     };
 
     return (
@@ -191,7 +203,7 @@ export default function CustomerAddresses() {
                     <div className="panel-header-actions">
                         <button
                             type="button"
-                            className="btn-add-entity"
+                            className="btn-add-entity btn-customer-primary"
                             onClick={handleOpenAddModal}
                         >
                             <i className="bi bi-plus-lg"></i>
@@ -230,9 +242,14 @@ export default function CustomerAddresses() {
                                             type="button"
                                             className="btn-addr-delete"
                                             onClick={() => handleDeleteAddress(addr.id)}
+                                            disabled={deletingId === addr.id}
                                             title="Delete address"
                                         >
-                                            <i className="bi bi-trash3"></i>
+                                            {deletingId === addr.id ? (
+                                                <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
+                                            ) : (
+                                                <i className="bi bi-trash3"></i>
+                                            )}
                                         </button>
                                     )}
                                 </div>
@@ -262,8 +279,19 @@ export default function CustomerAddresses() {
                                         type="button"
                                         className="btn-set-default"
                                         onClick={() => handleSetDefault(addr.id)}
+                                        disabled={settingDefaultId === addr.id}
                                     >
-                                        Set as Default
+                                        {settingDefaultId === addr.id ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "4px" }} role="status"></span>
+                                                <span>Updating...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-check2"></i>
+                                                <span>Set as Default</span>
+                                            </>
+                                        )}
                                     </button>
                                 )}
                             </div>
@@ -390,12 +418,22 @@ export default function CustomerAddresses() {
                                     type="button"
                                     className="btn-modal-cancel"
                                     onClick={() => setIsModalOpen(false)}
+                                    disabled={isSaving}
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-modal-save">
-                                    <i className="bi bi-check-lg"></i>
-                                    <span>{editingAddressId ? "Save Changes" : "Save Address"}</span>
+                                <button type="submit" className="btn-modal-save" disabled={isSaving}>
+                                    {isSaving ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ width: "14px", height: "14px", marginRight: "6px" }}></span>
+                                            <span>Saving Address...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-check-lg" style={{ marginRight: "4px" }}></i>
+                                            <span>{editingAddressId ? "Save Changes" : "Save Address"}</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

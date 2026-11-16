@@ -268,44 +268,34 @@ export default function CustomerLayout() {
                                 <span>Help &amp; Support</span>
                             </NavLink>
 
+                            {/* Divider matching clean reference menu */}
+                            <div className="sidebar-menu-separator"></div>
+
                             <Link to="/customer/signin" className="cust-nav-item logout-item" onClick={closeSidebar}>
                                 <i className="bi bi-box-arrow-right"></i>
                                 <span>Log-Out</span>
                             </Link>
+
+                            <NavLink
+                                to="/customer/settings"
+                                onClick={closeSidebar}
+                                className={({ isActive }) =>
+                                    `cust-nav-item cust-my-profile-nav ${isActive ? "active" : ""}`
+                                }
+                            >
+                                <div className="nav-profile-left">
+                                    <div className="nav-profile-avatar-thumb">
+                                        {user.profileImage || user.avatar ? (
+                                            <img src={user.profileImage || user.avatar} alt={user.name} />
+                                        ) : (
+                                            <i className="bi bi-person-circle"></i>
+                                        )}
+                                    </div>
+                                    <span>My Profile</span>
+                                </div>
+                                <i className="bi bi-arrow-right-short nav-profile-arrow"></i>
+                            </NavLink>
                         </nav>
-                    </div>
-
-                    <div className="customer-sidebar-footer">
-                        <div className="user-profile-widget">
-                            <Link to="/customer/settings" className="user-info-row" title="View Profile" onClick={closeSidebar}>
-                                <div className="user-avatar-img" id="customerAvatarInitial">
-                                    {user.profileImage || user.avatar ? (
-                                        <img src={user.profileImage || user.avatar} alt={user.name} className="sidebar-avatar-img" />
-                                    ) : (
-                                        user.initials
-                                    )}
-                                </div>
-                                <div className="user-text">
-                                    <span className="user-name" id="customerUserName">
-                                        {user.name}
-                                    </span>
-                                    <span className="user-email" id="customerUserEmail">
-                                        {user.email}
-                                    </span>
-                                </div>
-                            </Link>
-                            <Link to="/customer/signin" className="logout-icon-btn" title="Sign Out" onClick={closeSidebar}>
-                                <i className="bi bi-box-arrow-right"></i>
-                            </Link>
-                        </div>
-
-                        <Link to="/customer/settings" className="shop-btn" onClick={closeSidebar}>
-                            <div className="shop-left">
-                                <i className="bi bi-person-circle"></i>
-                                <span>My Profile</span>
-                            </div>
-                            <i className="bi bi-arrow-right-short" style={{ fontSize: "18px" }}></i>
-                        </Link>
                     </div>
                 </aside>
 

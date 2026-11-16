@@ -18,6 +18,9 @@ export default function CustomerPaymentMethods() {
     const [copiedField, setCopiedField] = useState("");
     const [isAddCardOpen, setIsAddCardOpen] = useState(false);
     const [isTopupOpen, setIsTopupOpen] = useState(false);
+    const [isAddingCard, setIsAddingCard] = useState(false);
+    const [isFundingWallet, setIsFundingWallet] = useState(false);
+    const [removingCardId, setRemovingCardId] = useState(null);
     const [topupAmount, setTopupAmount] = useState(5000);
     const [toastMessage, setToastMessage] = useState("");
 
@@ -50,46 +53,56 @@ export default function CustomerPaymentMethods() {
         e.preventDefault();
         const cleanNumber = newCardData.cardNumber.replace(/\s+/g, '');
         if (cleanNumber.length < 12) {
-            alert("Please enter a valid card number.");
+            showToast("Please enter a valid card number.");
             return;
         }
 
-        const last4 = cleanNumber.slice(-4);
-        let brand = "mastercard";
-        if (cleanNumber.startsWith("4")) brand = "visa";
-        if (cleanNumber.startsWith("506") || cleanNumber.startsWith("6500")) brand = "verve";
+        setIsAddingCard(true);
+        setTimeout(() => {
+            const last4 = cleanNumber.slice(-4);
+            let brand = "mastercard";
+            if (cleanNumber.startsWith("4")) brand = "visa";
+            if (cleanNumber.startsWith("506") || cleanNumber.startsWith("6500")) brand = "verve";
 
-        const added = addSavedCard({
-            brand,
-            last4,
-            expiry: newCardData.expiry || "12/28"
-        });
+            addSavedCard({
+                brand,
+                last4,
+                expiry: newCardData.expiry || "12/28"
+            });
 
-        setSavedCards(getSavedCards());
-        setIsAddCardOpen(false);
-        setNewCardData({ nameOnCard: "omo Layi", cardNumber: "", expiry: "", cvv: "" });
-        showToast("Card saved securely.");
+            setSavedCards(getSavedCards());
+            setIsAddingCard(false);
+            setIsAddCardOpen(false);
+            setNewCardData({ nameOnCard: "omo Layi", cardNumber: "", expiry: "", cvv: "" });
+            showToast("Card saved securely.");
+        }, 350);
     };
 
     const handleRemoveCard = (cardId) => {
-        if (window.confirm("Remove this saved card?")) {
+        setRemovingCardId(cardId);
+        setTimeout(() => {
             removeSavedCard(cardId);
             setSavedCards(getSavedCards());
+            setRemovingCardId(null);
             showToast("Saved card removed.");
-        }
+        }, 250);
     };
 
     const handleTopupSubmit = (e) => {
         e.preventDefault();
         const amt = Number(topupAmount);
         if (amt < 500) {
-            alert("Minimum wallet top-up is ₦ 500.");
+            showToast("Minimum wallet top-up is ₦ 500.");
             return;
         }
-        const newBal = addWalletFunds(amt);
-        setWalletBalance(newBal);
-        setIsTopupOpen(false);
-        showToast(`Added ₦ ${amt.toLocaleString()} to your wallet balance.`);
+        setIsFundingWallet(true);
+        setTimeout(() => {
+            const newBal = addWalletFunds(amt);
+            setWalletBalance(newBal);
+            setIsFundingWallet(false);
+            setIsTopupOpen(false);
+            showToast(`Added ₦ ${amt.toLocaleString()} to your wallet balance.`);
+        }, 350);
     };
 
     return (
@@ -311,9 +324,14 @@ export default function CustomerPaymentMethods() {
                                         type="button"
                                         className="btn-delete-card"
                                         onClick={() => handleRemoveCard(card.id)}
+                                        disabled={removingCardId === card.id}
                                         title="Remove card"
                                     >
-                                        <i className="bi bi-trash3"></i>
+                                        {removingCardId === card.id ? (
+                                            <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
+                                        ) : (
+                                            <i className="bi bi-trash3"></i>
+                                        )}
                                     </button>
                                 </div>
                             ))}
@@ -421,12 +439,22 @@ export default function CustomerPaymentMethods() {
                                     type="button"
                                     className="btn-modal-cancel"
                                     onClick={() => setIsAddCardOpen(false)}
+                                    disabled={isAddingCard}
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-modal-save">
-                                    <i className="bi bi-lock-fill"></i>
-                                    <span>Save Card Securely</span>
+                                <button type="submit" className="btn-modal-save" disabled={isAddingCard}>
+                                    {isAddingCard ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ width: "14px", height: "14px", marginRight: "6px" }}></span>
+                                            <span>Saving Card...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-lock-fill" style={{ marginRight: "4px" }}></i>
+                                            <span>Save Card Securely</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
@@ -486,12 +514,22 @@ export default function CustomerPaymentMethods() {
                                     type="button"
                                     className="btn-modal-cancel"
                                     onClick={() => setIsTopupOpen(false)}
+                                    disabled={isFundingWallet}
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-modal-save">
-                                    <i className="bi bi-check-lg"></i>
-                                    <span>Confirm Top-up</span>
+                                <button type="submit" className="btn-modal-save" disabled={isFundingWallet}>
+                                    {isFundingWallet ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ width: "14px", height: "14px", marginRight: "6px" }}></span>
+                                            <span>Processing Top-up...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-check-lg" style={{ marginRight: "4px" }}></i>
+                                            <span>Confirm Top-up</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
