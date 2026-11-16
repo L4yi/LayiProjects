@@ -624,9 +624,6 @@ export default function Profile() {
                             <div className="profile-name-edit-wrap">
                                 <h3 className="profile-full-name">
                                     <span>{user.name}</span>
-                                    {(isCustomerPortal || user.isCustomer || user.customerId) && (
-                                        <i className="bi bi-patch-check-fill verified-name-check" title="Verified Customer"></i>
-                                    )}
                                 </h3>
                                 <button
                                     type="button"

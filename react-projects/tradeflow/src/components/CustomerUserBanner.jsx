@@ -27,7 +27,6 @@ export default function CustomerUserBanner() {
                 <div className="banner-details">
                     <h3 className="banner-user-name">
                         <span>{user.name}</span>
-                        <i className="bi bi-patch-check-fill verified-name-check" title="Verified Customer"></i>
                     </h3>
                     <p className="banner-user-dept">
                         Account Tier: <span className="verified-badge-pill"><i className="bi bi-patch-check-fill verified-badge-icon"></i> VERIFIED CUSTOMER</span>
