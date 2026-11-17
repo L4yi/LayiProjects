@@ -18,7 +18,10 @@ if (typeof window !== "undefined") {
 export function parsePrice(val) {
     if (typeof val === "number") return isNaN(val) ? 0 : val;
     if (!val) return 0;
-    const cleaned = String(val).replace(/[^0-9.-]+/g, "");
+    // Strip HTML tags first to neutralize markup and handler injection
+    const tagFree = String(val).replace(/<[^>]*>/g, "").trim();
+    const cleaned = tagFree.replace(/[^0-9.-]+/g, "");
+    if (!cleaned) return 0;
     const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
 }

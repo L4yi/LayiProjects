@@ -1,4 +1,4 @@
-import { getSessionUser } from "./session";
+import { getSessionUser } from "./session.js";
 
 /**
  * Normalizes user role string or roleId from session.

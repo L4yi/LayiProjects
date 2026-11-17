@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "https://tradeflow.niitwebdev.com.ng/tradeflow-api";
+const rawBaseUrl = (typeof import.meta.env !== "undefined" ? import.meta.env?.VITE_API_BASE_URL : process?.env?.VITE_API_BASE_URL) || "https://tradeflow.niitwebdev.com.ng/tradeflow-api";
 const baseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
 
 const api = axios.create({

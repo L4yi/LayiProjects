@@ -1,4 +1,4 @@
-import api from "../api/axios";
+import api from "../api/axios.js";
 
 // Helper function to format responses cleanly.
 // This makes sure our app always gets { success: true/false, message: "...", data: [...] }

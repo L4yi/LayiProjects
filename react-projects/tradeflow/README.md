@@ -35,18 +35,28 @@
 - Node.js >= 18.0.0
 - npm >= 9.0.0
 
-### Installation & Development
+### Installation, Testing & Development
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Launch Vite development server
+# 2. Run the 5-tier production test suite (53 tests across 20 suites)
+npm run test
+
+# 3. Run individual testing pillars
+npm run test:unit            # Pillar 1: Pure functions & utility logic
+npm run test:integration     # Pillar 2: Cross-tab sync & service fallbacks
+npm run test:regression      # Pillar 3: Single badge & layout invariants
+npm run test:performance     # Pillar 4: 150 kB bundle budget & 1,000-op stress
+npm run test:security        # Pillar 5: RBAC escalation, XSS & storage tampering
+
+# 4. Launch Vite development server
 npm run dev
 
-# 3. Build for production (clean bundle chunking)
+# 5. Build for production (clean bundle chunking)
 npm run build
 
-# 4. Preview production build
+# 6. Preview production build
 npm run preview
 ```
 

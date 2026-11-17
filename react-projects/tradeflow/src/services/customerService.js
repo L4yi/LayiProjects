@@ -1,6 +1,6 @@
-import setupService from './setupService';
-import api from "../api/axios";
-import { setSessionUser } from "../utils/session";
+import setupService from './setupService.js';
+import api from "../api/axios.js";
+import { setSessionUser } from "../utils/session.js";
 
 // Formats a raw database row into a clean customer object.
 // The backend returns snake_case fields (e.g. first_name, status_name).

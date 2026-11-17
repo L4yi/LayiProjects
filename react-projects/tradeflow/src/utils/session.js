@@ -11,7 +11,10 @@ if (typeof window !== "undefined") {
 
 export function getInitials(name = "") {
     if (!name) return "SU";
-    const parts = name.trim().split(/\s+/);
+    // Strip HTML markup and non-alphanumeric characters to prevent XSS in avatar badges
+    const cleaned = String(name).replace(/<[^>]*>/g, "").replace(/[^a-zA-Z0-9\s]/g, "").trim();
+    if (!cleaned) return "SU";
+    const parts = cleaned.split(/\s+/);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
@@ -149,8 +152,15 @@ export function setSessionUser(userData) {
         const customerId = userData.customerId || userData.customer_id || (isCustomer ? (userData.id || userData.userId) : null);
         const id = userData.id || userData.customerId || userData.customer_id || userData.staffId || userData.staff_id || userData.userId || "";
 
+        // Scrub any sensitive credential fields before persistent caching
+        const sanitized = { ...userData };
+        delete sanitized.password;
+        delete sanitized.confirmPassword;
+        delete sanitized.currentPassword;
+        delete sanitized.newPassword;
+
         const updated = {
-            ...userData,
+            ...sanitized,
             id,
             customerId,
             name,
