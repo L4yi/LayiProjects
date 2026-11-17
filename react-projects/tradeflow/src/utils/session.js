@@ -1,5 +1,14 @@
 const SESSION_USER_KEY = "tradeflow_active_user";
 
+// Cross-tab synchronization: broadcast localStorage session changes to active window
+if (typeof window !== "undefined") {
+    window.addEventListener("storage", (e) => {
+        if (e.key === SESSION_USER_KEY) {
+            window.dispatchEvent(new Event("tradeflow_session_update"));
+        }
+    });
+}
+
 export function getInitials(name = "") {
     if (!name) return "SU";
     const parts = name.trim().split(/\s+/);
@@ -50,9 +59,13 @@ export function getSessionUser() {
             }
 
             const profileImage = parsed.profileImage || parsed.avatar || parsed.avatarUrl || parsed.image || cachedPhoto || null;
+            const customerId = parsed.customerId || parsed.customer_id || (isCustomer ? (parsed.id || parsed.userId) : null);
+            const id = parsed.id || parsed.customerId || parsed.customer_id || parsed.staffId || parsed.staff_id || parsed.userId || "";
 
             return {
                 ...parsed,
+                id,
+                customerId,
                 name,
                 role,
                 roleName: role,
@@ -133,8 +146,13 @@ export function setSessionUser(userData) {
             }
         }
 
+        const customerId = userData.customerId || userData.customer_id || (isCustomer ? (userData.id || userData.userId) : null);
+        const id = userData.id || userData.customerId || userData.customer_id || userData.staffId || userData.staff_id || userData.userId || "";
+
         const updated = {
             ...userData,
+            id,
+            customerId,
             name,
             role,
             roleName: role,

@@ -1,39 +1,11 @@
 import '../index.css';
 import '../assets/styles/MainStyle.css';
+import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Home from "./Home";
-import SignIn from "./SignIn";
-import ForgotPassword from "./ForgotPassword";
-import ResetPassword from "./ResetPassword";
-import Profile from "./Profile";
+import { LoadingSpinner } from "../components/common";
+
 import DashboardLayout from "../components/DashboardLayout";
-import Dashboard from "./Dashboard";
-import Staffs from "./Staffs";
-import Categories from "./Categories";
-import Products from "./Products";
-import Customers from "./Customers";
-import Orders from "./Orders";
-import Transactions from "./Transactions";
-import Report from "./Report";
-
 import CustomerLayout from "../components/CustomerLayout";
-import CustomerDashboard from "./customer/CustomerDashboard";
-import CustomerCategories from "./customer/CustomerCategories";
-import CustomerCategoryProducts from "./customer/CustomerCategoryProducts";
-import CustomerProductDetails from "./customer/CustomerProductDetails";
-import CustomerProducts from "./customer/CustomerProducts";
-import CustomerOrders from "./customer/CustomerOrders";
-import CustomerTrackOrder from "./customer/CustomerTrackOrder";
-import CustomerCart from "./customer/CustomerCart";
-import CustomerWishlist from "./customer/CustomerWishlist";
-import CustomerNotifications from "./customer/CustomerNotifications";
-import CustomerAddresses from "./customer/CustomerAddresses";
-import CustomerPaymentMethods from "./customer/CustomerPaymentMethods";
-import CustomerSupport from "./customer/CustomerSupport";
-import CustomerCheckout from "./customer/CustomerCheckout";
-import CustomerSignIn from "./customer/CustomerSignIn";
-import CustomerSignUp from "./customer/CustomerSignUp";
-
 import RoleRouteGuard from "../components/auth/RoleRouteGuard";
 import { 
   canAccessStaffs, 
@@ -50,18 +22,66 @@ import {
   ServiceUnavailable503 
 } from "./errors";
 
+// Code-split routes with React.lazy
+const Home = lazy(() => import("./Home"));
+const SignIn = lazy(() => import("./SignIn"));
+const ForgotPassword = lazy(() => import("./ForgotPassword"));
+const ResetPassword = lazy(() => import("./ResetPassword"));
+const Profile = lazy(() => import("./Profile"));
+
+// Admin Portal Pages
+const Dashboard = lazy(() => import("./Dashboard"));
+const Staffs = lazy(() => import("./Staffs"));
+const Categories = lazy(() => import("./Categories"));
+const Products = lazy(() => import("./Products"));
+const Customers = lazy(() => import("./Customers"));
+const Orders = lazy(() => import("./Orders"));
+const Transactions = lazy(() => import("./Transactions"));
+const Report = lazy(() => import("./Report"));
+
+// Customer Portal Pages
+const CustomerDashboard = lazy(() => import("./customer/CustomerDashboard"));
+const CustomerCategories = lazy(() => import("./customer/CustomerCategories"));
+const CustomerCategoryProducts = lazy(() => import("./customer/CustomerCategoryProducts"));
+const CustomerProductDetails = lazy(() => import("./customer/CustomerProductDetails"));
+const CustomerProducts = lazy(() => import("./customer/CustomerProducts"));
+const CustomerOrders = lazy(() => import("./customer/CustomerOrders"));
+const CustomerTrackOrder = lazy(() => import("./customer/CustomerTrackOrder"));
+const CustomerCart = lazy(() => import("./customer/CustomerCart"));
+const CustomerWishlist = lazy(() => import("./customer/CustomerWishlist"));
+const CustomerNotifications = lazy(() => import("./customer/CustomerNotifications"));
+const CustomerAddresses = lazy(() => import("./customer/CustomerAddresses"));
+const CustomerPaymentMethods = lazy(() => import("./customer/CustomerPaymentMethods"));
+const CustomerSupport = lazy(() => import("./customer/CustomerSupport"));
+const CustomerCheckout = lazy(() => import("./customer/CustomerCheckout"));
+const CustomerSignIn = lazy(() => import("./customer/CustomerSignIn"));
+const CustomerSignUp = lazy(() => import("./customer/CustomerSignUp"));
+
+// Route suspense wrapper for silky-smooth lazy loading
+const S = (Component, variant = "spinner") => (
+  <Suspense
+    fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", width: "100%" }}>
+        <LoadingSpinner variant={variant} />
+      </div>
+    }
+  >
+    <Component />
+  </Suspense>
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <SignIn />
+    element: S(SignIn)
   },
   {
     path: "/home",
-    element: <Home />
+    element: S(Home)
   },
   {
     path: "/signin",
-    element: <SignIn />
+    element: S(SignIn)
   },
   {
     path: "/signup",
@@ -69,23 +89,23 @@ export const router = createBrowserRouter([
   },
   {
     path: "/forgot-password",
-    element: <ForgotPassword />
+    element: S(ForgotPassword)
   },
   {
     path: "/reset-password",
-    element: <ResetPassword />
+    element: S(ResetPassword)
   },
   {
     path: "/profile",
-    element: <Profile />
+    element: S(Profile)
   },
   {
     path: "/customer/signin",
-    element: <CustomerSignIn />
+    element: S(CustomerSignIn)
   },
   {
     path: "/customer/signup",
-    element: <CustomerSignUp />
+    element: S(CustomerSignUp)
   },
   {
     path: "/customer",
@@ -97,63 +117,63 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/customer/dashboard",
-        element: <CustomerDashboard />
+        element: S(CustomerDashboard)
       },
       {
         path: "/customer/categories",
-        element: <CustomerCategories />
+        element: S(CustomerCategories)
       },
       {
         path: "/customer/products",
-        element: <CustomerProducts />
+        element: S(CustomerProducts)
       },
       {
         path: "/customer/orders",
-        element: <CustomerOrders />
+        element: S(CustomerOrders)
       },
       {
         path: "/customer/track-order",
-        element: <CustomerTrackOrder />
+        element: S(CustomerTrackOrder)
       },
       {
         path: "/customer/category/:categoryId",
-        element: <CustomerCategoryProducts />
+        element: S(CustomerCategoryProducts)
       },
       {
         path: "/customer/product/:productId",
-        element: <CustomerProductDetails />
+        element: S(CustomerProductDetails)
       },
       {
         path: "/customer/cart",
-        element: <CustomerCart />
+        element: S(CustomerCart)
       },
       {
         path: "/customer/wishlist",
-        element: <CustomerWishlist />
+        element: S(CustomerWishlist)
       },
       {
         path: "/customer/notifications",
-        element: <CustomerNotifications />
+        element: S(CustomerNotifications)
       },
       {
         path: "/customer/addresses",
-        element: <CustomerAddresses />
+        element: S(CustomerAddresses)
       },
       {
         path: "/customer/payment-methods",
-        element: <CustomerPaymentMethods />
+        element: S(CustomerPaymentMethods)
       },
       {
         path: "/customer/checkout",
-        element: <CustomerCheckout />
+        element: S(CustomerCheckout)
       },
       {
         path: "/customer/settings",
-        element: <Profile />
+        element: S(Profile)
       },
       {
         path: "/customer/support",
-        element: <CustomerSupport />
+        element: S(CustomerSupport)
       }
     ]
   },
@@ -163,41 +183,41 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/dashboard",
-        element: <Dashboard />
+        element: S(Dashboard)
       },
       {
         path: "/staffs",
         element: (
           <RoleRouteGuard permissionCheck={canAccessStaffs}>
-            <Staffs />
+            {S(Staffs)}
           </RoleRouteGuard>
         )
       },
       {
         path: "/categories",
-        element: <Categories />
+        element: S(Categories)
       },
       {
         path: "/products",
-        element: <Products />
+        element: S(Products)
       },
       {
         path: "/customers",
         element: (
           <RoleRouteGuard permissionCheck={canAccessCustomers}>
-            <Customers />
+            {S(Customers)}
           </RoleRouteGuard>
         )
       },
       {
         path: "/orders",
-        element: <Orders />
+        element: S(Orders)
       },
       {
         path: "/transactions",
         element: (
           <RoleRouteGuard permissionCheck={canAccessTransactions}>
-            <Transactions />
+            {S(Transactions)}
           </RoleRouteGuard>
         )
       },
@@ -205,7 +225,7 @@ export const router = createBrowserRouter([
         path: "/report",
         element: (
           <RoleRouteGuard permissionCheck={canAccessReports}>
-            <Report />
+            {S(Report)}
           </RoleRouteGuard>
         )
       }

@@ -1,5 +1,28 @@
 const WISHLIST_STORAGE_KEY = "tradeflow_wishlist";
 
+// Cross-tab synchronization: broadcast localStorage changes to active window
+if (typeof window !== "undefined") {
+    window.addEventListener("storage", (e) => {
+        if (e.key === WISHLIST_STORAGE_KEY) {
+            try {
+                const items = e.newValue ? JSON.parse(e.newValue) : [];
+                window.dispatchEvent(new CustomEvent("tradeflow_wishlist_update", { detail: items }));
+            } catch (err) {
+                // Ignore parse errors from concurrent writes
+            }
+        }
+    });
+}
+
+// Safely normalize prices that may arrive as strings ("₦14,500", "12.50") or numbers
+function parsePrice(val) {
+    if (typeof val === "number") return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const cleaned = String(val).replace(/[^0-9.-]+/g, "");
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+}
+
 // Retrieve user's wishlist from localStorage (returns empty array if none saved)
 export function getWishlistItems() {
     try {
@@ -31,11 +54,13 @@ export function addToWishlist(product) {
     const existingIndex = current.findIndex(i => String(i.id) === String(product.id));
 
     if (existingIndex === -1) {
+        const unitPrice = parsePrice(product.price || product.product_price);
+        const oldPrice = parsePrice(product.oldPrice || (unitPrice * 1.15));
         const item = {
             id: String(product.id),
             name: product.name || product.product_name || "Product",
-            price: Number(product.price || product.product_price || 0),
-            oldPrice: Number(product.oldPrice || (Number(product.price || product.product_price || 0) * 1.15)),
+            price: unitPrice,
+            oldPrice: oldPrice,
             discountPercent: product.discountPercent || 15,
             image: product.image || null,
             categoryId: product.categoryId || product.category_id || "",
