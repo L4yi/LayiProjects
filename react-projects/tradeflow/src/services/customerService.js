@@ -855,6 +855,21 @@ export const customerService = {
             // Handled locally with mock ticket generator
         }
         return { success: true, ticketId: `TCK-${Math.floor(100000 + Math.random() * 900000)}` };
+    },
+
+    // 7. Customer Orders History
+    async fetchCustomerOrders(customerId) {
+        try {
+            const formData = new FormData();
+            formData.append("customerId", String(customerId || "").trim());
+            const response = await api.post("customer/order/fetch-customer-orders.php", formData);
+            if (response.data?.success && Array.isArray(response.data.data)) {
+                return { success: true, data: response.data.data };
+            }
+        } catch (err) {
+            // Handled via orderService bridge or view filter
+        }
+        return { success: false, data: [] };
     }
 };
 
