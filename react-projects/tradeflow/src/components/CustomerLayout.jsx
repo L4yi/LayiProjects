@@ -444,11 +444,6 @@ export default function CustomerLayout() {
                                 <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
                                 <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                             </button>
-
-                            <Link to="/customer/signin" className="cust-nav-item logout-item" onClick={closeSidebar}>
-                                <i className="bi bi-box-arrow-right"></i>
-                                <span>Log-Out</span>
-                            </Link>
                         </nav>
                     </div>
                 </aside>

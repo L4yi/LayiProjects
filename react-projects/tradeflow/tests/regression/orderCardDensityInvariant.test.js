@@ -21,11 +21,11 @@ describe("Regression Invariant: Order Card Density & Profile Redundancy Removal"
         assert.ok(ordersCode.includes("btn-view-order-receipt"), "Must retain compact receipt action button");
     });
 
-    test("Profile.jsx removes both Storefront Shortcuts and redundant Log-Out button ('remove two of dem')", () => {
+    test("Profile.jsx eliminates STOREFRONT SHORTCUTS and retains Log-Out in Account Settings", () => {
         const profileCode = fs.readFileSync(path.resolve("src/pages/Profile.jsx"), "utf-8");
         
         assert.equal(profileCode.includes("STOREFRONT SHORTCUTS"), false, "Must eliminate STOREFRONT SHORTCUTS block");
-        assert.equal(profileCode.includes("btn-profile-logout"), false, "Must eliminate redundant btn-profile-logout button");
+        assert.ok(profileCode.includes("btn-profile-logout"), "Must retain btn-profile-logout in account settings");
         assert.ok(profileCode.includes("btn-profile-dash-link"), "Must keep Go to Dashboard link");
     });
 });

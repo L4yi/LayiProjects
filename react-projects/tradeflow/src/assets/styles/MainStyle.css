@@ -16591,3 +16591,94 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
     background: #10b981 !important;
 }
+
+
+/* ==========================================================================
+   CUSTOMER AUTH CONTAINER & SIGN IN REFINEMENTS
+   ========================================================================== */
+.customer-auth-container {
+    max-width: 480px !important;
+    min-height: auto !important;
+    margin: 40px auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 20px !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+    overflow: hidden !important;
+}
+
+.customer-auth-container .form-content {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    padding: 38px 36px !important;
+    border-radius: 20px !important;
+    background-color: #ffffff !important;
+}
+
+.portal-switch-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 24px !important;
+    padding-top: 18px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    font-size: 13px !important;
+    color: #64748b !important;
+}
+
+.admin-return-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-weight: 600 !important;
+    color: #143526 !important;
+    text-decoration: none !important;
+}
+
+.admin-return-link:hover {
+    color: #10b981 !important;
+}
+
+/* Dark mode for Customer Auth Container */
+[data-theme="dark"] .customer-auth-container,
+[data-theme="dark"] .customer-auth-container .form-content,
+html.dark .customer-auth-container,
+html.dark .customer-auth-container .form-content {
+    background-color: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    color: #f8fafc !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-theme="dark"] .portal-switch-footer,
+html.dark .portal-switch-footer {
+    border-top: 1px solid #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .admin-return-link,
+html.dark .admin-return-link {
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .portal-indicator-pill,
+html.dark .portal-indicator-pill {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #34d399 !important;
+}
+
+[data-theme="dark"] .btn-profile-logout,
+html.dark .btn-profile-logout {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #f87171 !important;
+}
+
+[data-theme="dark"] .btn-profile-logout:hover,
+html.dark .btn-profile-logout:hover {
+    background-color: rgba(239, 68, 68, 0.25) !important;
+    color: #ef4444 !important;
+}

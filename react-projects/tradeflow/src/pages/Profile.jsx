@@ -33,7 +33,7 @@ import {
     Camera,
     Loader2
 } from "lucide-react";
-import { getSessionUser, setSessionUser } from "../utils/session";
+import { getSessionUser, setSessionUser, clearSessionUser } from "../utils/session";
 import { getCartCount, addToCart } from "../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../utils/wishlist";
 import { 
@@ -679,6 +679,21 @@ export default function Profile() {
                             <Link to={dashboardLink} className="btn-profile-dash-link">
                                 <Home size={16} />
                                 <span>Go to Dashboard</span>
+                            </Link>
+
+                            <Link 
+                                to={logoutLink} 
+                                className="btn-profile-logout"
+                                onClick={() => {
+                                    clearSessionUser();
+                                    try {
+                                        localStorage.removeItem("accessToken");
+                                        localStorage.removeItem("user");
+                                    } catch {}
+                                }}
+                            >
+                                <LogOut size={16} />
+                                <span>Log-Out Account</span>
                             </Link>
                         </div>
                     </div>

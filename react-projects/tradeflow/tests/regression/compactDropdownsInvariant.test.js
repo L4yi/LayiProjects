@@ -24,11 +24,11 @@ describe("Regression Invariant: Compact Dropdowns & Universal Search", () => {
         assert.ok(layoutCode.includes("preferences: false"), "Preferences accordion must default to false/closed");
     });
 
-    test("CustomerLayout.jsx removes redundant My Profile nav from sidebar bottom and leaves only Log-Out", () => {
+    test("CustomerLayout.jsx streamlines sidebar footer with Log-Out dedicated to Account Settings only", () => {
         const layoutCode = fs.readFileSync(path.resolve("src/components/CustomerLayout.jsx"), "utf-8");
         
         assert.equal(layoutCode.includes("cust-my-profile-nav"), false, "Must not render redundant cust-my-profile-nav");
-        assert.ok(layoutCode.includes("logout-item"), "Must retain clean logout item");
+        assert.equal(layoutCode.includes("logout-item"), false, "Must not render logout-item in sidebar footer when dedicated to Account Settings");
     });
 
     test("CustomerLayout.jsx places Wishlist directly under My Cart with dynamic count badge", () => {
