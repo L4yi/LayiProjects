@@ -206,3 +206,49 @@
     height: 160px;
     border-radius: 8px;
 }
+
+
+/* ==========================================================================
+   SKELETON DARK MODE THEME OVERRIDES ([data-theme="dark"], html.dark)
+   ========================================================================== */
+[data-theme="dark"] .skeleton-box,
+html.dark .skeleton-box {
+    background: linear-gradient(
+        90deg,
+        #1e293b 0%,
+        #334155 45%,
+        #1e293b 60%,
+        #1e293b 100%
+    ) !important;
+    background-size: 200% 100% !important;
+}
+
+[data-theme="dark"] .skeleton-metric-card,
+[data-theme="dark"] .skeleton-card-container,
+[data-theme="dark"] .skeleton-staff-card,
+[data-theme="dark"] .skeleton-table-wrapper,
+[data-theme="dark"] .skeleton-store-product-card,
+html.dark .skeleton-metric-card,
+html.dark .skeleton-card-container,
+html.dark .skeleton-staff-card,
+html.dark .skeleton-table-wrapper,
+html.dark .skeleton-store-product-card {
+    background-color: #0f172a !important;
+    border-color: #1e293b !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .skeleton-card-header,
+[data-theme="dark"] .skeleton-table th,
+[data-theme="dark"] .skeleton-table td,
+html.dark .skeleton-card-header,
+html.dark .skeleton-table th,
+html.dark .skeleton-table td {
+    border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .skeleton-table-header,
+html.dark .skeleton-table-header {
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
+}
