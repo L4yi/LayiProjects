@@ -1,6 +1,6 @@
 import '../index.css';
 import '../assets/styles/MainStyle.css';
-import React, { lazy, Suspense } from "react";
+import React, { lazy as reactLazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoadingSpinner } from "../components/common";
 
@@ -21,6 +21,30 @@ import {
   Forbidden403, 
   ServiceUnavailable503 
 } from "./errors";
+
+// Resilient code-split loader with auto-retry on stale chunk deployments
+const lazy = (factory) =>
+  reactLazy(async () => {
+    const hasRefreshed = typeof window !== "undefined" && window.sessionStorage.getItem("tradeflow_chunk_refresh") === "true";
+    try {
+      const module = await factory();
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("tradeflow_chunk_refresh");
+      }
+      return module;
+    } catch (error) {
+      if (!hasRefreshed && typeof window !== "undefined") {
+        console.warn("Chunk load failed (likely stale deployment cache). Performing seamless refresh...", error);
+        window.sessionStorage.setItem("tradeflow_chunk_refresh", "true");
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("tradeflow_chunk_refresh");
+      }
+      throw error;
+    }
+  });
 
 // Code-split routes with React.lazy
 const Home = lazy(() => import("./Home"));
@@ -73,39 +97,48 @@ const S = (Component, variant = "spinner") => (
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: S(SignIn)
+    element: S(SignIn),
+    errorElement: <ServerError500 />
   },
   {
     path: "/home",
-    element: S(Home)
+    element: S(Home),
+    errorElement: <ServerError500 />
   },
   {
     path: "/signin",
-    element: S(SignIn)
+    element: S(SignIn),
+    errorElement: <ServerError500 />
   },
   {
     path: "/signup",
-    element: <Navigate to="/customer/signup" replace />
+    element: <Navigate to="/customer/signup" replace />,
+    errorElement: <ServerError500 />
   },
   {
     path: "/forgot-password",
-    element: S(ForgotPassword)
+    element: S(ForgotPassword),
+    errorElement: <ServerError500 />
   },
   {
     path: "/reset-password",
-    element: S(ResetPassword)
+    element: S(ResetPassword),
+    errorElement: <ServerError500 />
   },
   {
     path: "/profile",
-    element: S(Profile)
+    element: S(Profile),
+    errorElement: <ServerError500 />
   },
   {
     path: "/customer/signin",
-    element: S(CustomerSignIn)
+    element: S(CustomerSignIn),
+    errorElement: <ServerError500 />
   },
   {
     path: "/customer/signup",
-    element: S(CustomerSignUp)
+    element: S(CustomerSignUp),
+    errorElement: <ServerError500 />
   },
   {
     path: "/customer",
