@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import productService from "../../services/productService";
-import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal } from "../../utils/cart";
+import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal, MAX_CART_ITEMS } from "../../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
 
 function CartThumb({ src, alt }) {
@@ -55,6 +55,7 @@ export default function CustomerCart() {
     const [wishlistItems, setWishlistItems] = useState(getWishlistItems());
     const [checkoutComplete, setCheckoutComplete] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState([]);
+    const [limitWarning, setLimitWarning] = useState("");
 
     // Fetch live products directly from backend
     useEffect(() => {
@@ -95,8 +96,22 @@ export default function CustomerCart() {
         const handleCartUpdate = (e) => {
             setCartItems(e.detail || getCartItems());
         };
+        const handleLimitReached = (e) => {
+            setLimitWarning(e.detail?.message || `Cart capacity limit reached (${MAX_CART_ITEMS} items).`);
+        };
+        const handleStorageQuota = (e) => {
+            setLimitWarning(e.detail?.message || "Browser local storage limit reached.");
+        };
+
         window.addEventListener("tradeflow_cart_update", handleCartUpdate);
-        return () => window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+        window.addEventListener("tradeflow_cart_limit_reached", handleLimitReached);
+        window.addEventListener("tradeflow_storage_quota_exceeded", handleStorageQuota);
+
+        return () => {
+            window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+            window.removeEventListener("tradeflow_cart_limit_reached", handleLimitReached);
+            window.removeEventListener("tradeflow_storage_quota_exceeded", handleStorageQuota);
+        };
     }, []);
 
     useEffect(() => {
@@ -158,7 +173,36 @@ export default function CustomerCart() {
                     </Link>
                 </div>
             ) : (
-                <div className="cart-grid-layout">
+                <>
+                    {(limitWarning || cartItems.length >= MAX_CART_ITEMS) && (
+                        <div className="cart-limit-warning-banner" style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "12px 18px",
+                            background: "#fef2f2",
+                            border: "1px solid #fecaca",
+                            borderRadius: "10px",
+                            color: "#991b1b",
+                            fontSize: "13.5px",
+                            fontWeight: "500",
+                            marginBottom: "16px"
+                        }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <i className="bi bi-exclamation-triangle-fill" style={{ color: "#ef4444", fontSize: "16px" }}></i>
+                                <span>
+                                    {limitWarning || `Cart capacity limit reached (${MAX_CART_ITEMS} distinct items). For corporate bulk purchases, please proceed to checkout or contact support.`}
+                                </span>
+                            </div>
+                            {limitWarning && (
+                                <button type="button" onClick={() => setLimitWarning("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#991b1b" }}>
+                                    <i className="bi bi-x-lg"></i>
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="cart-grid-layout">
                     {/* Left Column: Cart Items & Wishlist */}
                     <div className="cart-main-column">
                         {/* Cart Header & Items */}
@@ -432,7 +476,8 @@ export default function CustomerCart() {
                         </div>
                     </div>
                 </div>
-            )}
+            </>
+        )}
         </div>
     );
 }

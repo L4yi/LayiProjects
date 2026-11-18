@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getWishlistItems, removeFromWishlist, clearWishlist } from "../../utils/wishlist";
-import { addToCart } from "../../utils/cart";
+import { addToCart, addBatchToCart } from "../../utils/cart";
 import { PageHeader } from "../../components/common";
 
 export default function CustomerWishlist() {
@@ -11,6 +11,7 @@ export default function CustomerWishlist() {
     const [movingId, setMovingId] = useState(null);
     const [removingId, setRemovingId] = useState(null);
     const [isClearing, setIsClearing] = useState(false);
+    const [isMovingAll, setIsMovingAll] = useState(false);
 
     useEffect(() => {
         const handleWishlistUpdate = () => {
@@ -44,6 +45,19 @@ export default function CustomerWishlist() {
             setRemovingId(null);
             showToast(`Removed "${name}" from your wishlist.`);
         }, 200);
+    };
+
+    const handleMoveAllToCart = () => {
+        if (wishlist.length === 0) return;
+        setIsMovingAll(true);
+        setTimeout(() => {
+            const count = wishlist.length;
+            addBatchToCart(wishlist);
+            clearWishlist();
+            setWishlist([]);
+            setIsMovingAll(false);
+            showToast(`Moved all ${count} item${count > 1 ? "s" : ""} to your shopping cart!`);
+        }, 250);
     };
 
     const handleClearAll = () => {
@@ -92,12 +106,27 @@ export default function CustomerWishlist() {
                     </div>
 
                     {wishlist.length > 0 && (
-                        <div className="panel-header-actions">
+                        <div className="panel-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <button
+                                type="button"
+                                className="btn-move-to-cart btn-customer-primary"
+                                onClick={handleMoveAllToCart}
+                                disabled={isMovingAll || isClearing}
+                                style={{ padding: "8px 16px", fontSize: "13px" }}
+                            >
+                                {isMovingAll ? (
+                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                ) : (
+                                    <i className="bi bi-cart-plus-fill" style={{ marginRight: "6px" }}></i>
+                                )}
+                                <span>{isMovingAll ? "Moving All..." : "Move All to Cart"}</span>
+                            </button>
+
                             <button
                                 type="button"
                                 className="btn-clear-wishlist"
                                 onClick={handleClearAll}
-                                disabled={isClearing}
+                                disabled={isClearing || isMovingAll}
                             >
                                 {isClearing ? (
                                     <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>

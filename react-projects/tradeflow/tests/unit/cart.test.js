@@ -9,11 +9,13 @@ const {
     getCartItems, 
     setCartItems, 
     addToCart, 
+    addBatchToCart,
     updateCartQuantity, 
     removeCartItem, 
     clearCart, 
     getCartCount, 
-    getCartSubtotal 
+    getCartSubtotal,
+    MAX_CART_ITEMS
 } = await import("../../src/utils/cart.js");
 
 describe("Unit: Shopping Cart Calculations & Bounds", () => {
@@ -76,5 +78,35 @@ describe("Unit: Shopping Cart Calculations & Bounds", () => {
 
         assert.equal(getCartCount(), 3);
         assert.equal(getCartSubtotal(), 25250.75);
+    });
+
+    test("MAX_CART_ITEMS cap stops inserting 101st distinct item while allowing quantity increments", () => {
+        // Pre-fill cart with 100 distinct items
+        for (let i = 1; i <= MAX_CART_ITEMS; i++) {
+            addToCart({ id: `CAP-${i}`, name: `Item ${i}`, price: 1000 }, 1);
+        }
+        assert.equal(getCartItems().length, 100);
+
+        // Attempting to add 101st distinct item must be blocked
+        const blocked = addToCart({ id: "CAP-101", name: "Overflow Item", price: 2000 }, 1);
+        assert.equal(getCartItems().length, 100);
+        assert.equal(blocked.limitReached, true);
+
+        // Modifying quantity of an EXISTING item in full cart must succeed
+        updateCartQuantity("CAP-1", 2);
+        assert.equal(getCartItems().find(i => i.id === "CAP-1").quantity, 3);
+    });
+
+    test("addBatchToCart inserts multiple products atomically in a single write", () => {
+        const batch = [
+            { id: "BATCH-1", name: "Inverter", price: 50000, quantity: 1 },
+            { id: "BATCH-2", name: "Battery", price: 120000, quantity: 2 },
+            { id: "BATCH-3", name: "Wire 10m", price: 8000, quantity: 5 }
+        ];
+
+        const updated = addBatchToCart(batch);
+        assert.equal(updated.length, 3);
+        assert.equal(getCartCount(), 8);
+        assert.equal(getCartSubtotal(), 50000 + (120000 * 2) + (8000 * 5));
     });
 });

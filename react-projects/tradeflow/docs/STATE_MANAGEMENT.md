@@ -65,6 +65,13 @@ Below is the comprehensive audit of implicit states discovered in TradeFlow and 
 - **Vulnerability**: If a user deleted all addresses or saved cards, components assumed an active default existed and crashed trying to read `defaultAddress.street`.
 - **Hardening Applied**: `CustomerAddresses.jsx` enforces that at least one primary address remains on file. `CustomerPaymentMethods.jsx` automatically falls back to `"bank_transfer"` if no cards or wallet balances exist.
 
+### F. Cart Saturation & Storage Quota Guardrails
+- **Vulnerability**: Inserting thousands of items consecutively caused $O(N^2)$ JSON parsing/writing bottlenecks and risked hitting the browser's 5 MB `QuotaExceededError`.
+- **Hardening Applied**:
+  - Enforced `MAX_CART_ITEMS = 100` distinct item ceiling in `src/utils/cart.js`. Dispatches `tradeflow_cart_limit_reached` and alerts user in `CustomerCart.jsx`.
+  - Implemented `addBatchToCart(items)` for $O(N)$ single-write bulk insertions (integrated into `CustomerWishlist.jsx` via "Move All to Cart").
+  - Defensive storage catch dispatches `tradeflow_storage_quota_exceeded` if browser local storage ever fills up.
+
 ---
 
 ## 3. Storage Keys & Event Contract Reference

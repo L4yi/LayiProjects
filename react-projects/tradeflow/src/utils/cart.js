@@ -1,5 +1,8 @@
 const CART_STORAGE_KEY = "tradeflow_cart";
 
+// Maximum allowable distinct items in cart to prevent memory & localStorage exhaustion
+export const MAX_CART_ITEMS = 100;
+
 // Cross-tab synchronization: broadcast localStorage changes to active window
 if (typeof window !== "undefined") {
     window.addEventListener("storage", (e) => {
@@ -43,6 +46,14 @@ export function setCartItems(items) {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
         console.error("Failed to save cart to localStorage:", e);
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("tradeflow_storage_quota_exceeded", {
+                detail: {
+                    error: e,
+                    message: "Browser storage capacity exceeded. Please proceed to checkout or remove items."
+                }
+            }));
+        }
     }
     window.dispatchEvent(new CustomEvent("tradeflow_cart_update", { detail: items }));
 }
@@ -50,6 +61,21 @@ export function setCartItems(items) {
 export function addToCart(product, quantity = 1) {
     const currentItems = getCartItems();
     const existingIndex = currentItems.findIndex(i => String(i.id) === String(product.id));
+
+    // Cap Guard: If inserting a brand new item when already at capacity
+    if (existingIndex === -1 && currentItems.length >= MAX_CART_ITEMS) {
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("tradeflow_cart_limit_reached", {
+                detail: {
+                    limit: MAX_CART_ITEMS,
+                    message: `Cart limit reached (${MAX_CART_ITEMS} items). Please proceed to checkout or contact support for bulk wholesale orders.`
+                }
+            }));
+        }
+        const result = [...currentItems];
+        result.limitReached = true;
+        return result;
+    }
 
     const unitPrice = parsePrice(product.price);
     const oldPrice = parsePrice(product.oldPrice || (unitPrice * 1.15));
@@ -85,6 +111,77 @@ export function addToCart(product, quantity = 1) {
 
     setCartItems(updatedItems);
     return updatedItems;
+}
+
+/**
+ * Efficiently adds a batch of products to the cart in a single atomic storage write.
+ * Eliminates O(N^2) JSON serialization bottlenecks during bulk operations.
+ * Enforces MAX_CART_ITEMS cap across the whole batch.
+ */
+export function addBatchToCart(itemsToAdd = []) {
+    if (!Array.isArray(itemsToAdd) || itemsToAdd.length === 0) {
+        return getCartItems();
+    }
+
+    const currentItems = getCartItems();
+    const itemMap = new Map();
+
+    // Index existing items
+    currentItems.forEach(item => {
+        itemMap.set(String(item.id), { ...item });
+    });
+
+    let limitHit = false;
+
+    // Process batch in-memory without intermediate disk writes
+    for (const entry of itemsToAdd) {
+        const product = entry.product || entry;
+        if (!product || !product.id) continue;
+
+        const qty = Math.max(1, entry.quantity || 1);
+        const pId = String(product.id);
+
+        if (itemMap.has(pId)) {
+            const existing = itemMap.get(pId);
+            existing.quantity = (existing.quantity || 1) + qty;
+        } else {
+            if (itemMap.size >= MAX_CART_ITEMS) {
+                limitHit = true;
+                break;
+            }
+            const unitPrice = parsePrice(product.price);
+            const oldPrice = parsePrice(product.oldPrice || (unitPrice * 1.15));
+
+            itemMap.set(pId, {
+                id: pId,
+                name: product.name,
+                categoryId: product.categoryId || "",
+                categoryName: product.categoryName || "",
+                variation: product.variation || (product.subtitle ? product.subtitle.split("/")[0].trim() : "Standard Edition"),
+                price: unitPrice,
+                oldPrice: oldPrice,
+                discountPercent: product.discountPercent || 0,
+                quantity: qty,
+                inStock: true,
+                express: product.express !== undefined ? product.express : true,
+                image: product.image
+            });
+        }
+    }
+
+    const updated = Array.from(itemMap.values());
+    setCartItems(updated);
+
+    if (limitHit && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("tradeflow_cart_limit_reached", {
+            detail: {
+                limit: MAX_CART_ITEMS,
+                message: `Cart reached maximum capacity of ${MAX_CART_ITEMS} items during bulk operation.`
+            }
+        }));
+    }
+
+    return updated;
 }
 
 export function updateCartQuantity(productId, delta) {
