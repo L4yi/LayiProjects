@@ -743,8 +743,11 @@ export const customerService = {
     // 1. Order Tracking
     async trackOrder(orderId) {
         try {
+            const cleanRef = String(orderId || "").trim();
             const formData = new FormData();
-            formData.append("orderId", String(orderId).trim());
+            formData.append("orderId", cleanRef);
+            formData.append("orderReference", cleanRef);
+            formData.append("trackingNumber", cleanRef);
             const response = await api.post("customer/order/track-order.php", formData);
             if (response.data?.success) {
                 return { success: true, data: response.data.data };

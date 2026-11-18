@@ -71,7 +71,16 @@ export const orderService = {
             formData.append("productId", productId);
             formData.append("statusId", statusId);
 
-            const response = await api.post("admin/order/create-order.php", formData);
+            let response;
+            try {
+                response = await api.post("customer/order/create-order.php", formData);
+            } catch (custErr) {
+                if (custErr.response && custErr.response.status === 404) {
+                    response = await api.post("admin/order/create-order.php", formData);
+                } else {
+                    throw custErr;
+                }
+            }
             const resData = response.data;
             if (resData?.success === true) {
                 return {
