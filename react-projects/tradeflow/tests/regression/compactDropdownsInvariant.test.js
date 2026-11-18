@@ -2,6 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { getWishlistCount } from "../../src/utils/wishlist.js";
 
 describe("Regression Invariant: Compact Dropdowns & Universal Search", () => {
     test("CustomerLayout.jsx defines compact dropdown groups (Shop, Orders, Account, Notif)", () => {
@@ -14,13 +15,31 @@ describe("Regression Invariant: Compact Dropdowns & Universal Search", () => {
         assert.ok(layoutCode.includes("customer-notif-dropdown-menu"), "Must render bell notifications dropdown");
     });
 
-    test("CustomerLayout.jsx implements collapsible sidebar accordions", () => {
+    test("CustomerLayout.jsx implements collapsible sidebar accordions defaulting to closed", () => {
         const layoutCode = fs.readFileSync(path.resolve("src/components/CustomerLayout.jsx"), "utf-8");
         
         assert.ok(layoutCode.includes("sidebar-accordion-group"), "Must contain sidebar accordion groups");
-        assert.ok(layoutCode.includes("toggleAccordion(\"catalog\")"), "Must toggle catalog accordion");
-        assert.ok(layoutCode.includes("toggleAccordion(\"orders\")"), "Must toggle orders accordion");
-        assert.ok(layoutCode.includes("toggleAccordion(\"preferences\")"), "Must toggle preferences accordion");
+        assert.ok(layoutCode.includes("catalog: false"), "Catalog accordion must default to false/closed");
+        assert.ok(layoutCode.includes("orders: false"), "Orders accordion must default to false/closed");
+        assert.ok(layoutCode.includes("preferences: false"), "Preferences accordion must default to false/closed");
+    });
+
+    test("CustomerLayout.jsx removes redundant My Profile nav from sidebar bottom and leaves only Log-Out", () => {
+        const layoutCode = fs.readFileSync(path.resolve("src/components/CustomerLayout.jsx"), "utf-8");
+        
+        assert.equal(layoutCode.includes("cust-my-profile-nav"), false, "Must not render redundant cust-my-profile-nav");
+        assert.ok(layoutCode.includes("logout-item"), "Must retain clean logout item");
+    });
+
+    test("CustomerLayout.jsx places Wishlist directly under My Cart with dynamic count badge", () => {
+        const layoutCode = fs.readFileSync(path.resolve("src/components/CustomerLayout.jsx"), "utf-8");
+        
+        const cartIndex = layoutCode.indexOf("to=\"/customer/cart\"");
+        const wishlistIndex = layoutCode.indexOf("to=\"/customer/wishlist\"");
+        assert.ok(cartIndex !== -1 && wishlistIndex !== -1, "Both cart and wishlist must exist in sidebar");
+        assert.ok(wishlistIndex > cartIndex, "Wishlist must be positioned after My Cart");
+        assert.ok(layoutCode.includes("getWishlistCount"), "Must use getWishlistCount");
+        assert.equal(typeof getWishlistCount(), "number");
     });
 
     test("TopHeader.jsx implements live debounced search and autocomplete for admin", () => {

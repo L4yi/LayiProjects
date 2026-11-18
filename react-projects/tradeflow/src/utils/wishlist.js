@@ -26,10 +26,12 @@ function parsePrice(val) {
 // Retrieve user's wishlist from localStorage (returns empty array if none saved)
 export function getWishlistItems() {
     try {
-        const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) return parsed;
+        if (typeof localStorage !== "undefined") {
+            const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) return parsed;
+            }
         }
     } catch (e) {
         console.error("Failed to read wishlist from localStorage:", e);
@@ -40,11 +42,15 @@ export function getWishlistItems() {
 // Persist wishlist items to localStorage and notify listeners
 export function setWishlistItems(items) {
     try {
-        localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+        if (typeof localStorage !== "undefined") {
+            localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+        }
     } catch (e) {
         console.error("Failed to save wishlist to localStorage:", e);
     }
-    window.dispatchEvent(new CustomEvent("tradeflow_wishlist_update", { detail: items }));
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("tradeflow_wishlist_update", { detail: items }));
+    }
 }
 
 // Add a real product to the wishlist
@@ -92,4 +98,9 @@ export function isInWishlist(productId) {
     if (!productId) return false;
     const current = getWishlistItems();
     return current.some(i => String(i.id) === String(productId));
+}
+
+// Retrieve current item count in wishlist
+export function getWishlistCount() {
+    return getWishlistItems().length;
 }

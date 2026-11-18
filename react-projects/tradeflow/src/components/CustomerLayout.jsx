@@ -4,6 +4,7 @@ import ProfileDropdown from "./ProfileDropdown";
 import { BrandLogo } from "./common";
 import { getSessionUser } from "../utils/session";
 import { getCartCount } from "../utils/cart";
+import { getWishlistCount } from "../utils/wishlist";
 import { 
     getNotifications, 
     getUnreadCount, 
@@ -12,10 +13,14 @@ import {
     NOTIFICATION_UPDATE_EVENT 
 } from "../utils/notifications";
 import productService from "../services/productService";
+import { getStoredTheme, toggleTheme } from "../utils/theme";
 
 export default function CustomerLayout() {
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Theme state
+    const [theme, setTheme] = useState(getStoredTheme());
 
     // Search state
     const [headerSearch, setHeaderSearch] = useState("");
@@ -29,14 +34,15 @@ export default function CustomerLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
     const [cartCount, setCartCount] = useState(getCartCount());
+    const [wishlistCount, setWishlistCount] = useState(getWishlistCount);
 
     // Notifications state
     const [notifications, setNotifications] = useState(getNotifications);
     const [unreadCount, setUnreadCount] = useState(getUnreadCount);
 
-    // Sidebar accordion state
+    // Sidebar accordion state - default closed
     const [accordions, setAccordions] = useState({
-        catalog: true,
+        catalog: false,
         orders: false,
         preferences: false
     });
@@ -95,23 +101,35 @@ export default function CustomerLayout() {
         const handleCartUpdate = () => {
             setCartCount(getCartCount());
         };
+        const handleWishlistUpdate = () => {
+            setWishlistCount(getWishlistCount());
+        };
         const handleNotificationsUpdate = () => {
             setNotifications(getNotifications());
             setUnreadCount(getUnreadCount());
+        };
+        const handleThemeUpdate = (e) => {
+            setTheme(e?.detail?.theme || getStoredTheme());
         };
 
         document.addEventListener("click", handleClickOutside);
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
         window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+        window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
         window.addEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
+        window.addEventListener("tradeflow_theme_update", handleThemeUpdate);
         window.addEventListener("storage", handleNotificationsUpdate);
+        window.addEventListener("storage", handleWishlistUpdate);
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
             window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+            window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
             window.removeEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
+            window.removeEventListener("tradeflow_theme_update", handleThemeUpdate);
             window.removeEventListener("storage", handleNotificationsUpdate);
+            window.removeEventListener("storage", handleWishlistUpdate);
         };
     }, [openDropdown]);
 
@@ -328,8 +346,13 @@ export default function CustomerLayout() {
                                     `cust-nav-item ${isActive ? "active" : ""}`
                                 }
                             >
-                                <i className="bi bi-heart"></i>
-                                <span>Wishlist</span>
+                                <div className="cart-nav-label-wrap">
+                                    <i className="bi bi-heart"></i>
+                                    <span>Wishlist</span>
+                                </div>
+                                {wishlistCount > 0 && (
+                                    <span className="cart-badge-count">{wishlistCount}</span>
+                                )}
                             </NavLink>
 
                             <NavLink
@@ -411,30 +434,21 @@ export default function CustomerLayout() {
                             {/* Divider & Clean User / Signout Row */}
                             <div className="sidebar-menu-separator"></div>
 
+                            {/* Sidebar Theme Toggle */}
+                            <button
+                                type="button"
+                                className="cust-nav-item cust-sidebar-theme-btn"
+                                onClick={toggleTheme}
+                                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                            >
+                                <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
+                                <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                            </button>
+
                             <Link to="/customer/signin" className="cust-nav-item logout-item" onClick={closeSidebar}>
                                 <i className="bi bi-box-arrow-right"></i>
                                 <span>Log-Out</span>
                             </Link>
-
-                            <NavLink
-                                to="/customer/settings"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item cust-my-profile-nav ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <div className="nav-profile-left">
-                                    <div className="nav-profile-avatar-thumb">
-                                        {user.profileImage || user.avatar ? (
-                                            <img src={user.profileImage || user.avatar} alt={user.name} />
-                                        ) : (
-                                            <i className="bi bi-person-circle"></i>
-                                        )}
-                                    </div>
-                                    <span>My Profile</span>
-                                </div>
-                                <i className="bi bi-arrow-right-short nav-profile-arrow"></i>
-                            </NavLink>
                         </nav>
                     </div>
                 </aside>
@@ -716,6 +730,19 @@ export default function CustomerLayout() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Dark Mode Toggle Button */}
+                            <button
+                                type="button"
+                                className={`customer-theme-toggle ${theme === "dark" ? "active" : ""}`}
+                                onClick={toggleTheme}
+                                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                                aria-label="Toggle Dark Mode"
+                            >
+                                <div className="toggle-handle">
+                                    <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
+                                </div>
+                            </button>
 
                             {/* Cart Icon */}
                             <Link to="/customer/cart" className="customer-cart-btn" title="View Cart">

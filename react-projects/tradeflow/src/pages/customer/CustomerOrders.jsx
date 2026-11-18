@@ -277,9 +277,18 @@ export default function CustomerOrders() {
                                 <div className="order-card-top-bar">
                                     <div className="order-top-left">
                                         <span className="order-code-badge font-mono">{ord.orderId}</span>
+                                        <span className="order-dot-separator">•</span>
                                         <span className="order-date-text">
                                             <Clock size={13} /> {ord.date}
                                         </span>
+                                        {ord.shippingDetails?.address && (
+                                            <>
+                                                <span className="order-dot-separator">•</span>
+                                                <span className="order-dest-chip" title="Delivery Destination">
+                                                    <MapPin size={12} /> {ord.shippingDetails.address}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="order-top-right">
                                         <span className={`order-status-badge ${(ord.status || "processing").toLowerCase()}`}>
@@ -302,40 +311,31 @@ export default function CustomerOrders() {
                                                 </div>
                                                 <div className="order-item-snippet-info">
                                                     <h4 className="item-snippet-title">{it.name}</h4>
-                                                    <span className="item-snippet-qty">Qty: {it.quantity || 1}</span>
+                                                    <div className="item-snippet-sub">
+                                                        <span className="item-snippet-qty">Qty: {it.quantity || 1}</span>
+                                                        <span className="order-dot-separator">•</span>
+                                                        <span className="item-snippet-unit-price">₦ {(it.price || 0).toLocaleString()} each</span>
+                                                    </div>
                                                 </div>
-                                                <span className="item-snippet-price">
-                                                    ₦ {((it.price || 0) * (it.quantity || 1)).toLocaleString()}
-                                                </span>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="order-meta-summary-col">
-                                        <div className="summary-field">
-                                            <span className="lbl"><MapPin size={12} /> Delivery Destination:</span>
-                                            <p className="val">{ord.shippingDetails?.address || "Abeokuta, Ogun State"}</p>
+                                    <div className="order-card-right-col">
+                                        <div className="order-total-block">
+                                            <span className="order-total-label">Total Paid:</span>
+                                            <span className="order-total-amount">₦ {(ord.totalAmount || 0).toLocaleString()}</span>
                                         </div>
-                                        <div className="summary-field">
-                                            <span className="lbl"><Truck size={12} /> Delivery Method:</span>
-                                            <p className="val">{ord.deliveryOption?.title || "Standard Doorstep Delivery"}</p>
-                                        </div>
-                                        <div className="summary-field total-field">
-                                            <span className="lbl">Total Paid:</span>
-                                            <span className="val total-val">₦ {(ord.totalAmount || 0).toLocaleString()}</span>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn-view-order-receipt"
+                                            onClick={() => setActiveReceiptOrder(ord)}
+                                            title="View full receipt and shipment details"
+                                        >
+                                            <FileText size={14} />
+                                            <span>View Details &amp; Receipt</span>
+                                        </button>
                                     </div>
-                                </div>
-
-                                <div className="order-card-footer">
-                                    <button
-                                        type="button"
-                                        className="btn-view-order-receipt"
-                                        onClick={() => setActiveReceiptOrder(ord)}
-                                    >
-                                        <FileText size={15} />
-                                        <span>View Order Details &amp; Receipt</span>
-                                    </button>
                                 </div>
                             </div>
                         ))}

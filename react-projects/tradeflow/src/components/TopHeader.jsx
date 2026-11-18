@@ -3,10 +3,12 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
 import productService from "../services/productService";
+import { getStoredTheme, toggleTheme } from "../utils/theme";
 
 export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const [theme, setTheme] = useState(getStoredTheme());
     const [searchTerm, setSearchTerm] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -87,13 +89,18 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
         const handleSessionUpdate = () => {
             setUser(getSessionUser());
         };
+        const handleThemeUpdate = (e) => {
+            setTheme(e?.detail?.theme || getStoredTheme());
+        };
 
         document.addEventListener("click", handleClickOutside);
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
+        window.addEventListener("tradeflow_theme_update", handleThemeUpdate);
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
+            window.removeEventListener("tradeflow_theme_update", handleThemeUpdate);
         };
     }, []);
 
@@ -263,14 +270,17 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                     <span className="badge-dot"></span>
                 </button>
 
-                <div
-                    className="theme-toggle"
-                    title="Toggle Light/Dark Theme"
+                <button
+                    type="button"
+                    className={`theme-toggle ${theme === "dark" ? "active" : ""}`}
+                    onClick={toggleTheme}
+                    title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    aria-label="Toggle Dark Mode"
                 >
                     <div className="toggle-handle">
-                        <i className="bi bi-brightness-high"></i>
+                        <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
                     </div>
-                </div>
+                </button>
 
                 <div className="user-profile-relative">
                     <button

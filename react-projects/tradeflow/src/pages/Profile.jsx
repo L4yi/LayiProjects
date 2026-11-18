@@ -674,64 +674,11 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Quick Navigation to Customer Modules */}
-                        {isCustomerPortal && (
-                            <div className="profile-quick-nav-group">
-                                <span className="profile-quick-nav-title">STOREFRONT SHORTCUTS</span>
-                                
-                                <Link to="/customer/orders" className="btn-profile-quick-link">
-                                    <div className="btn-quick-link-left">
-                                        <ShoppingBag size={16} />
-                                        <span>Your Orders</span>
-                                    </div>
-                                    {orders.length > 0 && (
-                                        <span className="profile-quick-badge">{orders.length}</span>
-                                    )}
-                                </Link>
-
-                                <Link to="/customer/cart" className="btn-profile-quick-link">
-                                    <div className="btn-quick-link-left">
-                                        <ShoppingCart size={16} />
-                                        <span>Shopping Cart</span>
-                                    </div>
-                                    {cartCount > 0 && (
-                                        <span className="profile-quick-badge">{cartCount}</span>
-                                    )}
-                                </Link>
-
-                                <button
-                                    type="button"
-                                    className={`btn-profile-quick-link ${activeTab === "payment" ? "active" : ""}`}
-                                    onClick={() => setActiveTab("payment")}
-                                    style={{ border: "none", width: "100%", textAlign: "left", cursor: "pointer" }}
-                                >
-                                    <div className="btn-quick-link-left">
-                                        <CreditCard size={16} />
-                                        <span>Payment Methods</span>
-                                    </div>
-                                    <span className="profile-quick-badge" style={{ backgroundColor: "#0284c7" }}>Active</span>
-                                </button>
-
-                                <Link to="/customer/products" className="btn-profile-quick-link">
-                                    <div className="btn-quick-link-left">
-                                        <Package size={16} />
-                                        <span>Browse Products</span>
-                                    </div>
-                                    <ChevronRight size={14} className="text-muted" />
-                                </Link>
-                            </div>
-                        )}
-
                         {/* Action Buttons */}
                         <div className="profile-card-action-links">
                             <Link to={dashboardLink} className="btn-profile-dash-link">
                                 <Home size={16} />
                                 <span>Go to Dashboard</span>
-                            </Link>
-
-                            <Link to={logoutLink} className="btn-profile-logout">
-                                <LogOut size={16} />
-                                <span>Log-Out Account</span>
                             </Link>
                         </div>
                     </div>
