@@ -100,14 +100,6 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
                         <i className="bi bi-box-arrow-right"></i>
                     </Link>
                 </div>
-
-                <Link to="/profile" className="shop-btn" onClick={onClose}>
-                    <div className="shop-left">
-                        <i className="bi bi-person-circle"></i>
-                        <span>My Profile</span>
-                    </div>
-                    <i className="bi bi-arrow-right-short" style={{ fontSize: "18px" }}></i>
-                </Link>
             </div>
         </aside>
     );

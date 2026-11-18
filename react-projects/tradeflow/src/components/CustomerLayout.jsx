@@ -4,54 +4,116 @@ import ProfileDropdown from "./ProfileDropdown";
 import { BrandLogo } from "./common";
 import { getSessionUser } from "../utils/session";
 import { getCartCount } from "../utils/cart";
+import { 
+    getNotifications, 
+    getUnreadCount, 
+    markAllNotificationsAsRead, 
+    markNotificationAsRead, 
+    NOTIFICATION_UPDATE_EVENT 
+} from "../utils/notifications";
 import productService from "../services/productService";
 
 export default function CustomerLayout() {
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Search state
     const [headerSearch, setHeaderSearch] = useState("");
     const [searchSuggestions, setSearchSuggestions] = useState([]);
     const [isSearchingHeader, setIsSearchingHeader] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
+
+    // Dropdowns and UI state
+    const [openDropdown, setOpenDropdown] = useState(null); // 'shop' | 'orders' | 'account' | 'notif' | null
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState(getSessionUser());
     const [cartCount, setCartCount] = useState(getCartCount());
+
+    // Notifications state
+    const [notifications, setNotifications] = useState(getNotifications);
+    const [unreadCount, setUnreadCount] = useState(getUnreadCount);
+
+    // Sidebar accordion state
+    const [accordions, setAccordions] = useState({
+        catalog: true,
+        orders: false,
+        preferences: false
+    });
+
+    // Refs for click outside
     const profileRef = useRef(null);
     const searchContainerRef = useRef(null);
+    const headerNavRef = useRef(null);
+    const bellDropdownRef = useRef(null);
 
-    // Auto-close mobile sidebar and search suggestions when navigating routes
+    // Auto-close dropdowns, sidebar, and search suggestions on route navigation
     useEffect(() => {
         setIsSidebarOpen(false);
         setShowSuggestions(false);
+        setOpenDropdown(null);
     }, [location.pathname]);
 
+    // Active route checks for compact header dropdowns
+    const isShopActive = location.pathname.startsWith("/customer/product") || 
+                         location.pathname.startsWith("/customer/categor");
+    const isOrdersActive = location.pathname.startsWith("/customer/order") || 
+                           location.pathname.startsWith("/customer/track");
+    const isAccountActive = location.pathname.startsWith("/customer/settings") || 
+                            location.pathname.startsWith("/customer/address") || 
+                            location.pathname.startsWith("/customer/payment") || 
+                            location.pathname.startsWith("/customer/support");
+
+    // Click outside handler & global listeners
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // Profile dropdown click outside
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setIsProfileOpen(false);
             }
+            // Search autocomplete click outside
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setShowSuggestions(false);
             }
+            // Header navigation dropdowns click outside
+            if (headerNavRef.current && !headerNavRef.current.contains(event.target)) {
+                if (openDropdown === "shop" || openDropdown === "orders" || openDropdown === "account") {
+                    setOpenDropdown(null);
+                }
+            }
+            // Notifications bell dropdown click outside
+            if (bellDropdownRef.current && !bellDropdownRef.current.contains(event.target)) {
+                if (openDropdown === "notif") {
+                    setOpenDropdown(null);
+                }
+            }
         };
+
         const handleSessionUpdate = () => {
             setUser(getSessionUser());
         };
         const handleCartUpdate = () => {
             setCartCount(getCartCount());
         };
+        const handleNotificationsUpdate = () => {
+            setNotifications(getNotifications());
+            setUnreadCount(getUnreadCount());
+        };
 
         document.addEventListener("click", handleClickOutside);
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
         window.addEventListener("tradeflow_cart_update", handleCartUpdate);
+        window.addEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
+        window.addEventListener("storage", handleNotificationsUpdate);
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
             window.removeEventListener("tradeflow_cart_update", handleCartUpdate);
+            window.removeEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
+            window.removeEventListener("storage", handleNotificationsUpdate);
         };
-    }, []);
+    }, [openDropdown]);
 
     // Live backend product search query for header search autocomplete
     useEffect(() => {
@@ -66,7 +128,6 @@ export default function CustomerLayout() {
         setIsSearchingHeader(true);
         const timer = setTimeout(async () => {
             try {
-                // Call live backend endpoint: admin/product/search-product.php
                 const res = await productService.searchProduct(term);
                 if (!isMounted) return;
                 if (res.success && Array.isArray(res.data)) {
@@ -90,6 +151,15 @@ export default function CustomerLayout() {
 
     const closeSidebar = () => setIsSidebarOpen(false);
 
+    const toggleDropdown = (name, e) => {
+        if (e) e.stopPropagation();
+        setOpenDropdown(prev => prev === name ? null : name);
+    };
+
+    const toggleAccordion = (section) => {
+        setAccordions(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+
     const handleSearchSubmit = (e) => {
         if (e && e.preventDefault) e.preventDefault();
         setShowSuggestions(false);
@@ -98,6 +168,19 @@ export default function CustomerLayout() {
             navigate(`/customer/products?search=${encodeURIComponent(q)}`);
         } else {
             navigate("/customer/products");
+        }
+    };
+
+    const handleMarkAllRead = (e) => {
+        if (e) e.stopPropagation();
+        markAllNotificationsAsRead();
+    };
+
+    const handleNotificationClick = (item) => {
+        markNotificationAsRead(item.id);
+        setOpenDropdown(null);
+        if (item.actionLink || item.link) {
+            navigate(item.actionLink || item.link);
         }
     };
 
@@ -131,6 +214,7 @@ export default function CustomerLayout() {
 
                         <nav className="customer-sidebar-nav">
                             <div className="nav-group-title">CUSTOMER MENU</div>
+                            
                             <NavLink
                                 to="/customer/dashboard"
                                 onClick={closeSidebar}
@@ -142,50 +226,85 @@ export default function CustomerLayout() {
                                 <span>Dashboard</span>
                             </NavLink>
 
-                            <NavLink
-                                to="/customer/categories"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive || location.pathname.startsWith("/customer/category/") ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-tags"></i>
-                                <span>Categories</span>
-                            </NavLink>
+                            {/* Accordion: Catalog & Shop */}
+                            <div className="sidebar-accordion-group">
+                                <button
+                                    type="button"
+                                    className={`accordion-header-btn ${isShopActive ? "group-active" : ""}`}
+                                    onClick={() => toggleAccordion("catalog")}
+                                >
+                                    <div className="acc-header-left">
+                                        <i className="bi bi-shop"></i>
+                                        <span>Shop &amp; Catalog</span>
+                                    </div>
+                                    <i className={`bi bi-chevron-down acc-chevron ${accordions.catalog ? "open" : ""}`}></i>
+                                </button>
+                                {accordions.catalog && (
+                                    <div className="accordion-child-links">
+                                        <NavLink
+                                            to="/customer/products"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive || location.pathname.startsWith("/customer/product/") ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-box-seam"></i>
+                                            <span>All Products</span>
+                                        </NavLink>
+                                        <NavLink
+                                            to="/customer/categories"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive || location.pathname.startsWith("/customer/category/") ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-tags"></i>
+                                            <span>Categories</span>
+                                        </NavLink>
+                                    </div>
+                                )}
+                            </div>
 
-                            <NavLink
-                                to="/customer/products"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive || location.pathname.startsWith("/customer/product/") ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-box-seam"></i>
-                                <span>Products</span>
-                            </NavLink>
+                            {/* Accordion: Orders & Tracking */}
+                            <div className="sidebar-accordion-group">
+                                <button
+                                    type="button"
+                                    className={`accordion-header-btn ${isOrdersActive ? "group-active" : ""}`}
+                                    onClick={() => toggleAccordion("orders")}
+                                >
+                                    <div className="acc-header-left">
+                                        <i className="bi bi-bag-check"></i>
+                                        <span>Orders &amp; Logistics</span>
+                                    </div>
+                                    <i className={`bi bi-chevron-down acc-chevron ${accordions.orders ? "open" : ""}`}></i>
+                                </button>
+                                {accordions.orders && (
+                                    <div className="accordion-child-links">
+                                        <NavLink
+                                            to="/customer/orders"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-receipt"></i>
+                                            <span>Your Orders</span>
+                                        </NavLink>
+                                        <NavLink
+                                            to="/customer/track-order"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-truck"></i>
+                                            <span>Track Orders</span>
+                                        </NavLink>
+                                    </div>
+                                )}
+                            </div>
 
-                            <NavLink
-                                to="/customer/orders"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-bag-check"></i>
-                                <span>Your Orders</span>
-                            </NavLink>
-
-                            <NavLink
-                                to="/customer/track-order"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-truck"></i>
-                                <span>Track Orders</span>
-                            </NavLink>
-
+                            {/* Quick Commerce Actions */}
                             <NavLink
                                 to="/customer/cart"
                                 onClick={closeSidebar}
@@ -220,42 +339,63 @@ export default function CustomerLayout() {
                                     `cust-nav-item ${isActive ? "active" : ""}`
                                 }
                             >
-                                <i className="bi bi-bell"></i>
-                                <span>Notifications</span>
+                                <div className="cart-nav-label-wrap">
+                                    <i className="bi bi-bell"></i>
+                                    <span>Notifications</span>
+                                </div>
+                                {unreadCount > 0 && (
+                                    <span className="cart-badge-count">{unreadCount}</span>
+                                )}
                             </NavLink>
 
-                            <NavLink
-                                to="/customer/addresses"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-geo-alt"></i>
-                                <span>Saved Addresses</span>
-                            </NavLink>
-
-                            <NavLink
-                                to="/customer/payment-methods"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-credit-card"></i>
-                                <span>Payment Methods</span>
-                            </NavLink>
-
-                            <NavLink
-                                to="/customer/settings"
-                                onClick={closeSidebar}
-                                className={({ isActive }) =>
-                                    `cust-nav-item ${isActive ? "active" : ""}`
-                                }
-                            >
-                                <i className="bi bi-gear"></i>
-                                <span>Settings</span>
-                            </NavLink>
+                            {/* Accordion: Preferences & Account */}
+                            <div className="sidebar-accordion-group">
+                                <button
+                                    type="button"
+                                    className={`accordion-header-btn ${isAccountActive ? "group-active" : ""}`}
+                                    onClick={() => toggleAccordion("preferences")}
+                                >
+                                    <div className="acc-header-left">
+                                        <i className="bi bi-person-gear"></i>
+                                        <span>Account Settings</span>
+                                    </div>
+                                    <i className={`bi bi-chevron-down acc-chevron ${accordions.preferences ? "open" : ""}`}></i>
+                                </button>
+                                {accordions.preferences && (
+                                    <div className="accordion-child-links">
+                                        <NavLink
+                                            to="/customer/settings"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-gear"></i>
+                                            <span>Profile &amp; Security</span>
+                                        </NavLink>
+                                        <NavLink
+                                            to="/customer/addresses"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-geo-alt"></i>
+                                            <span>Saved Addresses</span>
+                                        </NavLink>
+                                        <NavLink
+                                            to="/customer/payment-methods"
+                                            onClick={closeSidebar}
+                                            className={({ isActive }) =>
+                                                `cust-nav-child-item ${isActive ? "active" : ""}`
+                                            }
+                                        >
+                                            <i className="bi bi-credit-card"></i>
+                                            <span>Payment Methods</span>
+                                        </NavLink>
+                                    </div>
+                                )}
+                            </div>
 
                             <NavLink
                                 to="/customer/support"
@@ -268,7 +408,7 @@ export default function CustomerLayout() {
                                 <span>Help &amp; Support</span>
                             </NavLink>
 
-                            {/* Divider matching clean reference menu */}
+                            {/* Divider & Clean User / Signout Row */}
                             <div className="sidebar-menu-separator"></div>
 
                             <Link to="/customer/signin" className="cust-nav-item logout-item" onClick={closeSidebar}>
@@ -323,7 +463,10 @@ export default function CustomerLayout() {
                                 <i className="bi bi-list"></i>
                             </button>
                             <span className="user-portal-tag">USER PORTAL</span>
-                            <div className="header-nav-pills">
+
+                            {/* Compact Click Dropdown Modules */}
+                            <div className="header-nav-pills" ref={headerNavRef}>
+                                {/* Direct Link: Dashboard */}
                                 <NavLink
                                     to="/customer/dashboard"
                                     className={({ isActive }) =>
@@ -332,30 +475,156 @@ export default function CustomerLayout() {
                                 >
                                     <i className="bi bi-grid-1x2-fill"></i> Dashboard
                                 </NavLink>
-                                <NavLink
-                                    to="/customer/products"
-                                    className={({ isActive }) =>
-                                        `header-pill-btn ${isActive ? "active" : ""}`
-                                    }
-                                >
-                                    <i className="bi bi-box-seam"></i> Products
-                                </NavLink>
-                                <NavLink
-                                    to="/customer/orders"
-                                    className={({ isActive }) =>
-                                        `header-pill-btn ${isActive ? "active" : ""}`
-                                    }
-                                >
-                                    <i className="bi bi-bag-check"></i> Orders
-                                </NavLink>
-                                <NavLink
-                                    to="/customer/settings"
-                                    className={({ isActive }) =>
-                                        `header-pill-btn ${isActive ? "active" : ""}`
-                                    }
-                                >
-                                    <i className="bi bi-person-circle"></i> My Profile
-                                </NavLink>
+
+                                {/* Dropdown 1: Shop ▾ */}
+                                <div className="cust-header-dropdown-wrap">
+                                    <button
+                                        type="button"
+                                        className={`header-pill-btn cust-header-dropdown-btn ${isShopActive ? "active" : ""} ${openDropdown === "shop" ? "open" : ""}`}
+                                        onClick={(e) => toggleDropdown("shop", e)}
+                                    >
+                                        <i className="bi bi-shop"></i>
+                                        <span>Shop</span>
+                                        <i className={`bi bi-chevron-down pill-chevron ${openDropdown === "shop" ? "rotated" : ""}`}></i>
+                                    </button>
+                                    {openDropdown === "shop" && (
+                                        <div className="cust-header-dropdown-menu animate-fadeIn">
+                                            <Link
+                                                to="/customer/products"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-box-seam"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">All Products</span>
+                                                    <span className="item-sub">Explore full catalog &amp; stock</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/categories"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-tags"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Categories</span>
+                                                    <span className="item-sub">Browse by product category</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/products?filter=deals"
+                                                className="cust-dropdown-menu-item highlight-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-fire"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Special Deals</span>
+                                                    <span className="item-sub">Discounts for verified buyers</span>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Dropdown 2: Orders ▾ */}
+                                <div className="cust-header-dropdown-wrap">
+                                    <button
+                                        type="button"
+                                        className={`header-pill-btn cust-header-dropdown-btn ${isOrdersActive ? "active" : ""} ${openDropdown === "orders" ? "open" : ""}`}
+                                        onClick={(e) => toggleDropdown("orders", e)}
+                                    >
+                                        <i className="bi bi-bag-check"></i>
+                                        <span>Orders</span>
+                                        <i className={`bi bi-chevron-down pill-chevron ${openDropdown === "orders" ? "rotated" : ""}`}></i>
+                                    </button>
+                                    {openDropdown === "orders" && (
+                                        <div className="cust-header-dropdown-menu animate-fadeIn">
+                                            <Link
+                                                to="/customer/orders"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-receipt"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Your Orders</span>
+                                                    <span className="item-sub">View recent purchases &amp; receipts</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/track-order"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-truck"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Track Orders</span>
+                                                    <span className="item-sub">Live courier delivery updates</span>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Dropdown 3: Account ▾ */}
+                                <div className="cust-header-dropdown-wrap">
+                                    <button
+                                        type="button"
+                                        className={`header-pill-btn cust-header-dropdown-btn ${isAccountActive ? "active" : ""} ${openDropdown === "account" ? "open" : ""}`}
+                                        onClick={(e) => toggleDropdown("account", e)}
+                                    >
+                                        <i className="bi bi-person-gear"></i>
+                                        <span>Account</span>
+                                        <i className={`bi bi-chevron-down pill-chevron ${openDropdown === "account" ? "rotated" : ""}`}></i>
+                                    </button>
+                                    {openDropdown === "account" && (
+                                        <div className="cust-header-dropdown-menu animate-fadeIn">
+                                            <Link
+                                                to="/customer/settings"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-gear"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Profile &amp; Settings</span>
+                                                    <span className="item-sub">Security, password &amp; bio</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/addresses"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-geo-alt"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Saved Addresses</span>
+                                                    <span className="item-sub">Shipping &amp; delivery locations</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/payment-methods"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-credit-card"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Payment Methods</span>
+                                                    <span className="item-sub">Saved cards &amp; bank accounts</span>
+                                                </div>
+                                            </Link>
+                                            <Link
+                                                to="/customer/support"
+                                                className="cust-dropdown-menu-item"
+                                                onClick={() => setOpenDropdown(null)}
+                                            >
+                                                <i className="bi bi-headset"></i>
+                                                <div className="dropdown-item-text">
+                                                    <span className="item-title">Help &amp; Support</span>
+                                                    <span className="item-sub">Submit tickets &amp; contact care</span>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -456,11 +725,85 @@ export default function CustomerLayout() {
                                 )}
                             </Link>
 
-                            {/* Bell Notification */}
-                            <button type="button" className="customer-bell-btn" title="Notifications">
-                                <i className="bi bi-bell"></i>
-                                <span className="bell-badge-dot"></span>
-                            </button>
+                            {/* Interactive Bell Notification Trigger & Dropdown */}
+                            <div className="customer-bell-wrapper" ref={bellDropdownRef}>
+                                <button
+                                    type="button"
+                                    className={`customer-bell-btn ${openDropdown === "notif" ? "active" : ""}`}
+                                    title="Notifications"
+                                    onClick={(e) => toggleDropdown("notif", e)}
+                                >
+                                    <i className="bi bi-bell"></i>
+                                    {unreadCount > 0 && (
+                                        <span className="bell-badge-count">{unreadCount}</span>
+                                    )}
+                                </button>
+
+                                {openDropdown === "notif" && (
+                                    <div className="customer-notif-dropdown-menu animate-fadeIn">
+                                        <div className="notif-dropdown-header">
+                                            <div className="notif-header-title">
+                                                <span>Notifications</span>
+                                                {unreadCount > 0 && (
+                                                    <span className="unread-counter-badge">{unreadCount} New</span>
+                                                )}
+                                            </div>
+                                            {unreadCount > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-notif-mark-all-read"
+                                                    onClick={handleMarkAllRead}
+                                                >
+                                                    <i className="bi bi-check2-all"></i> Mark all read
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="notif-dropdown-body">
+                                            {notifications.length > 0 ? (
+                                                notifications.slice(0, 4).map((n) => (
+                                                    <div
+                                                        key={n.id}
+                                                        className={`notif-dropdown-row ${n.isRead ? "read" : "unread"}`}
+                                                        onClick={() => handleNotificationClick(n)}
+                                                    >
+                                                        <div
+                                                            className="notif-mini-icon"
+                                                            style={{ backgroundColor: n.bgColor || "#ecfdf5", color: n.color || "#10b981" }}
+                                                        >
+                                                            <i className={n.icon || "bi bi-bell"}></i>
+                                                        </div>
+                                                        <div className="notif-mini-content">
+                                                            <div className="notif-mini-top">
+                                                                <span className="notif-mini-title">{n.title}</span>
+                                                                {!n.isRead && <span className="mini-unread-dot"></span>}
+                                                            </div>
+                                                            <p className="notif-mini-msg">{n.message}</p>
+                                                            <span className="notif-mini-time">{n.time}</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="notif-dropdown-empty">
+                                                    <i className="bi bi-bell-slash"></i>
+                                                    <span>No notifications yet</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="notif-dropdown-footer">
+                                            <Link
+                                                to="/customer/notifications"
+                                                onClick={() => setOpenDropdown(null)}
+                                                className="notif-view-all-link"
+                                            >
+                                                <span>View All Notifications</span>
+                                                <i className="bi bi-arrow-right"></i>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Avatar Trigger with Dropdown */}
                             <div className="user-profile-relative">

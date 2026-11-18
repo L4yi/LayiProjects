@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { OrderSlideDrawer } from "../components/drawers";
 import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
 import orderService from "../services/orderService";
@@ -16,12 +17,29 @@ export default function Orders() {
     const [drawerError, setDrawerError] = useState("");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [drawerTitle, setDrawerTitle] = useState("Edit Order");
+    const [searchParams, setSearchParams] = useSearchParams();
     const [statusFilter, setStatusFilter] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [modalData, setModalData] = useState({ title: "", message: "", type: "success" });
     const [orderToDelete, setOrderToDelete] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    useEffect(() => {
+        const urlSearch = searchParams.get("search");
+        if (urlSearch !== null) {
+            setSearchQuery(urlSearch);
+        }
+    }, [searchParams]);
+
+    const handleSearchChange = (val) => {
+        setSearchQuery(val);
+        if (val.trim()) {
+            setSearchParams({ search: val.trim() });
+        } else {
+            setSearchParams({});
+        }
+    };
 
     const loadOrders = async () => {
         setIsLoading(true);
@@ -312,12 +330,12 @@ export default function Orders() {
                                     className="table-filter-search-input"
                                     placeholder="Search orders..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
                                 />
                                 {searchQuery && (
                                     <button
                                         type="button"
-                                        onClick={() => setSearchQuery("")}
+                                        onClick={() => handleSearchChange("")}
                                         className="table-filter-clear-btn"
                                         title="Clear search"
                                     >
