@@ -26,6 +26,34 @@ export default function CustomerOrders() {
     const [selectedTab, setSelectedTab] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [activeReceiptOrder, setActiveReceiptOrder] = useState(null);
+    const [cancellingOrderId, setCancellingOrderId] = useState(null);
+
+    const handleCancelOrder = async (orderId) => {
+        if (!window.confirm(`Are you sure you want to cancel order ${orderId}?`)) return;
+        setCancellingOrderId(orderId);
+        try {
+            const res = await orderService.cancelOrder(orderId, sessionUser?.customerId || sessionUser?.id);
+            if (res.success) {
+                setOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, status: "Cancelled", rawStatus: "Cancelled" } : o));
+            } else {
+                alert(res.message || "Could not cancel order.");
+            }
+        } finally {
+            setCancellingOrderId(null);
+        }
+    };
+
+    const handleOpenReceipt = async (ord) => {
+        setActiveReceiptOrder(ord);
+        try {
+            const liveRes = await orderService.fetchEachOrder(ord.orderId || ord.id);
+            if (liveRes.success && liveRes.data) {
+                setActiveReceiptOrder(prev => (prev?.orderId === ord.orderId ? { ...prev, ...liveRes.data } : prev));
+            }
+        } catch (_) {
+            // keep existing receipt order payload
+        }
+    };
 
     useEffect(() => {
         const loadOrders = async () => {
@@ -41,7 +69,7 @@ export default function CustomerOrders() {
 
                 // Concurrently fetch backend orders and products from database
                 const [ordersRes, productsRes] = await Promise.all([
-                    orderService.fetchAllOrders(),
+                    orderService.fetchCustomerOrders(sessionUser?.customerId || sessionUser?.id),
                     productService.fetchAllProducts().catch(() => ({ data: [] }))
                 ]);
 
@@ -329,12 +357,24 @@ export default function CustomerOrders() {
                                         <button
                                             type="button"
                                             className="btn-view-order-receipt"
-                                            onClick={() => setActiveReceiptOrder(ord)}
+                                            onClick={() => handleOpenReceipt(ord)}
                                             title="View full receipt and shipment details"
                                         >
                                             <FileText size={14} />
                                             <span>View Details &amp; Receipt</span>
                                         </button>
+                                        {(ord.status?.toLowerCase() === "processing" || ord.status?.toLowerCase() === "pending") && (
+                                            <button
+                                                type="button"
+                                                className="btn-cancel-order"
+                                                disabled={cancellingOrderId === ord.orderId}
+                                                onClick={() => handleCancelOrder(ord.orderId)}
+                                                title="Cancel this order"
+                                            >
+                                                <X size={13} />
+                                                <span>{cancellingOrderId === ord.orderId ? "Cancelling..." : "Cancel Order"}</span>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

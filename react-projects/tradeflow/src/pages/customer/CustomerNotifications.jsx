@@ -7,6 +7,8 @@ import {
     deleteNotification,
     NOTIFICATION_UPDATE_EVENT 
 } from "../../utils/notifications";
+import { getSessionUser } from "../../utils/session";
+import { customerService } from "../../services/customerService";
 
 export default function CustomerNotifications() {
     const [notifications, setNotifications] = useState(getNotifications);
@@ -20,6 +22,25 @@ export default function CustomerNotifications() {
         };
         window.addEventListener(NOTIFICATION_UPDATE_EVENT, handleUpdate);
         window.addEventListener("storage", handleUpdate);
+
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            customerService.fetchNotifications(customerId).then(res => {
+                if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+                    const mapped = res.data.map(n => ({
+                        id: n.id || n.notificationId,
+                        title: n.title || n.subject || "Notification",
+                        message: n.message || n.text || "",
+                        date: n.createdAt || n.date || "Just now",
+                        type: n.type || "orders",
+                        isRead: !!(n.isRead === 1 || n.isRead === true || n.read === 1)
+                    }));
+                    setNotifications(mapped);
+                }
+            }).catch(() => {});
+        }
+
         return () => {
             window.removeEventListener(NOTIFICATION_UPDATE_EVENT, handleUpdate);
             window.removeEventListener("storage", handleUpdate);
@@ -33,15 +54,31 @@ export default function CustomerNotifications() {
         return n.type === activeFilter;
     });
 
-    const handleMarkAllRead = () => {
+    const handleMarkAllRead = async () => {
         setIsMarkingAll(true);
-        setTimeout(() => {
-            markAllNotificationsAsRead();
-            setIsMarkingAll(false);
-        }, 250);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.markNotificationRead(customerId, null, 1);
+            } catch (err) {
+                console.warn("Backend mark all read fallback:", err);
+            }
+        }
+        markAllNotificationsAsRead();
+        setIsMarkingAll(false);
     };
 
-    const handleToggleRead = (id) => {
+    const handleToggleRead = async (id) => {
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.markNotificationRead(customerId, id, 0);
+            } catch (err) {
+                console.warn("Backend mark notification read fallback:", err);
+            }
+        }
         toggleNotificationRead(id);
     };
 

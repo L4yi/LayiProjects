@@ -167,6 +167,10 @@ export default function CustomerCheckout() {
             customerId = "CUST20261111143445"; // Default verified customer account
         }
 
+        const paymentMethodId = selectedPayment === "wallet" ? 1 : (selectedPayment === "bank_transfer" ? 2 : 3);
+        const deliveryAddress = selectedAddress ? `${selectedAddress.street || ""}, ${selectedAddress.city || ""}, ${selectedAddress.state || ""}`.trim() : (user.address || "Ibara, Abeokuta");
+        const deliveryPhone = selectedAddress?.phone || user.phone || "+2348108725967";
+
         // Place order directly in MySQL backend database
         let backendAssignedOrderId = null;
         try {
@@ -175,6 +179,9 @@ export default function CustomerCheckout() {
                 if (prodId) {
                     const res = await orderService.createOrder({
                         customerId: String(customerId),
+                        paymentMethodId,
+                        deliveryAddress,
+                        deliveryPhone,
                         productId: String(prodId),
                         statusId: "4" // 4 = PROCESSING in database setup
                     }).catch(() => null);

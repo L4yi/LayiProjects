@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import orderService from "../../services/orderService";
+import { customerService } from "../../services/customerService";
 import { getSessionUser } from "../../utils/session";
 
 const MOCK_TRACKING_DATA = {
@@ -88,32 +89,57 @@ export default function CustomerTrackOrder() {
         });
     }, [user?.id, user?.email]);
 
-    const handleSearchOrder = (e) => {
+    const handleSearchOrder = async (e) => {
         e?.preventDefault();
         const term = searchInput.trim();
         if (!term) return;
 
         setIsLoading(true);
-        setTimeout(() => {
-            // Check if matching order exists in active orders list
-            const matched = activeOrders.find(o => o.orderId.toLowerCase() === term.toLowerCase() || o.id.toLowerCase() === term.toLowerCase());
-            if (matched) {
+        try {
+            const customerId = user?.customerId || user?.id;
+            const res = await customerService.trackOrder(term, customerId);
+            if (res?.success && res.data) {
+                const d = res.data;
                 setTrackingInfo(prev => ({
                     ...prev,
-                    orderId: matched.orderId || matched.id,
-                    productName: matched.productName || "Ordered Product",
-                    price: matched.price || 185000,
-                    currentStatus: matched.status || "In Transit",
-                    shippingAddress: matched.address || prev.shippingAddress
+                    orderId: d.orderId || term.toUpperCase(),
+                    currentStatus: d.currentStatus || d.status || prev.currentStatus,
+                    statusId: d.statusId || prev.statusId,
+                    carrier: d.carrier || prev.carrier,
+                    trackingNumber: d.trackingNumber || prev.trackingNumber,
+                    estimatedDelivery: d.estimatedDelivery || prev.estimatedDelivery,
+                    shippingAddress: d.shippingAddress || d.address || prev.shippingAddress,
+                    contactPhone: d.contactPhone || d.phoneNumber || prev.contactPhone,
+                    productName: d.productName || prev.productName,
+                    categoryName: d.categoryName || prev.categoryName,
+                    price: d.price ? parseFloat(d.price) : prev.price,
+                    milestones: Array.isArray(d.milestones) && d.milestones.length > 0 ? d.milestones : prev.milestones
                 }));
-            } else {
-                setTrackingInfo(prev => ({
-                    ...prev,
-                    orderId: term.toUpperCase()
-                }));
+                setIsLoading(false);
+                return;
             }
-            setIsLoading(false);
-        }, 300);
+        } catch (err) {
+            console.warn("Live tracking endpoint fallback:", err);
+        }
+
+        // Check if matching order exists in active orders list
+        const matched = activeOrders.find(o => o.orderId?.toLowerCase() === term.toLowerCase() || o.id?.toLowerCase() === term.toLowerCase());
+        if (matched) {
+            setTrackingInfo(prev => ({
+                ...prev,
+                orderId: matched.orderId || matched.id,
+                productName: matched.productName || "Ordered Product",
+                price: matched.price || 185000,
+                currentStatus: matched.status || "In Transit",
+                shippingAddress: matched.address || prev.shippingAddress
+            }));
+        } else {
+            setTrackingInfo(prev => ({
+                ...prev,
+                orderId: term.toUpperCase()
+            }));
+        }
+        setIsLoading(false);
     };
 
     const handleCopyTracking = () => {

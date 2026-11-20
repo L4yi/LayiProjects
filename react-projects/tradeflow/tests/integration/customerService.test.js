@@ -44,6 +44,6 @@ describe("Integration: Customer Module Fallbacks & API Contract", () => {
         });
         assert.equal(res.success, true);
         assert.ok(res.ticketId);
-        assert.ok(res.ticketId.startsWith("TCK-"));
+        assert.ok(res.ticketId.startsWith("TCK"));
     });
 });

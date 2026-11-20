@@ -59,6 +59,28 @@ export default function CustomerAddresses() {
         localStorage.setItem("tradeflow_saved_addresses", JSON.stringify(addresses));
     }, [addresses]);
 
+    useEffect(() => {
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            customerService.fetchAddresses(customerId).then(res => {
+                if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+                    const mapped = res.data.map(a => ({
+                        id: a.id || a.addressId || `ADDR_${Math.random()}`,
+                        label: a.label || "Home",
+                        recipientName: a.recipientName || user.name || "Customer",
+                        phone: a.phoneNumber || a.phone || user.phone || "",
+                        street: a.streetAddress || a.street || "",
+                        city: a.city || "Abeokuta",
+                        state: a.state || "Ogun State",
+                        landmark: a.landmark || "",
+                        isDefault: !!(a.isDefault === 1 || a.isDefault === true)
+                    }));
+                    setAddresses(mapped);
+                }
+            }).catch(() => {});
+        }
+    }, [user?.customerId, user?.id]);
+
     const showToast = (msg) => {
         setToastMessage(msg);
         setTimeout(() => setToastMessage(""), 3000);
@@ -81,17 +103,23 @@ export default function CustomerAddresses() {
         }, 250);
     };
 
-    const handleDeleteAddress = (id) => {
+    const handleDeleteAddress = async (id) => {
         if (addresses.length <= 1) {
             showToast("You must keep at least one delivery address on file.");
             return;
         }
         setDeletingId(id);
-        setTimeout(() => {
-            setAddresses(prev => prev.filter(a => a.id !== id));
-            setDeletingId(null);
-            showToast("Address deleted successfully.");
-        }, 250);
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.deleteAddress(customerId, id);
+            } catch (err) {
+                console.warn("Backend delete address fallback:", err);
+            }
+        }
+        setAddresses(prev => prev.filter(a => a.id !== id));
+        setDeletingId(null);
+        showToast("Address deleted successfully.");
     };
 
     const handleOpenAddModal = () => {
@@ -124,7 +152,7 @@ export default function CustomerAddresses() {
         setIsModalOpen(true);
     };
 
-    const handleSubmitAddress = (e) => {
+    const handleSubmitAddress = async (e) => {
         e.preventDefault();
         if (!formData.street.trim()) {
             showToast("Please enter a valid street address.");
@@ -132,40 +160,57 @@ export default function CustomerAddresses() {
         }
 
         setIsSaving(true);
-        setTimeout(() => {
-            if (editingAddressId) {
-                // Update existing
-                setAddresses(prev => prev.map(a => {
-                    if (a.id === editingAddressId) {
-                        return {
-                            ...a,
-                            ...formData
-                        };
-                    }
-                    if (formData.isDefault) {
-                        return { ...a, isDefault: false };
-                    }
-                    return a;
-                }));
-                showToast("Address updated successfully.");
-            } else {
-                // Add new
-                const newId = `ADDR${Date.now()}`;
-                const newAddr = {
-                    id: newId,
-                    ...formData
-                };
-                if (formData.isDefault) {
-                    setAddresses(prev => [...prev.map(a => ({ ...a, isDefault: false })), newAddr]);
-                    setSessionUser({ address: `${formData.street}, ${formData.city}, ${formData.state}` });
-                } else {
-                    setAddresses(prev => [...prev, newAddr]);
-                }
-                showToast("New address added successfully.");
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.saveAddress({
+                    customerId,
+                    addressId: editingAddressId || undefined,
+                    label: formData.label,
+                    recipientName: formData.recipientName,
+                    phoneNumber: formData.phone,
+                    streetAddress: formData.street,
+                    city: formData.city,
+                    state: formData.state,
+                    isDefault: formData.isDefault ? 1 : 0
+                });
+            } catch (err) {
+                console.warn("Backend save address fallback:", err);
             }
-            setIsSaving(false);
-            setIsModalOpen(false);
-        }, 350);
+        }
+
+        if (editingAddressId) {
+            // Update existing
+            setAddresses(prev => prev.map(a => {
+                if (a.id === editingAddressId) {
+                    return {
+                        ...a,
+                        ...formData
+                    };
+                }
+                if (formData.isDefault) {
+                    return { ...a, isDefault: false };
+                }
+                return a;
+            }));
+            showToast("Address updated successfully.");
+        } else {
+            // Add new
+            const newId = `ADDR${Date.now()}`;
+            const newAddr = {
+                id: newId,
+                ...formData
+            };
+            if (formData.isDefault) {
+                setAddresses(prev => [...prev.map(a => ({ ...a, isDefault: false })), newAddr]);
+                setSessionUser({ address: `${formData.street}, ${formData.city}, ${formData.state}` });
+            } else {
+                setAddresses(prev => [...prev, newAddr]);
+            }
+            showToast("New address added successfully.");
+        }
+        setIsSaving(false);
+        setIsModalOpen(false);
     };
 
     return (

@@ -63,11 +63,13 @@ export const orderService = {
     },
 
     // Fetches orders for a specific customer with automatic bridge to live orders
-    async fetchCustomerOrders(customerId) {
+    async fetchCustomerOrders(customerId, statusId = null) {
         if (!customerId) return this.fetchAllOrders();
         try {
             const formData = new FormData();
             formData.append("customerId", String(customerId).trim());
+            if (statusId) formData.append("statusId", String(statusId).trim());
+
             const response = await api.post("customer/order/fetch-customer-orders.php", formData);
             if (response.data?.success && Array.isArray(response.data?.data)) {
                 return {
@@ -77,13 +79,17 @@ export const orderService = {
                 };
             }
         } catch (err) {
-            // Endpoint pending (404): gracefully bridge through live orders filtered by customerId
+            // Endpoint pending or network issue: gracefully bridge through live orders filtered by customerId
         }
 
         const allRes = await this.fetchAllOrders();
         if (allRes.success && Array.isArray(allRes.data)) {
             const cleanId = String(customerId).trim();
-            const filtered = allRes.data.filter(o => String(o.customerId || "").trim() === cleanId);
+            const filtered = allRes.data.filter(o => {
+                const matchId = String(o.customerId || "").trim() === cleanId;
+                const matchStatus = !statusId || String(o.statusId || "") === String(statusId);
+                return matchId && matchStatus;
+            });
             return {
                 success: true,
                 data: filtered.length > 0 ? filtered : allRes.data,
@@ -93,14 +99,72 @@ export const orderService = {
         return allRes;
     },
 
-    // Places a new order in the database for a customer and product
-    async createOrder({ customerId, productId, statusId }) {
+    // Fetches single order details and receipt via customer/order/fetch-each-order.php
+    async fetchEachOrder(orderId) {
+        if (!orderId) return { success: false, message: "Order ID is required." };
+        try {
+            const formData = new FormData();
+            formData.append("orderId", String(orderId).trim());
+            const response = await api.post("customer/order/fetch-each-order.php", formData);
+            if (response.data?.success && response.data?.data) {
+                return {
+                    success: true,
+                    data: normalizeOrder(response.data.data),
+                    message: response.data.message || "ORDER DETAILS RETRIEVED"
+                };
+            }
+        } catch (err) {
+            // Fallback: search in all orders
+        }
+
+        const allRes = await this.fetchAllOrders();
+        if (allRes.success && Array.isArray(allRes.data)) {
+            const matched = allRes.data.find(o => String(o.orderId || o.id).toLowerCase() === String(orderId).toLowerCase());
+            if (matched) {
+                return { success: true, data: matched, message: "Order found in directory" };
+            }
+        }
+        return { success: false, message: "Order not found." };
+    },
+
+    // Cancels an active or pending order via customer/order/cancel-order.php
+    async cancelOrder(orderId, customerId = null) {
+        if (!orderId) return { success: false, message: "Order ID is required." };
+        try {
+            const formData = new FormData();
+            formData.append("orderId", String(orderId).trim());
+            if (customerId) formData.append("customerId", String(customerId).trim());
+
+            const response = await api.post("customer/order/cancel-order.php", formData);
+            if (response.data?.success) {
+                return {
+                    success: true,
+                    message: response.data.message || "ORDER CANCELLED SUCCESSFULLY"
+                };
+            }
+            return {
+                success: false,
+                message: response.data?.message || "Failed to cancel order."
+            };
+        } catch (err) {
+            return {
+                success: false,
+                message: err.response?.data?.message || err.message || "Failed to cancel order."
+            };
+        }
+    },
+
+    // Places a new order in the database for a customer and product / cart items
+    async createOrder({ customerId, paymentMethodId = 3, deliveryAddress = "", deliveryPhone = "", productId = null, statusId = null }) {
         statusId = statusId || setupService.getStatusId("Processing");
         try {
             const formData = new FormData();
-            formData.append("customerId", customerId);
-            formData.append("productId", productId);
-            formData.append("statusId", statusId);
+            formData.append("customerId", String(customerId).trim());
+            if (paymentMethodId) formData.append("paymentMethodId", String(paymentMethodId));
+            if (deliveryAddress) formData.append("deliveryAddress", String(deliveryAddress).trim());
+            if (deliveryPhone) formData.append("deliveryPhone", String(deliveryPhone).trim());
+            if (productId) formData.append("productId", String(productId).trim());
+            if (statusId) formData.append("statusId", String(statusId).trim());
 
             let response;
             try {
@@ -116,7 +180,8 @@ export const orderService = {
             if (resData?.success === true) {
                 return {
                     success: true,
-                    data: normalizeOrder(resData.data),
+                    data: normalizeOrder(resData.data || resData),
+                    raw: resData,
                     message: resData.message || "ORDER CREATED SUCCESSFULLY"
                 };
             }

@@ -25,22 +25,23 @@ import {
 // Resilient code-split loader with auto-retry on stale chunk deployments
 const lazy = (factory) =>
   reactLazy(async () => {
-    const hasRefreshed = typeof window !== "undefined" && window.sessionStorage.getItem("tradeflow_chunk_refresh") === "true";
     try {
-      const module = await factory();
-      if (typeof window !== "undefined") {
-        window.sessionStorage.removeItem("tradeflow_chunk_refresh");
-      }
-      return module;
+      return await factory();
     } catch (error) {
-      if (!hasRefreshed && typeof window !== "undefined") {
+      const isChunkError =
+        error?.message?.includes("Failed to fetch dynamically imported module") ||
+        error?.message?.includes("Importing a module script failed") ||
+        error?.message?.includes("error loading dynamically imported module");
+
+      const key = "tf_lazy_reload_ts";
+      const last = typeof window !== "undefined" ? parseInt(window.sessionStorage.getItem(key) || "0", 10) : 0;
+      const now = Date.now();
+
+      if (isChunkError && now - last > 8000 && typeof window !== "undefined") {
         console.warn("Chunk load failed (likely stale deployment cache). Performing seamless refresh...", error);
-        window.sessionStorage.setItem("tradeflow_chunk_refresh", "true");
+        window.sessionStorage.setItem(key, String(now));
         window.location.reload();
         return new Promise(() => {});
-      }
-      if (typeof window !== "undefined") {
-        window.sessionStorage.removeItem("tradeflow_chunk_refresh");
       }
       throw error;
     }
@@ -142,7 +143,8 @@ export const router = createBrowserRouter([
   },
   {
     path: "/customer",
-    element: <Navigate to="/customer/dashboard" replace />
+    element: <Navigate to="/customer/dashboard" replace />,
+    errorElement: <ServerError500 />
   },
   {
     element: <CustomerLayout />,

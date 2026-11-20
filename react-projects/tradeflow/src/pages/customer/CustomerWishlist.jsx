@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getWishlistItems, removeFromWishlist, clearWishlist } from "../../utils/wishlist";
 import { addToCart, addBatchToCart } from "../../utils/cart";
+import { getSessionUser } from "../../utils/session";
+import { customerService } from "../../services/customerService";
 import { PageHeader } from "../../components/common";
 
 export default function CustomerWishlist() {
@@ -18,6 +20,27 @@ export default function CustomerWishlist() {
             setWishlist(getWishlistItems());
         };
         window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
+
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            customerService.fetchWishlist(customerId).then(res => {
+                if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+                    const remoteItems = res.data.map(item => ({
+                        id: item.productId || item.id,
+                        productId: item.productId || item.id,
+                        name: item.productName || item.name || "Item",
+                        price: parseFloat(item.price || 0),
+                        originalPrice: item.originalPrice ? parseFloat(item.originalPrice) : null,
+                        category: item.categoryName || item.category || "General",
+                        image: item.imageUrl || item.image || item.product_image || "",
+                        inStock: item.inStock !== false && item.inStock !== 0
+                    }));
+                    setWishlist(remoteItems);
+                }
+            }).catch(() => {});
+        }
+
         return () => window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
     }, []);
 
@@ -26,25 +49,39 @@ export default function CustomerWishlist() {
         setTimeout(() => setToastMessage(""), 3000);
     };
 
-    const handleMoveToCart = (item) => {
+    const handleMoveToCart = async (item) => {
         setMovingId(item.id);
-        setTimeout(() => {
-            addToCart(item, 1);
-            removeFromWishlist(item.id);
-            setWishlist(getWishlistItems());
-            setMovingId(null);
-            showToast(`Moved "${item.name}" to your shopping cart!`);
-        }, 250);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.moveWishlistToCart(customerId, item.productId || item.id);
+            } catch (err) {
+                console.warn("Backend move to cart fallback:", err);
+            }
+        }
+        addToCart(item, 1);
+        removeFromWishlist(item.id);
+        setWishlist(getWishlistItems());
+        setMovingId(null);
+        showToast(`Moved "${item.name}" to your shopping cart!`);
     };
 
-    const handleRemove = (id, name) => {
+    const handleRemove = async (id, name) => {
         setRemovingId(id);
-        setTimeout(() => {
-            removeFromWishlist(id);
-            setWishlist(getWishlistItems());
-            setRemovingId(null);
-            showToast(`Removed "${name}" from your wishlist.`);
-        }, 200);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.removeWishlist(customerId, id);
+            } catch (err) {
+                console.warn("Backend remove wishlist fallback:", err);
+            }
+        }
+        removeFromWishlist(id);
+        setWishlist(getWishlistItems());
+        setRemovingId(null);
+        showToast(`Removed "${name}" from your wishlist.`);
     };
 
     const handleMoveAllToCart = () => {

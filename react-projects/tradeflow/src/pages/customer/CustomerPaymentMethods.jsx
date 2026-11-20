@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
     OFFICIAL_BANK_DETAILS,
@@ -10,6 +10,8 @@ import {
     getWalletBalance,
     addWalletFunds
 } from "../../utils/payment";
+import { getSessionUser } from "../../utils/session";
+import { customerService } from "../../services/customerService";
 
 export default function CustomerPaymentMethods() {
     const [defaultMethod, setCurDefaultMethod] = useState(getDefaultPaymentMethod());
@@ -24,6 +26,23 @@ export default function CustomerPaymentMethods() {
     const [topupAmount, setTopupAmount] = useState(5000);
     const [toastMessage, setToastMessage] = useState("");
 
+    useEffect(() => {
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            customerService.fetchPaymentMethods(customerId).then(res => {
+                if (res?.success && res.data) {
+                    if (res.data.walletBalance !== undefined) {
+                        setWalletBalance(parseFloat(res.data.walletBalance));
+                    }
+                    if (res.data.defaultMethod) {
+                        setCurDefaultMethod(res.data.defaultMethod);
+                    }
+                }
+            }).catch(() => {});
+        }
+    }, []);
+
     const [newCardData, setNewCardData] = useState({
         nameOnCard: "omo Layi",
         cardNumber: "",
@@ -36,9 +55,18 @@ export default function CustomerPaymentMethods() {
         setTimeout(() => setToastMessage(""), 3000);
     };
 
-    const handleSelectDefault = (method) => {
+    const handleSelectDefault = async (method) => {
         setDefaultPaymentMethod(method);
         setCurDefaultMethod(method);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                await customerService.savePaymentPreference(customerId, method);
+            } catch (err) {
+                console.warn("Backend save payment preference fallback:", err);
+            }
+        }
         showToast(`Default payment preference updated to ${method.replace('_', ' ').toUpperCase()}.`);
     };
 

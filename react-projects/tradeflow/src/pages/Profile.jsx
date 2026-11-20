@@ -408,13 +408,16 @@ export default function Profile() {
 
             if (isCustomerUser) {
                 const customerId = user.customerId || user.id || "";
-                res = await customerService.updateProfilePhoto(customerId, file, {
-                    customerId,
-                    name: user.name,
-                    emailAddress: user.email,
-                    phoneNumber: user.phone,
-                    address: user.address
-                });
+                res = await customerService.uploadCustomerAvatar(customerId, file);
+                if (!res?.success) {
+                    res = await customerService.updateProfilePhoto(customerId, file, {
+                        customerId,
+                        name: user.name,
+                        emailAddress: user.email,
+                        phoneNumber: user.phone,
+                        address: user.address
+                    });
+                }
             } else {
                 const staffId = user.staffId || user.id || "1";
                 res = await staffService.updateProfilePhoto(staffId, file, {

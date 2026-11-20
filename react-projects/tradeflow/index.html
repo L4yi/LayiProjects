@@ -24,6 +24,34 @@
             document.documentElement.classList.add('dark');
           }
         } catch (e) {}
+
+        // Automatic self-healing for stale dynamic module imports
+        function handleChunkError(e) {
+          var msg = (e && (e.message || (e.error && e.error.message))) || '';
+          if (
+            msg.indexOf('Failed to fetch dynamically imported module') !== -1 ||
+            msg.indexOf('Importing a module script failed') !== -1 ||
+            msg.indexOf('error loading dynamically imported module') !== -1
+          ) {
+            var key = 'tf_auto_reload_ts';
+            var last = parseInt(sessionStorage.getItem(key) || '0', 10);
+            var now = Date.now();
+            if (now - last > 10000) {
+              sessionStorage.setItem(key, String(now));
+              window.location.reload();
+            }
+          }
+        }
+        window.addEventListener('error', handleChunkError, true);
+        window.addEventListener('vite:preloadError', function() {
+          var key = 'tf_auto_reload_ts';
+          var last = parseInt(sessionStorage.getItem(key) || '0', 10);
+          var now = Date.now();
+          if (now - last > 10000) {
+            sessionStorage.setItem(key, String(now));
+            window.location.reload();
+          }
+        });
       })();
     </script>
   </head>

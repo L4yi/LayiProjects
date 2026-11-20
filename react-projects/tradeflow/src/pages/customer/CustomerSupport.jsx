@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser } from "../../utils/session";
 import { StatusModal } from "../../components/common";
+import { customerService } from "../../services/customerService";
 
 const FAQS = [
     {
@@ -42,7 +43,7 @@ export default function CustomerSupport() {
         setFaqOpenIdx(prev => prev === idx ? -1 : idx);
     };
 
-    const handleSubmitTicket = (e) => {
+    const handleSubmitTicket = async (e) => {
         e.preventDefault();
         if (!ticketSubject.trim() || !ticketMessage.trim()) {
             alert("Please complete the subject and message fields.");
@@ -50,15 +51,30 @@ export default function CustomerSupport() {
         }
 
         setIsSubmitting(true);
-        setTimeout(() => {
-            const ticketId = `TCK-${Math.floor(100000 + Math.random() * 900000)}`;
-            setSubmittedTicketId(ticketId);
-            setIsSubmitting(false);
-            setIsSuccessModalOpen(true);
-            setTicketSubject("");
-            setTicketMessage("");
-            setTicketOrderId("");
-        }, 600);
+        let finalTicketId = `TCK-${Math.floor(100000 + Math.random() * 900000)}`;
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            try {
+                const res = await customerService.submitSupportTicket({
+                    customerId,
+                    orderId: ticketOrderId || undefined,
+                    category: ticketCategory,
+                    subject: ticketSubject,
+                    message: ticketMessage
+                });
+                if (res?.data?.ticketId) {
+                    finalTicketId = res.data.ticketId;
+                }
+            } catch (err) {
+                console.warn("Backend submit ticket fallback:", err);
+            }
+        }
+        setSubmittedTicketId(finalTicketId);
+        setIsSubmitting(false);
+        setIsSuccessModalOpen(true);
+        setTicketSubject("");
+        setTicketMessage("");
+        setTicketOrderId("");
     };
 
     return (

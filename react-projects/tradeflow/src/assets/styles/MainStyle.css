@@ -15299,6 +15299,31 @@ button:disabled,
     box-shadow: 0 3px 8px rgba(20, 53, 38, 0.15) !important;
 }
 
+.btn-cancel-order {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 12px !important;
+    background-color: transparent !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #ef4444 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-cancel-order:hover:not(:disabled) {
+    background-color: #fee2e2 !important;
+    border-color: #f87171 !important;
+}
+
+.btn-cancel-order:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
 
 /* ==========================================================================
    TRADEFLOW AUTHORITATIVE MASTER DARK MODE PALETTE
@@ -16681,4 +16706,17 @@ html.dark .btn-profile-logout {
 html.dark .btn-profile-logout:hover {
     background-color: rgba(239, 68, 68, 0.25) !important;
     color: #ef4444 !important;
+}
+
+[data-theme="dark"] .btn-cancel-order,
+html.dark .btn-cancel-order {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #f87171 !important;
+}
+
+[data-theme="dark"] .btn-cancel-order:hover:not(:disabled),
+html.dark .btn-cancel-order:hover:not(:disabled) {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
 }
