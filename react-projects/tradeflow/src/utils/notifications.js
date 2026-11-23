@@ -176,4 +176,39 @@ export function addNotification(notification) {
     return setNotifications(updated);
 }
 
+export function mapBackendNotifications(rawList = []) {
+    if (!Array.isArray(rawList)) return [];
+    const typeStyleMap = {
+        order: { icon: "bi bi-truck", color: "#10b981", bgColor: "#ecfdf5" },
+        security: { icon: "bi bi-shield-check", color: "#0284c7", bgColor: "#e0f2fe" },
+        promo: { icon: "bi bi-tag", color: "#f59e0b", bgColor: "#fef3c7" }
+    };
+    return rawList.map((n) => {
+        const rawType = String(n.type || "order").toLowerCase();
+        const normalizedType =
+            rawType === "promo" || rawType.includes("deal")
+                ? "promo"
+                : rawType === "security" || rawType === "system" || rawType === "account"
+                    ? "security"
+                    : "order";
+        const preset = typeStyleMap[normalizedType];
+        const readFlag = !!(n.isRead === 1 || n.isRead === true || n.read === 1 || n.read === true);
+        return {
+            id: String(n.id || n.notificationId || `NOTIF-${Math.random()}`),
+            title: n.title || n.subject || "Notification",
+            message: n.message || n.text || "",
+            date: n.createdAt || n.date || "Just now",
+            time: n.time || n.createdAt || n.date || "Just now",
+            type: normalizedType,
+            icon: n.icon || preset.icon,
+            color: n.color || preset.color,
+            bgColor: n.bgColor || preset.bgColor,
+            isRead: readFlag,
+            read: readFlag,
+            actionLink: n.actionLink || (normalizedType === "promo" ? "/customer/products" : normalizedType === "security" ? "/customer/settings" : "/customer/orders"),
+            actionText: n.actionText || (normalizedType === "promo" ? "View Catalog" : normalizedType === "security" ? "Review Profile" : "Order Details")
+        };
+    });
+}
+
 export { NOTIFICATION_UPDATE_EVENT };

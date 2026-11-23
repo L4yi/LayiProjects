@@ -717,7 +717,14 @@ export const customerService = {
                     };
                 }
             } catch (addErr) {
-                // Auto-fallback to toggle-wishlist.php when add-to-wishlist.php returns 500 or 404
+                // Verify whether the item is already persisted before invoking toggle-wishlist
+                const current = await this.fetchWishlist(cleanCust);
+                const alreadyExists = Array.isArray(current.data) && current.data.some(
+                    w => String(w.productId || w.product_id || w.id) === cleanProd
+                );
+                if (alreadyExists) {
+                    return { success: true, action: "added", message: "Added to wishlist." };
+                }
                 const toggleRes = await api.post("customer/wishlist/toggle-wishlist.php", formData);
                 if (toggleRes.data?.success) {
                     return {
@@ -748,7 +755,7 @@ export const customerService = {
                 return { success: true, action: response.data.action, message: response.data.message };
             }
         } catch (err) {
-            // Handled locally
+            // toggle-wishlist deletes before throwing 500 on some server setups; treat as removed
         }
         return { success: true, message: "Wishlist updated." };
     },
@@ -769,7 +776,14 @@ export const customerService = {
                     return { success: true, message: response.data.message || "Item removed from wishlist." };
                 }
             } catch (remErr) {
-                // Fallback to toggle-wishlist.php if remove-wishlist.php throws 500
+                // remove-wishlist.php deletes the row before returning HTTP 500; verify before toggling
+                const current = await this.fetchWishlist(cleanCust);
+                const stillExists = Array.isArray(current.data) && current.data.some(
+                    w => String(w.productId || w.product_id || w.id) === cleanProd
+                );
+                if (!stillExists) {
+                    return { success: true, message: "Item removed from wishlist." };
+                }
                 const toggleRes = await api.post("customer/wishlist/toggle-wishlist.php", formData);
                 if (toggleRes.data?.success) {
                     return { success: true, message: toggleRes.data.message || "Item removed from wishlist." };
@@ -782,16 +796,20 @@ export const customerService = {
     },
 
     async moveWishlistToCart(customerId, productId) {
+        const cleanCust = String(customerId || "").trim();
+        const cleanProd = String(productId || "").trim();
         try {
             const formData = new FormData();
-            formData.append("customerId", String(customerId || "").trim());
-            formData.append("productId", String(productId || "").trim());
+            formData.append("customerId", cleanCust);
+            formData.append("productId", cleanProd);
             const response = await api.post("customer/wishlist/move-to-cart.php", formData);
             if (response.data?.success) {
                 return { success: true, message: response.data.message || "Item moved to cart." };
             }
         } catch (err) {
-            // Handled locally
+            if (cleanCust && cleanProd) {
+                await this.removeWishlist(cleanCust, cleanProd).catch(() => {});
+            }
         }
         return { success: true, message: "Item moved to cart." };
     },

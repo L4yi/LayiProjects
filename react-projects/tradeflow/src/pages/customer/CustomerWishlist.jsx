@@ -26,7 +26,7 @@ export default function CustomerWishlist() {
         const customerId = user?.customerId || user?.id;
         if (customerId) {
             customerService.fetchWishlist(customerId).then(res => {
-                if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+                if (res?.success && Array.isArray(res.data)) {
                     const remoteItems = res.data.map(item => ({
                         id: String(item.productId || item.id),
                         productId: String(item.productId || item.id),
@@ -87,41 +87,44 @@ export default function CustomerWishlist() {
         showToast(`Removed "${name}" from your wishlist.`);
     };
 
-    const handleMoveAllToCart = () => {
+    const handleMoveAllToCart = async () => {
         if (wishlist.length === 0) return;
         setIsMovingAll(true);
+        const itemsToMove = [...wishlist];
         const user = getSessionUser();
         const customerId = user?.customerId || user?.id;
         if (customerId) {
-            wishlist.forEach(item => {
-                customerService.moveWishlistToCart(customerId, item.productId || item.id).catch(() => {});
-            });
+            await Promise.allSettled(
+                itemsToMove.map(item =>
+                    customerService.moveWishlistToCart(customerId, item.productId || item.id)
+                )
+            );
         }
-        setTimeout(() => {
-            const count = wishlist.length;
-            addBatchToCart(wishlist);
-            clearWishlist();
-            setWishlist([]);
-            setIsMovingAll(false);
-            showToast(`Moved all ${count} item${count > 1 ? "s" : ""} to your shopping cart!`);
-        }, 250);
+        const count = itemsToMove.length;
+        addBatchToCart(itemsToMove);
+        clearWishlist();
+        setWishlist([]);
+        setIsMovingAll(false);
+        showToast(`Moved all ${count} item${count > 1 ? "s" : ""} to your shopping cart!`);
     };
 
-    const handleClearAll = () => {
+    const handleClearAll = async () => {
+        if (wishlist.length === 0) return;
         setIsClearing(true);
+        const itemsToClear = [...wishlist];
         const user = getSessionUser();
         const customerId = user?.customerId || user?.id;
         if (customerId) {
-            wishlist.forEach(item => {
-                customerService.removeWishlist(customerId, item.productId || item.id).catch(() => {});
-            });
+            await Promise.allSettled(
+                itemsToClear.map(item =>
+                    customerService.removeWishlist(customerId, item.productId || item.id)
+                )
+            );
         }
-        setTimeout(() => {
-            clearWishlist();
-            setWishlist([]);
-            setIsClearing(false);
-            showToast("Your wishlist has been cleared.");
-        }, 250);
+        clearWishlist();
+        setWishlist([]);
+        setIsClearing(false);
+        showToast("Your wishlist has been cleared.");
     };
 
     return (

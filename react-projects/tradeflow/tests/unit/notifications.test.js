@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { 
     getNotifications, 
     setNotifications, 
+    mapBackendNotifications,
     getUnreadCount, 
     markNotificationAsRead, 
     markAllNotificationsAsRead, 
@@ -78,5 +79,17 @@ describe("Unit: Notifications Engine", () => {
         assert.equal(updated.length, initialCount + 1);
         assert.equal(updated[0].title, "Test Alert");
         assert.equal(updated[0].isRead, false);
+    });
+
+    test("mapBackendNotifications normalizes system/promo/order types and icons", () => {
+        const mapped = mapBackendNotifications([
+            { notificationId: "N1", title: "Welcome!", message: "Verified", type: "system", isRead: false },
+            { notificationId: "N2", title: "Deals", message: "Discounts", type: "promo", isRead: true }
+        ]);
+        assert.equal(mapped.length, 2);
+        assert.equal(mapped[0].type, "security");
+        assert.equal(mapped[0].icon, "bi bi-shield-check");
+        assert.equal(mapped[1].type, "promo");
+        assert.equal(mapped[1].icon, "bi bi-tag");
     });
 });

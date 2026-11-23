@@ -22,9 +22,19 @@ describe("Integration: Customer Module Fallbacks & API Contract", () => {
         assert.ok(Array.isArray(res.data));
     });
 
-    test("addToWishlist calls add-to-wishlist with resilient fallback", async () => {
-        const res = await customerService.addToWishlist("CUST20261116225756", "PROD20261112124614");
-        assert.equal(res.success, true);
+    test("addToWishlist and removeWishlist complete full add-delete DB lifecycle without re-adding", async () => {
+        const custId = "CUST20261116225756";
+        const prodId = "PROD20261112124614";
+        const addRes = await customerService.addToWishlist(custId, prodId);
+        assert.equal(addRes.success, true);
+
+        const remRes = await customerService.removeWishlist(custId, prodId);
+        assert.equal(remRes.success, true);
+
+        const listRes = await customerService.fetchWishlist(custId);
+        assert.equal(listRes.success, true);
+        const stillThere = listRes.data.some(w => String(w.productId || w.id) === prodId);
+        assert.equal(stillThere, false);
     });
 
     test("fetchNotifications returns list shape", async () => {

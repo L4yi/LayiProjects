@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { 
     getNotifications, 
     setNotifications as saveNotifications,
+    mapBackendNotifications,
     markAllNotificationsAsRead, 
     toggleNotificationRead, 
     deleteNotification,
@@ -29,19 +30,7 @@ export default function CustomerNotifications() {
         if (customerId) {
             customerService.fetchNotifications(customerId).then(res => {
                 if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-                    const mapped = res.data.map(n => ({
-                        id: n.id || n.notificationId,
-                        title: n.title || n.subject || "Notification",
-                        message: n.message || n.text || "",
-                        date: n.createdAt || n.date || "Just now",
-                        time: n.createdAt || n.date || "Just now",
-                        type: n.type || "order",
-                        icon: n.icon || "bi bi-bell",
-                        color: n.color || "#10b981",
-                        bgColor: n.bgColor || "#ecfdf5",
-                        isRead: !!(n.isRead === 1 || n.isRead === true || n.read === 1),
-                        read: !!(n.isRead === 1 || n.isRead === true || n.read === 1)
-                    }));
+                    const mapped = mapBackendNotifications(res.data);
                     saveNotifications(mapped);
                     setNotifications(mapped);
                 }
