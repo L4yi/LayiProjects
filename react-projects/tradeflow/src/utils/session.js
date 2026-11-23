@@ -55,13 +55,21 @@ export function getSessionUser() {
             let cachedPhoto = null;
             if (userId) {
                 try {
-                    cachedPhoto = localStorage.getItem(`tradeflow_photo_${userId}`);
+                    const st = localStorage.getItem(`tradeflow_photo_${userId}`);
+                    if (st && !st.startsWith("blob:")) {
+                        cachedPhoto = st;
+                    } else if (st && st.startsWith("blob:")) {
+                        localStorage.removeItem(`tradeflow_photo_${userId}`);
+                    }
                 } catch {
                     // Ignore localStorage read errors
                 }
             }
 
-            const profileImage = parsed.profileImage || parsed.avatar || parsed.avatarUrl || parsed.image || cachedPhoto || null;
+            let profileImage = parsed.profileImage || parsed.avatar || parsed.avatarUrl || parsed.image || cachedPhoto || null;
+            if (typeof profileImage === "string" && profileImage.startsWith("blob:")) {
+                profileImage = null;
+            }
             const customerId = parsed.customerId || parsed.customer_id || (isCustomer ? (parsed.id || parsed.userId) : null);
             const id = parsed.id || parsed.customerId || parsed.customer_id || parsed.staffId || parsed.staff_id || parsed.userId || "";
 
@@ -74,6 +82,7 @@ export function getSessionUser() {
                 roleName: role,
                 roleId,
                 isCustomer,
+                isAuthenticated: true,
                 profileImage,
                 avatar: profileImage,
                 avatarUrl: profileImage,
@@ -85,16 +94,25 @@ export function getSessionUser() {
     }
 
     return {
-        name: "Staff User",
+        id: undefined,
+        name: "Guest",
+        firstName: "",
+        lastName: "",
         email: "",
-        initials: "SU",
-        role: "STAFF",
-        roleName: "STAFF",
-        roleId: "1",
+        initials: "GU",
+        role: "GUEST",
+        roleName: "GUEST",
+        roleId: "0",
         isCustomer: false,
+        isAuthenticated: false,
         profileImage: null,
         avatar: null
     };
+}
+
+export function isUserAuthenticated(user = null) {
+    const u = user || getSessionUser();
+    return Boolean(u && u.isAuthenticated === true && (u.id || u.customerId || u.staffId || u.email));
 }
 
 export function setSessionUser(userData) {
@@ -130,18 +148,27 @@ export function setSessionUser(userData) {
         }
         if (profileImage === undefined && userId) {
             try {
-                profileImage = localStorage.getItem(`tradeflow_photo_${userId}`) || null;
+                const storedPhoto = localStorage.getItem(`tradeflow_photo_${userId}`);
+                if (storedPhoto && storedPhoto.startsWith("blob:")) {
+                    localStorage.removeItem(`tradeflow_photo_${userId}`);
+                    profileImage = null;
+                } else {
+                    profileImage = storedPhoto || null;
+                }
             } catch {
                 profileImage = null;
             }
+        }
+        if (typeof profileImage === "string" && profileImage.startsWith("blob:")) {
+            profileImage = null;
         }
         profileImage = profileImage || null;
 
         if (userId) {
             try {
-                if (profileImage) {
+                if (profileImage && !profileImage.startsWith("blob:")) {
                     localStorage.setItem(`tradeflow_photo_${userId}`, profileImage);
-                } else {
+                } else if (!profileImage) {
                     localStorage.removeItem(`tradeflow_photo_${userId}`);
                 }
             } catch {
@@ -168,6 +195,7 @@ export function setSessionUser(userData) {
             roleName: role,
             roleId,
             isCustomer,
+            isAuthenticated: true,
             profileImage,
             avatar: profileImage,
             avatarUrl: profileImage,

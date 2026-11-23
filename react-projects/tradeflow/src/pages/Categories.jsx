@@ -71,13 +71,17 @@ export default function Categories() {
         loadCategories();
     }, []);
 
+    const searchDebounceRef = useRef(null);
     const handleSearchChange = (val) => {
         setSearchQuery(val);
-        if (val.trim()) {
-            setSearchParams({ search: val.trim() });
-        } else {
-            setSearchParams({});
-        }
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = setTimeout(() => {
+            if (val.trim()) {
+                setSearchParams({ search: val.trim() });
+            } else {
+                setSearchParams({});
+            }
+        }, 300);
     };
 
     const handleOpenEdit = (cat) => {
@@ -317,19 +321,21 @@ export default function Categories() {
                 )}
             </div>
 
-            <CategorySlideDrawer
-                isOpen={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                title={drawerTitle}
-                subtitle="Please complete the form below to configure category taxonomy."
-                icon="bi bi-tags-fill"
-                entityType="Category"
-                initialData={selectedCat || {}}
-                isSaving={isSaving}
-                errorMessage={drawerError}
-                onSave={handleSaveCategory}
-                readOnly={!canManageCatalog()}
-            />
+            {drawerOpen && (
+                <CategorySlideDrawer
+                    isOpen={drawerOpen}
+                    onClose={() => setDrawerOpen(false)}
+                    title={drawerTitle}
+                    subtitle="Please complete the form below to configure category taxonomy."
+                    icon="bi bi-tags-fill"
+                    entityType="Category"
+                    initialData={selectedCat || {}}
+                    isSaving={isSaving}
+                    errorMessage={drawerError}
+                    onSave={handleSaveCategory}
+                    readOnly={!canManageCatalog()}
+                />
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             <StatusModal

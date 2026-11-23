@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-export default function CategoryCard({
+function CategoryCard({
     id = "tubers",
     to = "",
     title = "Category",
@@ -47,3 +47,5 @@ export default function CategoryCard({
         </Link>
     );
 }
+
+export default React.memo(CategoryCard);

@@ -39,8 +39,8 @@ export default function CustomerSignUp() {
 
         if (!password) {
             newErrors.password = "Password is required.";
-        } else if (password.length < 4) {
-            newErrors.password = "Password must be at least 4 characters.";
+        } else if (password.length < 8 || !/(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)) {
+            newErrors.password = "Password must be at least 8 characters and contain both letters and numbers.";
         }
 
         setErrors(newErrors);

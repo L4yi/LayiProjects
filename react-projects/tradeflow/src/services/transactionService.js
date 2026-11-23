@@ -56,6 +56,17 @@ function mapOrderToTransaction(order) {
     };
 }
 
+export function deriveTransactionsFromOrders(orders = []) {
+    if (!Array.isArray(orders)) return [];
+    const settledOrders = orders.filter(o => {
+        const sId = String(o.statusId || "");
+        const sLower = (o.status || o.statusName || "").toLowerCase();
+        return ["10", "5", "13", "12"].includes(sId) ||
+            ["done", "delivered", "successful", "reverse", "refunded"].some(k => sLower.includes(k));
+    });
+    return settledOrders.map(mapOrderToTransaction);
+}
+
 export const transactionService = {
     /**
      * Fetches all delivered and refunded orders from the database,
@@ -66,14 +77,7 @@ export const transactionService = {
             const res = await orderService.fetchAllOrders();
             if (res.success && Array.isArray(res.data)) {
                 // Filter for finalized financial events: Delivered/Done (10, 5) or Refunded/Reverse (13, 12)
-                const settledOrders = res.data.filter(o => {
-                    const sId = String(o.statusId || "");
-                    const sLower = (o.status || o.statusName || "").toLowerCase();
-                    return ["10", "5", "13", "12"].includes(sId) ||
-                        ["done", "delivered", "successful", "reverse", "refunded"].some(k => sLower.includes(k));
-                });
-
-                const transactions = settledOrders.map(mapOrderToTransaction);
+                const transactions = deriveTransactionsFromOrders(res.data);
 
                 return {
                     success: true,

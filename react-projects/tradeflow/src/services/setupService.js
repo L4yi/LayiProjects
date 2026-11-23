@@ -1,22 +1,5 @@
 import api from "../api/axios.js";
-
-// Helper function to format responses cleanly.
-// This makes sure our app always gets { success: true/false, message: "...", data: [...] }
-// even if the backend returns raw text or an error.
-function normalizeResponse(resData, defaultSuccessMsg = "Success") {
-    if (typeof resData === "object" && resData !== null) {
-        const isSuccess = resData.success === true || resData.success === "true";
-        return {
-            ...resData,
-            success: isSuccess,
-            message: resData.message || (isSuccess ? defaultSuccessMsg : "Request could not be completed.")
-        };
-    }
-    return {
-        success: false,
-        message: String(resData || "Empty response from server.")
-    };
-}
+import { normalizeResponse } from "../utils/apiResponse.js";
 
 // In-memory cache stores.
 // Caches full lists of setup data in memory so the app only hits the server once per session.
@@ -24,6 +7,12 @@ let cachedStatuses = null;
 let cachedTitles = null;
 let cachedRoles = null;
 let cachedPaymentMethods = null;
+
+// In-flight promise caches to deduplicate simultaneous requests on mount
+let inFlightStatusPromise = null;
+let inFlightTitlesPromise = null;
+let inFlightRolesPromise = null;
+let inFlightPaymentMethodsPromise = null;
 
 export const setupService = {
     // Synchronous cache getters for instant drawer rendering without flicker
@@ -45,28 +34,39 @@ export const setupService = {
         if (!statusIds && cachedStatuses) {
             return { success: true, data: cachedStatuses, message: "Statuses loaded from cache" };
         }
-        try {
-            const formData = new FormData();
-            if (statusIds) {
-                formData.append("statusIds", statusIds);
-            }
-            const response = await api.post("setup/fetch-all-status.php", formData);
-            const normalized = normalizeResponse(response.data, response.data?.message || "STATUSES FETCHED SUCCESSFULLY");
-            if (normalized.success && Array.isArray(normalized.data)) {
-                if (!statusIds) {
-                    cachedStatuses = normalized.data;
-                } else if (!cachedStatuses) {
-                    cachedStatuses = normalized.data;
-                }
-            }
-            return normalized;
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load statuses.",
-                data: cachedStatuses || []
-            };
+        if (!statusIds && inFlightStatusPromise) {
+            return inFlightStatusPromise;
         }
+
+        const fetchPromise = (async () => {
+            try {
+                const formData = new FormData();
+                if (statusIds) {
+                    formData.append("statusIds", statusIds);
+                }
+                const response = await api.post("setup/fetch-all-status.php", formData);
+                const normalized = normalizeResponse(response.data, response.data?.message || "STATUSES FETCHED SUCCESSFULLY");
+                if (normalized.success && Array.isArray(normalized.data)) {
+                    if (!statusIds) {
+                        cachedStatuses = normalized.data;
+                    } else if (!cachedStatuses) {
+                        cachedStatuses = normalized.data;
+                    }
+                }
+                return normalized;
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || error.message || "Failed to load statuses.",
+                    data: cachedStatuses || []
+                };
+            } finally {
+                if (!statusIds) inFlightStatusPromise = null;
+            }
+        })();
+
+        if (!statusIds) inFlightStatusPromise = fetchPromise;
+        return fetchPromise;
     },
 
     // Fetches titles from backend (setup/fetch-all-title.php)
@@ -75,28 +75,39 @@ export const setupService = {
         if (!titleIds && cachedTitles) {
             return { success: true, data: cachedTitles, message: "Titles loaded from cache" };
         }
-        try {
-            const formData = new FormData();
-            if (titleIds) {
-                formData.append("titleIds", titleIds);
-            }
-            const response = await api.post("setup/fetch-all-title.php", formData);
-            const normalized = normalizeResponse(response.data, "TITLES FETCHED SUCCESSFULLY");
-            if (normalized.success && Array.isArray(normalized.data)) {
-                if (!titleIds) {
-                    cachedTitles = normalized.data;
-                } else if (!cachedTitles) {
-                    cachedTitles = normalized.data;
-                }
-            }
-            return normalized;
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load titles.",
-                data: cachedTitles || []
-            };
+        if (!titleIds && inFlightTitlesPromise) {
+            return inFlightTitlesPromise;
         }
+
+        const fetchPromise = (async () => {
+            try {
+                const formData = new FormData();
+                if (titleIds) {
+                    formData.append("titleIds", titleIds);
+                }
+                const response = await api.post("setup/fetch-all-title.php", formData);
+                const normalized = normalizeResponse(response.data, "TITLES FETCHED SUCCESSFULLY");
+                if (normalized.success && Array.isArray(normalized.data)) {
+                    if (!titleIds) {
+                        cachedTitles = normalized.data;
+                    } else if (!cachedTitles) {
+                        cachedTitles = normalized.data;
+                    }
+                }
+                return normalized;
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || error.message || "Failed to load titles.",
+                    data: cachedTitles || []
+                };
+            } finally {
+                if (!titleIds) inFlightTitlesPromise = null;
+            }
+        })();
+
+        if (!titleIds) inFlightTitlesPromise = fetchPromise;
+        return fetchPromise;
     },
 
     // Fetches all 19 user roles from backend (setup/fetch-all-role.php)
@@ -104,28 +115,39 @@ export const setupService = {
         if (!roleIds && cachedRoles) {
             return { success: true, data: cachedRoles, message: "Roles loaded from cache" };
         }
-        try {
-            const formData = new FormData();
-            if (roleIds) {
-                formData.append("roleIds", roleIds);
-            }
-            const response = await api.post("setup/fetch-all-role.php", formData);
-            const normalized = normalizeResponse(response.data, response.data?.message || "ROLES FETCHED SUCCESSFULLY");
-            if (normalized.success && Array.isArray(normalized.data)) {
-                if (!roleIds) {
-                    cachedRoles = normalized.data;
-                } else if (!cachedRoles) {
-                    cachedRoles = normalized.data;
-                }
-            }
-            return normalized; 
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load roles.",
-                data: cachedRoles || []
-            };
+        if (!roleIds && inFlightRolesPromise) {
+            return inFlightRolesPromise;
         }
+
+        const fetchPromise = (async () => {
+            try {
+                const formData = new FormData();
+                if (roleIds) {
+                    formData.append("roleIds", roleIds);
+                }
+                const response = await api.post("setup/fetch-all-role.php", formData);
+                const normalized = normalizeResponse(response.data, response.data?.message || "ROLES FETCHED SUCCESSFULLY");
+                if (normalized.success && Array.isArray(normalized.data)) {
+                    if (!roleIds) {
+                        cachedRoles = normalized.data;
+                    } else if (!cachedRoles) {
+                        cachedRoles = normalized.data;
+                    }
+                }
+                return normalized; 
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || error.message || "Failed to load roles.",
+                    data: cachedRoles || []
+                };
+            } finally {
+                if (!roleIds) inFlightRolesPromise = null;
+            }
+        })();
+
+        if (!roleIds) inFlightRolesPromise = fetchPromise;
+        return fetchPromise;
     },
 
     // Fetches all payment methods from backend (setup/fetch-all-payment-method.php)
@@ -133,20 +155,31 @@ export const setupService = {
         if (cachedPaymentMethods) {
             return { success: true, data: cachedPaymentMethods, message: "Payment methods loaded from cache" };
         }
-        try {
-            const response = await api.post("setup/fetch-all-payment-method.php", new FormData());
-            const normalized = normalizeResponse(response.data, "PAYMENT METHODS FETCHED SUCCESSFULLY");
-            if (normalized.success && Array.isArray(normalized.data)) {
-                cachedPaymentMethods = normalized.data;
-            }
-            return normalized;
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load payment methods.",
-                data: cachedPaymentMethods || []
-            };
+        if (inFlightPaymentMethodsPromise) {
+            return inFlightPaymentMethodsPromise;
         }
+
+        const fetchPromise = (async () => {
+            try {
+                const response = await api.post("setup/fetch-all-payment-method.php", new FormData());
+                const normalized = normalizeResponse(response.data, "PAYMENT METHODS FETCHED SUCCESSFULLY");
+                if (normalized.success && Array.isArray(normalized.data)) {
+                    cachedPaymentMethods = normalized.data;
+                }
+                return normalized;
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || error.message || "Failed to load payment methods.",
+                    data: cachedPaymentMethods || []
+                };
+            } finally {
+                inFlightPaymentMethodsPromise = null;
+            }
+        })();
+
+        inFlightPaymentMethodsPromise = fetchPromise;
+        return fetchPromise;
     },
 
     // --- Domain-Specific Filters for Roles & Statuses ---

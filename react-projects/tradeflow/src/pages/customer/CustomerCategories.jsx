@@ -1,3 +1,4 @@
+import { VERIFIED_FALLBACK_CATEGORIES } from "../../data/fallbackData";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CategoryCard from "../../components/CategoryCard";
@@ -5,50 +6,6 @@ import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
 import productService from "../../services/productService";
 
-const VERIFIED_FALLBACK_CATEGORIES = [
-    {
-        id: "CAT20261109082827",
-        title: "Mobile Devices & phones",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "1 Item"
-    },
-    {
-        id: "CAT20261109082647",
-        title: "Health & Beauty",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082603",
-        title: "Office Supplies",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082511",
-        title: "Clothing & Apparel",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082439",
-        title: "Groceries",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082340",
-        title: "Electronics",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    }
-];
 
 export default function CustomerCategories() {
     const [categories, setCategories] = useState([]);
@@ -71,7 +28,7 @@ export default function CustomerCategories() {
                     const mapped = catRes.value.data.map((cat) => {
                         const catId = cat.categories_id || cat.categoryId || cat.id;
                         const catName = cat.categories_name || cat.category_name || cat.name || "Category";
-                        const matchCount = rawProducts.filter(p => (p.categories_id || p.categoryId || p.category_id) === catId).length;
+                        const matchCount = productCountByCat.get(catId) || 0;
                         return {
                             id: catId,
                             title: catName,

@@ -11,6 +11,9 @@ import { getSessionUser } from "./session.js";
 export function getNormalizedRole(user = null) {
     const sessionUser = user || getSessionUser();
     if (!sessionUser) return "GUEST";
+    if (sessionUser.isAuthenticated === false || sessionUser.role === "GUEST" || sessionUser.roleId === "0") {
+        return "GUEST";
+    }
 
     const roleId = String(sessionUser.roleId || sessionUser.role_id || "").trim();
     const roleName = String(sessionUser.role || sessionUser.roleName || "").toLowerCase().trim();
@@ -35,8 +38,8 @@ export function getNormalizedRole(user = null) {
         return "CUSTOMER";
     }
 
-    // Default to STAFF
-    return "STAFF";
+    // Default to GUEST (fail closed)
+    return "GUEST";
 }
 
 export function isSuperAdmin(user = null) {

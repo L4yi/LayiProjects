@@ -1,3 +1,4 @@
+import { parsePrice } from "./cart.js";
 const WISHLIST_STORAGE_KEY = "tradeflow_wishlist";
 
 // Cross-tab synchronization: broadcast localStorage changes to active window
@@ -12,15 +13,6 @@ if (typeof window !== "undefined") {
             }
         }
     });
-}
-
-// Safely normalize prices that may arrive as strings ("₦14,500", "12.50") or numbers
-function parsePrice(val) {
-    if (typeof val === "number") return isNaN(val) ? 0 : val;
-    if (!val) return 0;
-    const cleaned = String(val).replace(/[^0-9.-]+/g, "");
-    const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : num;
 }
 
 // Retrieve user's wishlist from localStorage (returns empty array if none saved)

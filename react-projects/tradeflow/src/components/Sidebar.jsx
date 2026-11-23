@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { BrandLogo } from "./common";
 import { getSessionUser } from "../utils/session";
+import authService from "../services/authService";
 import { 
     canAccessStaffs, 
     canAccessCustomers, 
@@ -79,10 +80,23 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
                     <Link to="/profile" className="user-info-row" title="View Profile" onClick={onClose}>
                         <div className="user-avatar-img" id="dashboardAvatarInitial">
                             {user?.profileImage || user?.avatar ? (
-                                <img src={user.profileImage || user.avatar} alt={user.name} className="sidebar-avatar-img" />
-                            ) : (
-                                user?.initials || "SU"
-                            )}
+                                <img 
+                                    src={user.profileImage || user.avatar} 
+                                    alt={user.name} 
+                                    className="sidebar-avatar-img"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                        const fallback = e.currentTarget.parentElement?.querySelector(".sidebar-avatar-fallback");
+                                        if (fallback) fallback.style.display = "flex";
+                                    }}
+                                />
+                            ) : null}
+                            <span 
+                                className="sidebar-avatar-fallback"
+                                style={{ display: (user?.profileImage || user?.avatar) ? "none" : "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
+                            >
+                                {user?.initials || "SU"}
+                            </span>
                         </div>
                         <div className="user-text">
                             <span className="user-name" id="dashboardUserName">
@@ -96,7 +110,15 @@ export default function Sidebar({ isOpen, onToggle, onClose }) {
                             </span>
                         </div>
                     </Link>
-                    <Link to="/signin" className="logout-icon-btn" title="Sign Out" onClick={onClose}>
+                    <Link 
+                        to="/signin" 
+                        className="logout-icon-btn" 
+                        title="Sign Out" 
+                        onClick={() => {
+                            authService.logout();
+                            onClose?.();
+                        }}
+                    >
                         <i className="bi bi-box-arrow-right"></i>
                     </Link>
                 </div>

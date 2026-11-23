@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import productService from "../../services/productService";
+import { customerService } from "../../services/customerService";
+import { getSessionUser } from "../../utils/session";
 import { addToCart } from "../../utils/cart";
 import { addToWishlist, removeFromWishlist, isInWishlist } from "../../utils/wishlist";
 
@@ -20,12 +22,18 @@ export default function CustomerProductDetails() {
     useEffect(() => {
         const loadProduct = async () => {
             try {
-                const res = await productService.fetchAllProducts();
                 let found = null;
-                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-                    found = res.data.find(
-                        p => String(p.product_id || p.productId || p.id) === String(productId)
-                    ) || res.data[0];
+                const singleRes = await productService.fetchEachProduct(productId);
+                if (singleRes.success && singleRes.data) {
+                    found = Array.isArray(singleRes.data) ? singleRes.data[0] : singleRes.data;
+                }
+                if (!found) {
+                    const allRes = await productService.fetchAllProducts();
+                    if (allRes.success && Array.isArray(allRes.data) && allRes.data.length > 0) {
+                        found = allRes.data.find(
+                            p => String(p.product_id || p.productId || p.id) === String(productId)
+                        ) || allRes.data[0];
+                    }
                 }
 
                 if (!found) {
@@ -109,14 +117,23 @@ export default function CustomerProductDetails() {
         }, 500);
     };
 
-    const handleToggleWishlist = () => {
+    const handleToggleWishlist = async () => {
         if (!product) return;
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+
         if (isSaved) {
             removeFromWishlist(product.id);
             setIsSaved(false);
+            if (customerId) {
+                customerService.removeWishlist(customerId, product.id).catch(() => {});
+            }
         } else {
             addToWishlist(product);
             setIsSaved(true);
+            if (customerId) {
+                customerService.addToWishlist(customerId, product.id).catch(() => {});
+            }
         }
     };
 

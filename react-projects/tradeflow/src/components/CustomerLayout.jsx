@@ -83,15 +83,11 @@ export default function CustomerLayout() {
             }
             // Header navigation dropdowns click outside
             if (headerNavRef.current && !headerNavRef.current.contains(event.target)) {
-                if (openDropdown === "shop" || openDropdown === "orders" || openDropdown === "account") {
-                    setOpenDropdown(null);
-                }
+                setOpenDropdown((curr) => (curr === "notif" ? curr : null));
             }
             // Notifications bell dropdown click outside
             if (bellDropdownRef.current && !bellDropdownRef.current.contains(event.target)) {
-                if (openDropdown === "notif") {
-                    setOpenDropdown(null);
-                }
+                setOpenDropdown((curr) => (curr === "notif" ? null : curr));
             }
         };
 
@@ -118,8 +114,6 @@ export default function CustomerLayout() {
         window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
         window.addEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
         window.addEventListener("tradeflow_theme_update", handleThemeUpdate);
-        window.addEventListener("storage", handleNotificationsUpdate);
-        window.addEventListener("storage", handleWishlistUpdate);
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
@@ -128,10 +122,8 @@ export default function CustomerLayout() {
             window.removeEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
             window.removeEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
             window.removeEventListener("tradeflow_theme_update", handleThemeUpdate);
-            window.removeEventListener("storage", handleNotificationsUpdate);
-            window.removeEventListener("storage", handleWishlistUpdate);
         };
-    }, [openDropdown]);
+    }, []);
 
     // Live backend product search query for header search autocomplete
     useEffect(() => {
@@ -430,20 +422,6 @@ export default function CustomerLayout() {
                                 <i className="bi bi-headset"></i>
                                 <span>Help &amp; Support</span>
                             </NavLink>
-
-                            {/* Divider & Clean User / Signout Row */}
-                            <div className="sidebar-menu-separator"></div>
-
-                            {/* Sidebar Theme Toggle */}
-                            <button
-                                type="button"
-                                className="cust-nav-item cust-sidebar-theme-btn"
-                                onClick={toggleTheme}
-                                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                            >
-                                <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
-                                <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                            </button>
                         </nav>
                     </div>
                 </aside>
@@ -726,19 +704,6 @@ export default function CustomerLayout() {
                                 )}
                             </div>
 
-                            {/* Dark Mode Toggle Button */}
-                            <button
-                                type="button"
-                                className={`customer-theme-toggle ${theme === "dark" ? "active" : ""}`}
-                                onClick={toggleTheme}
-                                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                                aria-label="Toggle Dark Mode"
-                            >
-                                <div className="toggle-handle">
-                                    <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
-                                </div>
-                            </button>
-
                             {/* Cart Icon */}
                             <Link to="/customer/cart" className="customer-cart-btn" title="View Cart">
                                 <i className="bi bi-cart3"></i>
@@ -839,10 +804,23 @@ export default function CustomerLayout() {
                                     title={`${user.name} Profile`}
                                 >
                                     {user.profileImage || user.avatar ? (
-                                        <img src={user.profileImage || user.avatar} alt={user.name} className="header-avatar-img" />
-                                    ) : (
-                                        <span className="avatar-initial">{user.initials}</span>
-                                    )}
+                                        <img 
+                                            src={user.profileImage || user.avatar} 
+                                            alt={user.name} 
+                                            className="header-avatar-img"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = "none";
+                                                const fallback = e.currentTarget.parentElement?.querySelector(".avatar-initial");
+                                                if (fallback) fallback.style.display = "flex";
+                                            }}
+                                        />
+                                    ) : null}
+                                    <span 
+                                        className="avatar-initial"
+                                        style={{ display: (user.profileImage || user.avatar) ? "none" : "flex" }}
+                                    >
+                                        {user.initials || "U"}
+                                    </span>
                                 </button>
 
                                 <ProfileDropdown

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
 import { getSessionUser } from "../utils/session";
 import productService from "../services/productService";
+import customerService from "../services/customerService";
 import { getStoredTheme, toggleTheme } from "../utils/theme";
 
 export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
@@ -31,15 +32,26 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
         setIsSearching(true);
         const timer = setTimeout(async () => {
             try {
-                const res = await productService.searchProduct(term);
-                if (!isMounted) return;
-                if (res.success && Array.isArray(res.data)) {
-                    setSuggestions(res.data.slice(0, 5));
-                } else {
+                if (location.pathname.startsWith("/customers")) {
+                    const res = await customerService.searchCustomer(term);
+                    if (!isMounted) return;
+                    setSuggestions(res.success && Array.isArray(res.data) ? res.data.slice(0, 5).map(c => ({
+                        product_id: c.customerId || c.id,
+                        product_name: c.name || `${c.firstName || ""} ${c.lastName || ""}`.trim(),
+                        product_price: c.emailAddress || c.email || ""
+                    })) : []);
+                } else if (location.pathname.startsWith("/orders") || location.pathname.startsWith("/staffs")) {
                     setSuggestions([]);
+                } else {
+                    const res = await productService.searchProduct(term);
+                    if (!isMounted) return;
+                    if (res.success && Array.isArray(res.data)) {
+                        setSuggestions(res.data.slice(0, 5));
+                    } else {
+                        setSuggestions([]);
+                    }
                 }
             } catch (err) {
-                console.error("Admin search error:", err);
                 if (isMounted) setSuggestions([]);
             } finally {
                 if (isMounted) setIsSearching(false);
@@ -69,7 +81,7 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
         } else if (path.includes("/categories")) {
             navigate(`/categories?search=${encodeURIComponent(q)}`);
         } else if (path.includes("/staff")) {
-            navigate(`/staff?search=${encodeURIComponent(q)}`);
+            navigate(`/staffs?search=${encodeURIComponent(q)}`);
         } else if (path.includes("/orders")) {
             navigate(`/orders?search=${encodeURIComponent(q)}`);
         } else {
@@ -270,18 +282,6 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                     <span className="badge-dot"></span>
                 </button>
 
-                <button
-                    type="button"
-                    className={`theme-toggle ${theme === "dark" ? "active" : ""}`}
-                    onClick={toggleTheme}
-                    title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    aria-label="Toggle Dark Mode"
-                >
-                    <div className="toggle-handle">
-                        <i className={`bi ${theme === "dark" ? "bi-moon-stars-fill" : "bi-brightness-high"}`}></i>
-                    </div>
-                </button>
-
                 <div className="user-profile-relative">
                     <button
                         type="button"
@@ -293,10 +293,23 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                         title={`${user.name} Profile`}
                     >
                         {user.profileImage || user.avatar ? (
-                            <img src={user.profileImage || user.avatar} alt={user.name} className="header-avatar-img" />
-                        ) : (
-                            <span className="avatar-initial">{user.initials}</span>
-                        )}
+                            <img 
+                                src={user.profileImage || user.avatar} 
+                                alt={user.name} 
+                                className="header-avatar-img"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                    const fallback = e.currentTarget.parentElement?.querySelector(".avatar-initial");
+                                    if (fallback) fallback.style.display = "flex";
+                                }}
+                            />
+                        ) : null}
+                        <span 
+                            className="avatar-initial"
+                            style={{ display: (user.profileImage || user.avatar) ? "none" : "flex" }}
+                        >
+                            {user.initials || "U"}
+                        </span>
                     </button>
 
                     <ProfileDropdown

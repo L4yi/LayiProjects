@@ -15,14 +15,9 @@
     <script>
       (function() {
         try {
-          var t = localStorage.getItem('tradeflow_theme');
-          if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            t = 'dark';
-          }
-          if (t === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.classList.add('dark');
-          }
+          localStorage.setItem('tradeflow_theme', 'light');
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.classList.remove('dark');
         } catch (e) {}
 
         // Automatic self-healing for stale dynamic module imports

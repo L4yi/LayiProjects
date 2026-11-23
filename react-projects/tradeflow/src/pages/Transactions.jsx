@@ -240,8 +240,9 @@ export default function Transactions() {
                 )}
             </div>
 
-            <TransactionSlideDrawer
-                isOpen={drawerOpen}
+            {drawerOpen && (
+                <TransactionSlideDrawer
+                    isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}
                 subtitle="Please complete the form below to update payment record."
@@ -249,7 +250,8 @@ export default function Transactions() {
                 entityType="Transaction Log"
                 initialData={selectedTxn || {}}
                 onSave={handleSaveTransaction}
-            />
+                />
+            )}
 
             <StatusModal
                 isOpen={showSuccessModal}

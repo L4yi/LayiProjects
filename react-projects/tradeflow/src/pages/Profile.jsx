@@ -180,15 +180,15 @@ export default function Profile() {
                     email: liveData.emailAddress || liveData.email || currentUser.email,
                     phone: liveData.phoneNumber || liveData.phone || currentUser.phone,
                     address: liveData.address || currentUser.address,
-                    titleId: liveData.titleId || "1",
-                    roleId: (liveData.roleId && Number(liveData.roleId) <= 17) ? liveData.roleId : "1",
-                    statusId: liveData.statusId || "1",
+                    titleId: liveData.titleId || currentUser.titleId || "1",
+                    roleId: liveData.roleId ? String(liveData.roleId) : (currentUser.roleId || (isCustomerPortal ? "19" : "1")),
+                    role: isCustomerPortal ? "Customer" : (currentUser.role || "Customer"),
+                    statusId: liveData.statusId || currentUser.statusId || "1",
                     profileImage: photo,
                     avatar: photo,
                     avatarUrl: photo,
                     imageUrl: photo
                 });
-                setUser(updated);
                 const uFirst = updated.firstName || (updated.name ? updated.name.split(" ")[0] : "");
                 const uLast = updated.lastName || (updated.name ? updated.name.split(" ").slice(1).join(" ") : "");
                 setPersonalForm({
@@ -229,16 +229,19 @@ export default function Profile() {
                     console.warn("Could not read local tradeflow_orders:", e);
                 }
 
-                const res = await orderService.fetchAllOrders();
+                const currentId = String(user?.customerId || user?.id || "");
+                const res = currentId 
+                    ? await orderService.fetchCustomerOrders(currentId) 
+                    : { success: false, data: [] };
+
                 let backendOrders = [];
                 if (res.success && Array.isArray(res.data)) {
-                    const currentId = String(user?.customerId || user?.id || "");
                     const currentEmail = (user?.email || "").toLowerCase().trim();
                     const currentName = (user?.name || "").toLowerCase().trim();
 
                     backendOrders = res.data
                         .filter(o => {
-                            if (!currentId && !currentEmail) return true;
+                            if (!currentId && !currentEmail) return false;
                             const matchId = currentId && String(o.customerId) === currentId;
                             const matchEmail = currentEmail && (o.email || "").toLowerCase().trim() === currentEmail;
                             const matchName = currentName && (o.customerName || "").toLowerCase().trim() === currentName;

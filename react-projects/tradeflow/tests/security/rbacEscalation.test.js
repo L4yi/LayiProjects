@@ -11,7 +11,8 @@ const {
     canAccessReports, 
     canManageCatalog,
     canEditCustomer,
-    canDeleteCustomer
+    canDeleteCustomer,
+    canConfirmOrders
 } = await import("../../src/utils/permissions.js");
 
 describe("Security: Privilege Escalation & Role Protection", () => {
@@ -51,5 +52,6 @@ describe("Security: Privilege Escalation & Role Protection", () => {
         assert.equal(canAccessCustomers(null), false);
         assert.equal(canAccessTransactions(null), false);
         assert.equal(canAccessReports(null), false);
+        assert.equal(canConfirmOrders(null), false);
     });
 });

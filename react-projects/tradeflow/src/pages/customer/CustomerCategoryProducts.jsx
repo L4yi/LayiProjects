@@ -1,3 +1,4 @@
+import { VERIFIED_FALLBACK_CATEGORIES, VERIFIED_FALLBACK_PRODUCTS } from "../../data/fallbackData";
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ProductItemCard from "../../components/ProductItemCard";
@@ -5,69 +6,7 @@ import { PageSkeleton } from "../../components/common";
 import categoryService, { getStoredCategoryImage } from "../../services/categoryService";
 import productService from "../../services/productService";
 
-const VERIFIED_FALLBACK_CATEGORIES = [
-    {
-        id: "CAT20261109082827",
-        title: "Mobile Devices & phones",
-        name: "Mobile Devices & phones",
-        badge: "ACTIVE",
-        description: "Mobile Devices & phones",
-        image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80"
-    },
-    {
-        id: "CAT20261109082647",
-        title: "Health & Beauty",
-        name: "Health & Beauty",
-        badge: "ACTIVE",
-        description: "Personal care products including skincare, haircare, supplements and hygiene essentials.",
-        image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80"
-    },
-    {
-        id: "CAT20261109082603",
-        title: "Office Supplies",
-        name: "Office Supplies",
-        badge: "ACTIVE",
-        description: "Stationery, printing materials, office furniture and equipment.",
-        image: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=800&q=80"
-    },
-    {
-        id: "CAT20261109082511",
-        title: "Clothing & Apparel",
-        name: "Clothing & Apparel",
-        badge: "ACTIVE",
-        description: "Men and women fashion items including tops, trousers, shoes, bags and accessories.",
-        image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80"
-    },
-    {
-        id: "CAT20261109082439",
-        title: "Groceries",
-        name: "Groceries",
-        badge: "ACTIVE",
-        description: "Everyday food items and household consumables.",
-        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
-    },
-    {
-        id: "CAT20261109082340",
-        title: "Electronics",
-        name: "Electronics",
-        badge: "ACTIVE",
-        description: "Devices and gadgets including phones, laptops, and accessories.",
-        image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=80"
-    }
-];
 
-const VERIFIED_FALLBACK_PRODUCTS = [
-    {
-        id: "PROD20261109083122",
-        categoryId: "CAT20261109082827",
-        name: "Samsung Galaxy A15",
-        subtitle: "Mobile Devices & phones",
-        rating: 5,
-        price: 185000,
-        oldPrice: 212750,
-        image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800&q=80"
-    }
-];
 
 export default function CustomerCategoryProducts() {
     const { categoryId } = useParams();

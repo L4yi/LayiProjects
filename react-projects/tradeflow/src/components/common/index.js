@@ -7,3 +7,4 @@ export { default as PageHeader } from "./PageHeader";
 export { default as LoadingSpinner } from "./LoadingSpinner";
 export { default as PageSkeleton } from "./PageSkeleton";
 export { default as BrandLogo, TradeFlowIcon } from "./BrandLogo";
+export { default as ImageWithFallback } from "./ImageWithFallback";

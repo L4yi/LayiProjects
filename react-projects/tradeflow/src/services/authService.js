@@ -1,31 +1,9 @@
 import setupService from './setupService';
 import api from "../api/axios";
+import { extractErrorMessage } from "../utils/apiResponse";
 import { setSessionUser, clearSessionUser } from "../utils/session";
 import customerService from "./customerService";
 
-function extractErrorMessage(error, defaultMsg) {
-    if (error.response?.data?.message) {
-        return error.response.data.message;
-    }
-    if (typeof error.response?.data === "string" && error.response.data.trim()) {
-        const text = error.response.data.trim();
-        if (text.startsWith("<")) {
-            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
-            if (titleMatch && titleMatch[1]) {
-                return titleMatch[1].trim();
-            }
-        } else {
-            return text;
-        }
-    }
-    if (error.response?.status === 405) {
-        return "Server security verification triggered. Please refresh or retry.";
-    }
-    if (error.message) {
-        return error.message;
-    }
-    return defaultMsg;
-}
 
 export const authService = {
     async signIn(emailAddress, password) {
@@ -87,17 +65,6 @@ export const authService = {
                 };
             }
 
-            try {
-                const checkCust = await customerService.searchCustomer(cleanEmail);
-                if (checkCust.success && checkCust.data.length > 0) {
-                    return {
-                        success: false,
-                        isCustomerAccount: true,
-                        message: "This email is registered as a Customer. Please sign in via the Customer Portal."
-                    };
-                }
-            } catch (_) {}
-
             return {
                 success: false,
                 message: resData?.message || "Invalid login credentials. Please try again."
@@ -121,24 +88,32 @@ export const authService = {
             const resData = response.data;
 
             if (resData?.success === true) {
+                const safeData = { ...(resData.data || {}) };
+                delete safeData.resetOtp;
+                delete safeData.resetotp;
+                delete safeData.otp;
                 return {
                     success: resData.success,
                     isCustomer: false,
                     message: resData.message || "Reset OTP generated successfully.",
-                    data: resData.data
+                    data: safeData
                 };
             }
 
             // If not found in staff, check customer forgot-password endpoint
             const custRes = await customerService.customerForgotPassword(cleanEmail);
             if (custRes.success) {
+                const safeCustData = { ...(custRes.data || {}) };
+                delete safeCustData.resetOtp;
+                delete safeCustData.resetotp;
+                delete safeCustData.otp;
                 return {
                     success: true,
                     isCustomer: true,
                     message: custRes.message,
                     data: {
-                        ...custRes.data,
-                        staffId: custRes.data?.customerId
+                        ...safeCustData,
+                        staffId: safeCustData?.customerId
                     }
                 };
             }
@@ -152,13 +127,17 @@ export const authService = {
             try {
                 const custRes = await customerService.customerForgotPassword(cleanEmail);
                 if (custRes.success) {
+                    const safeCustData = { ...(custRes.data || {}) };
+                    delete safeCustData.resetOtp;
+                    delete safeCustData.resetotp;
+                    delete safeCustData.otp;
                     return {
                         success: true,
                         isCustomer: true,
                         message: custRes.message,
                         data: {
-                            ...custRes.data,
-                            staffId: custRes.data?.customerId
+                            ...safeCustData,
+                            staffId: safeCustData?.customerId
                         }
                     };
                 }

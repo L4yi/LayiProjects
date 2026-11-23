@@ -36,7 +36,7 @@ export default function TableCard({
                     <div
                         className="common-table-responsive"
                         style={{
-                            ...(tableMaxHeight ? { maxHeight: tableMaxHeight, overflowY: "scroll" } : {}),
+                            ...(tableMaxHeight ? { maxHeight: tableMaxHeight, overflowY: "auto" } : {}),
                             ...tableStyle
                         }}
                     >

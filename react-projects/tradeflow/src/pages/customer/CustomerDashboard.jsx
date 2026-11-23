@@ -1,3 +1,4 @@
+import { VERIFIED_FALLBACK_CATEGORIES, VERIFIED_FALLBACK_PRODUCTS } from "../../data/fallbackData";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CustomerUserBanner from "../../components/CustomerUserBanner";
@@ -7,62 +8,7 @@ import { PageSkeleton } from "../../components/common";
 import categoryService from "../../services/categoryService";
 import productService from "../../services/productService";
 
-const VERIFIED_FALLBACK_CATEGORIES = [
-    {
-        id: "CAT20261109082827",
-        title: "Mobile Devices & phones",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "1 Item"
-    },
-    {
-        id: "CAT20261109082647",
-        title: "Health & Beauty",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082603",
-        title: "Office Supplies",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082511",
-        title: "Clothing & Apparel",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082439",
-        title: "Groceries",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    },
-    {
-        id: "CAT20261109082340",
-        title: "Electronics",
-        badge: "ACTIVE",
-        image: null,
-        itemCount: "0 Items"
-    }
-];
 
-const VERIFIED_FALLBACK_PRODUCTS = [
-    {
-        id: "PROD20261109083122",
-        name: "Samsung Galaxy A15",
-        subtitle: "Mobile Devices & phones",
-        rating: 5,
-        price: "₦ 185,000",
-        oldPrice: "₦ 212,750",
-        image: ""
-    }
-];
 
 export default function CustomerDashboard() {
     const [categories, setCategories] = useState([]);
@@ -83,10 +29,15 @@ export default function CustomerDashboard() {
                     : [];
 
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data) && catRes.value.data.length > 0) {
+                    const productCountByCat = new Map();
+                    for (const p of rawProducts) {
+                        const cId = p.categories_id || p.categoryId || p.category_id;
+                        if (cId) productCountByCat.set(cId, (productCountByCat.get(cId) || 0) + 1);
+                    }
                     setCategories(catRes.value.data.map(cat => {
                         const catId = cat.categories_id || cat.categoryId || cat.id;
                         const catName = cat.categories_name || cat.category_name || cat.name || "Category";
-                        const matchCount = rawProducts.filter(p => (p.categories_id || p.categoryId || p.category_id) === catId).length;
+                        const matchCount = productCountByCat.get(catId) || 0;
                         return {
                             id: catId,
                             title: catName,

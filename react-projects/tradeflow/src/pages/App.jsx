@@ -164,7 +164,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/customer/orders",
-        element: S(CustomerOrders)
+        element: (
+          <RoleRouteGuard authRedirect="/customer/signin">
+            {S(CustomerOrders)}
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/customer/track-order",
@@ -188,15 +192,27 @@ export const router = createBrowserRouter([
       },
       {
         path: "/customer/notifications",
-        element: S(CustomerNotifications)
+        element: (
+          <RoleRouteGuard authRedirect="/customer/signin">
+            {S(CustomerNotifications)}
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/customer/addresses",
-        element: S(CustomerAddresses)
+        element: (
+          <RoleRouteGuard authRedirect="/customer/signin">
+            {S(CustomerAddresses)}
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/customer/payment-methods",
-        element: S(CustomerPaymentMethods)
+        element: (
+          <RoleRouteGuard authRedirect="/customer/signin">
+            {S(CustomerPaymentMethods)}
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/customer/checkout",
@@ -204,7 +220,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/customer/settings",
-        element: S(Profile)
+        element: (
+          <RoleRouteGuard authRedirect="/customer/signin">
+            {S(Profile)}
+          </RoleRouteGuard>
+        )
       },
       {
         path: "/customer/support",
@@ -213,7 +233,11 @@ export const router = createBrowserRouter([
     ]
   },
   {
-    element: <DashboardLayout />,
+    element: (
+      <RoleRouteGuard authRedirect="/signin">
+        <DashboardLayout />
+      </RoleRouteGuard>
+    ),
     errorElement: <ServerError500 />,
     children: [
       {

@@ -10,13 +10,15 @@ import transactionService from "../services/transactionService";
 
 export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
-    const [staffCount, setStaffCount] = useState(0);
-    const [categoryCount, setCategoryCount] = useState(0);
-    const [productCount, setProductCount] = useState(0);
-    const [orderCount, setOrderCount] = useState(0);
-    const [customerCount, setCustomerCount] = useState(0);
-    const [recentTransactions, setRecentTransactions] = useState([]);
-    const [topProducts, setTopProducts] = useState([]);
+    const [dashboardData, setDashboardData] = useState({
+        staffCount: 0,
+        categoryCount: 0,
+        productCount: 0,
+        orderCount: 0,
+        customerCount: 0,
+        recentTransactions: [],
+        topProducts: []
+    });
     const [searchProd, setSearchProd] = useState("");
 
     useEffect(() => {
@@ -81,7 +83,7 @@ export default function Dashboard() {
         loadDashboardData();
     }, []);
 
-    const filteredProducts = topProducts.filter((prod) =>
+    const filteredProducts = dashboardData.topProducts.filter((prod) =>
         (prod.name || "").toLowerCase().includes(searchProd.toLowerCase()) ||
         (prod.code || "").toLowerCase().includes(searchProd.toLowerCase())
     );
@@ -139,7 +141,7 @@ export default function Dashboard() {
                                 </Link>
                             </div>
 
-                            {recentTransactions.length === 0 ? (
+                            {dashboardData.recentTransactions.length === 0 ? (
                                 <div style={{ textAlign: "center", padding: "50px 20px", color: "#718096" }}>
                                     <i className="bi bi-credit-card-2-front" style={{ fontSize: "2.2rem", color: "#cbd5e1", display: "block", marginBottom: "10px" }}></i>
                                     <p style={{ margin: 0, fontWeight: 600, color: "#2d3748" }}>No recent transactions recorded</p>
@@ -158,7 +160,7 @@ export default function Dashboard() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {recentTransactions.map((tx, idx) => (
+                                            {dashboardData.recentTransactions.map((tx, idx) => (
                                                 <tr key={tx.id || idx}>
                                                     <td className="col-no">{idx + 1}</td>
                                                     <td className="col-cust-id">{tx.code || tx.id}</td>

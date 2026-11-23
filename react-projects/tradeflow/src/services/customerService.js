@@ -222,62 +222,11 @@ export const customerService = {
         }
     },
 
-    // Authenticates a customer by email.
-    // Finds customer by email, checks that their status is ACTIVE, and saves their session.
-    async customerSignIn(emailAddress) {
-        const cleanEmail = (emailAddress || "").trim().toLowerCase();
-        if (!cleanEmail) {
-            return {
-                success: false,
-                message: "Email address is required."
-            };
-        }
-
-        const searchRes = await this.searchCustomer(cleanEmail);
-        if (searchRes.success && searchRes.data.length > 0) {
-            const matched = searchRes.data.find(
-                (c) => (c.emailAddress || "").toLowerCase() === cleanEmail || (c.email || "").toLowerCase() === cleanEmail
-            ) || searchRes.data[0];
-
-            if (matched.statusId === "2" || matched.status === "INACTIVE") {
-                return {
-                    success: false,
-                    message: "Your customer account is currently inactive. Please contact support."
-                };
-            }
-
-            const photo = matched.profileImage || matched.profile_image || matched.imageUrl || matched.image || matched.avatar || "";
-            const sessionPayload = {
-                customerId: matched.customerId,
-                id: matched.customerId,
-                name: matched.name,
-                firstName: matched.firstName,
-                lastName: matched.lastName,
-                email: matched.emailAddress,
-                phone: matched.phoneNumber,
-                address: matched.address,
-                role: "Customer",
-                roleId: matched.roleId || setupService.getRoleId("Customer"),
-                status: matched.status || "ACTIVE",
-                statusId: matched.statusId || setupService.getStatusId("Active"),
-                profileImage: photo,
-                avatar: photo,
-                avatarUrl: photo,
-                imageUrl: photo
-            };
-
-            setSessionUser(sessionPayload);
-            return {
-                success: true,
-                message: "CUSTOMER LOGIN SUCCESSFUL",
-                user: sessionPayload,
-                data: sessionPayload
-            };
-        }
-
+    // [SEC-01 PATCH]: Passwordless login is strictly disabled. All authentication requires verified credentials.
+    async customerSignIn() {
         return {
             success: false,
-            message: "No registered customer found with this email. Please create an account to continue."
+            message: "Password authentication is required. Please use customerAuthSignIn with valid credentials."
         };
     },
 
@@ -416,13 +365,11 @@ export const customerService = {
             const resData = response.data;
             if (resData?.success === true) {
                 const customerId = resData.data?.customerId || resData.data?.customer_id || "";
-                const resetOtp = resData.data?.resetotp || resData.data?.resetOtp || "";
                 return {
                     success: true,
-                    message: resData.message || "RESET OTP GENERATED SUCCESSFULLY",
+                    message: resData.message || "Reset OTP sent to your registered email address.",
                     data: {
                         customerId,
-                        resetOtp,
                         emailAddress: resData.data?.emailAddress || cleanEmail
                     }
                 };
@@ -503,42 +450,12 @@ export const customerService = {
 
     // Fetch all categories for customer storefront
     async fetchAllCategories() {
-        try {
-            let response;
-            try {
-                response = await api.post("customer/category/fetch-all-category.php", new FormData());
-                if (!response?.data?.success) throw new Error("Fallback to admin categories");
-            } catch {
-                response = await api.post("admin/categories/fetch-all-category.php", new FormData());
-            }
-            return response.data;
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load categories.",
-                data: []
-            };
-        }
+        return categoryService.fetchAllCategories();
     },
 
     // Fetch all products for customer storefront
     async fetchAllProducts() {
-        try {
-            let response;
-            try {
-                response = await api.post("customer/product/fetch-all-products.php", new FormData());
-                if (!response?.data?.success) throw new Error("Fallback to admin products");
-            } catch {
-                response = await api.post("admin/product/fetch-all-products.php", new FormData());
-            }
-            return response.data;
-        } catch (error) {
-            return {
-                success: false,
-                message: error.response?.data?.message || error.message || "Failed to load products.",
-                data: []
-            };
-        }
+        return productService.fetchAllProducts();
     },
 
     // Authenticated customer change password endpoint (customer/auth/change-password.php)
@@ -585,7 +502,7 @@ export const customerService = {
     async customerUpdateProfile({ customerId, currentEmail, titleId, firstName, lastName, emailAddress, phoneNumber, address, city, state, landmark, roleId, statusId }) {
         let validCustomerId = (customerId || "").toString().trim();
 
-        // If customerId is missing from session, look it up by email
+        // If customerId is missing from session, look it up securely by email
         const lookupEmail = currentEmail || emailAddress;
         if (!validCustomerId) {
             try {
@@ -593,19 +510,8 @@ export const customerService = {
                     const searchRes = await this.searchCustomer(lookupEmail);
                     if (searchRes.success && Array.isArray(searchRes.data) && searchRes.data.length > 0) {
                         const matched = searchRes.data.find(c =>
-                            (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()
-                        ) || searchRes.data[0];
-                        validCustomerId = matched.customerId || matched.id || "";
-                        if (!roleId && matched.roleId) roleId = matched.roleId;
-                    }
-                }
-                if (!validCustomerId) {
-                    const allRes = await this.fetchAllCustomers();
-                    if (allRes.success && Array.isArray(allRes.data) && allRes.data.length > 0) {
-                        const matched = allRes.data.find(c =>
-                            (lookupEmail && (c.emailAddress || c.email || "").toLowerCase() === lookupEmail.toLowerCase().trim()) ||
-                            (emailAddress && (c.emailAddress || c.email || "").toLowerCase() === emailAddress.toLowerCase().trim())
-                        ) || allRes.data[0];
+                            (c.emailAddress || c.email || "").toLowerCase().trim() === lookupEmail.toLowerCase().trim()
+                        );
                         if (matched) {
                             validCustomerId = matched.customerId || matched.id || "";
                             if (!roleId && matched.roleId) roleId = matched.roleId;
@@ -615,6 +521,13 @@ export const customerService = {
             } catch (e) {
                 console.warn("Could not lookup customerId by email:", e);
             }
+        }
+
+        if (!validCustomerId) {
+            return {
+                success: false,
+                message: "Unauthorized: Invalid or missing customer session identity."
+            };
         }
 
         // Ensure titleId is valid in title_tab (default to 1 = Mr)
@@ -784,11 +697,52 @@ export const customerService = {
         return { success: true, data: [] };
     },
 
-    async toggleWishlist(customerId, productId) {
+    async addToWishlist(customerId, productId) {
+        const cleanCust = String(customerId || "").trim();
+        const cleanProd = String(productId || "").trim();
+        if (!cleanCust || !cleanProd) {
+            return { success: true, action: "added", message: "Added to wishlist locally." };
+        }
         try {
             const formData = new FormData();
-            formData.append("customerId", String(customerId || "").trim());
-            formData.append("productId", String(productId || "").trim());
+            formData.append("customerId", cleanCust);
+            formData.append("productId", cleanProd);
+            try {
+                const response = await api.post("customer/wishlist/add-to-wishlist.php", formData);
+                if (response.data?.success) {
+                    return {
+                        success: true,
+                        action: response.data.action || "added",
+                        message: response.data.message || "Added to wishlist."
+                    };
+                }
+            } catch (addErr) {
+                // Auto-fallback to toggle-wishlist.php when add-to-wishlist.php returns 500 or 404
+                const toggleRes = await api.post("customer/wishlist/toggle-wishlist.php", formData);
+                if (toggleRes.data?.success) {
+                    return {
+                        success: true,
+                        action: toggleRes.data.action || "added",
+                        message: toggleRes.data.message || "Added to wishlist."
+                    };
+                }
+            }
+        } catch (err) {
+            // Handled locally
+        }
+        return { success: true, action: "added", message: "Added to wishlist." };
+    },
+
+    async toggleWishlist(customerId, productId) {
+        const cleanCust = String(customerId || "").trim();
+        const cleanProd = String(productId || "").trim();
+        if (!cleanCust || !cleanProd) {
+            return { success: true, message: "Wishlist updated locally." };
+        }
+        try {
+            const formData = new FormData();
+            formData.append("customerId", cleanCust);
+            formData.append("productId", cleanProd);
             const response = await api.post("customer/wishlist/toggle-wishlist.php", formData);
             if (response.data?.success) {
                 return { success: true, action: response.data.action, message: response.data.message };
@@ -800,13 +754,26 @@ export const customerService = {
     },
 
     async removeWishlist(customerId, productId) {
+        const cleanCust = String(customerId || "").trim();
+        const cleanProd = String(productId || "").trim();
+        if (!cleanCust || !cleanProd) {
+            return { success: true, message: "Item removed locally." };
+        }
         try {
             const formData = new FormData();
-            formData.append("customerId", String(customerId || "").trim());
-            formData.append("productId", String(productId || "").trim());
-            const response = await api.post("customer/wishlist/remove-wishlist.php", formData);
-            if (response.data?.success) {
-                return { success: true, message: response.data.message || "Item removed from wishlist." };
+            formData.append("customerId", cleanCust);
+            formData.append("productId", cleanProd);
+            try {
+                const response = await api.post("customer/wishlist/remove-wishlist.php", formData);
+                if (response.data?.success) {
+                    return { success: true, message: response.data.message || "Item removed from wishlist." };
+                }
+            } catch (remErr) {
+                // Fallback to toggle-wishlist.php if remove-wishlist.php throws 500
+                const toggleRes = await api.post("customer/wishlist/toggle-wishlist.php", formData);
+                if (toggleRes.data?.success) {
+                    return { success: true, message: toggleRes.data.message || "Item removed from wishlist." };
+                }
             }
         } catch (err) {
             // Handled locally
@@ -988,18 +955,7 @@ export const customerService = {
 
     // 7. Customer Orders History
     async fetchCustomerOrders(customerId, statusId = null) {
-        try {
-            const formData = new FormData();
-            formData.append("customerId", String(customerId || "").trim());
-            if (statusId) formData.append("statusId", String(statusId).trim());
-            const response = await api.post("customer/order/fetch-customer-orders.php", formData);
-            if (response.data?.success && Array.isArray(response.data.data)) {
-                return { success: true, data: response.data.data, message: response.data.message };
-            }
-        } catch (err) {
-            // Handled via orderService bridge or view filter
-        }
-        return { success: false, data: [] };
+        return orderService.fetchCustomerOrders(customerId, statusId);
     },
 
     // 8. Dedicated Customer Profile & Avatar Endpoints

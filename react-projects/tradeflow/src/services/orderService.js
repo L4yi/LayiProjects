@@ -62,12 +62,20 @@ export const orderService = {
         }
     },
 
-    // Fetches orders for a specific customer with automatic bridge to live orders
+    // Fetches orders for a specific customer with strict ownership enforcement
     async fetchCustomerOrders(customerId, statusId = null) {
-        if (!customerId) return this.fetchAllOrders();
+        const cleanId = String(customerId || "").trim();
+        if (!cleanId) {
+            return {
+                success: true,
+                data: [],
+                message: "No customer identified."
+            };
+        }
+
         try {
             const formData = new FormData();
-            formData.append("customerId", String(customerId).trim());
+            formData.append("customerId", cleanId);
             if (statusId) formData.append("statusId", String(statusId).trim());
 
             const response = await api.post("customer/order/fetch-customer-orders.php", formData);
@@ -79,52 +87,58 @@ export const orderService = {
                 };
             }
         } catch (err) {
-            // Endpoint pending or network issue: gracefully bridge through live orders filtered by customerId
+            console.warn("Customer orders endpoint error:", err?.message || err);
         }
 
-        const allRes = await this.fetchAllOrders();
-        if (allRes.success && Array.isArray(allRes.data)) {
-            const cleanId = String(customerId).trim();
-            const filtered = allRes.data.filter(o => {
-                const matchId = String(o.customerId || "").trim() === cleanId;
-                const matchStatus = !statusId || String(o.statusId || "") === String(statusId);
-                return matchId && matchStatus;
-            });
-            return {
-                success: true,
-                data: filtered.length > 0 ? filtered : allRes.data,
-                message: allRes.message || "ORDERS FETCHED SUCCESSFULLY"
-            };
-        }
-        return allRes;
+        // Safe scoped fallback: strictly filter by cleanId and NEVER leak other customers' orders
+        try {
+            const allRes = await this.fetchAllOrders();
+            if (allRes.success && Array.isArray(allRes.data)) {
+                const filtered = allRes.data.filter(o => {
+                    const matchId = String(o.customerId || "").trim() === cleanId;
+                    const matchStatus = !statusId || String(o.statusId || "") === String(statusId);
+                    return matchId && matchStatus;
+                });
+                return {
+                    success: true,
+                    data: filtered,
+                    message: "CUSTOMER ORDERS FETCHED"
+                };
+            }
+        } catch (_) {}
+
+        return {
+            success: true,
+            data: [],
+            message: "No orders found."
+        };
     },
 
     // Fetches single order details and receipt via customer/order/fetch-each-order.php
-    async fetchEachOrder(orderId) {
+    async fetchEachOrder(orderId, customerId = null) {
         if (!orderId) return { success: false, message: "Order ID is required." };
         try {
             const formData = new FormData();
             formData.append("orderId", String(orderId).trim());
+            if (customerId) formData.append("customerId", String(customerId).trim());
+
             const response = await api.post("customer/order/fetch-each-order.php", formData);
             if (response.data?.success && response.data?.data) {
+                const norm = normalizeOrder(response.data.data);
+                if (customerId && norm.customerId && String(norm.customerId).trim() !== String(customerId).trim()) {
+                    return { success: false, message: "Access denied: You do not own this order record." };
+                }
                 return {
                     success: true,
-                    data: normalizeOrder(response.data.data),
+                    data: norm,
                     message: response.data.message || "ORDER DETAILS RETRIEVED"
                 };
             }
         } catch (err) {
-            // Fallback: search in all orders
+            console.warn("fetchEachOrder error:", err?.message || err);
         }
 
-        const allRes = await this.fetchAllOrders();
-        if (allRes.success && Array.isArray(allRes.data)) {
-            const matched = allRes.data.find(o => String(o.orderId || o.id).toLowerCase() === String(orderId).toLowerCase());
-            if (matched) {
-                return { success: true, data: matched, message: "Order found in directory" };
-            }
-        }
-        return { success: false, message: "Order not found." };
+        return { success: false, message: "Order record not found." };
     },
 
     // Cancels an active or pending order via customer/order/cancel-order.php

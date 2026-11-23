@@ -1,4 +1,5 @@
 import api from "../api/axios";
+import { normalizeResponse, extractErrorMessage } from "../utils/apiResponse";
 import setupService from "./setupService";
 
 // Helper function to extract a readable error message from Axios errors.
@@ -17,35 +18,12 @@ export function getErrorMessage(error, defaultMsg = "An unexpected error occurre
 }
 
 // Find title id from setup data loaded from backend setup/fetch-all-title.php
-export function getTitleId(title = "") {
-    return setupService.getTitleId(title);
-}
 
 // Find status id from setup data loaded from backend setup/fetch-all-status.php
-export function getStatusId(status = "") {
-    return setupService.getStatusId(status);
-}
 
 // Find role id from setup data loaded from backend setup/fetch-all-role.php
-export function getRoleId(role = "") {
-    return setupService.getRoleId(role);
-}
 
 // Helper to keep our service responses in a standard structure: { success, message, data }
-function normalizeResponse(resData, defaultSuccessMsg = "Success") {
-    if (typeof resData === "object" && resData !== null) {
-        const isSuccess = resData.success === true || resData.success === "true";
-        return {
-            ...resData,
-            success: isSuccess,
-            message: resData.message || (isSuccess ? defaultSuccessMsg : "Request could not be completed.")
-        };
-    }
-    return {
-        success: false,
-        message: String(resData || "Empty response from server.")
-    };
-}
 
 export const staffService = {
     // Fetches all staff members from the database (admin/staff/fetch-all-staff.php)
@@ -190,9 +168,9 @@ export const staffService = {
             const staffId = staffData.staffId || staffData.id;
 
             // Resolve IDs from setup service or use IDs already provided by the form drawer
-            const titleId = staffData.titleId || getTitleId(staffData.title);
-            const statusId = staffData.statusId || getStatusId(staffData.status);
-            const roleId = staffData.roleId || getRoleId(staffData.role);
+            const titleId = staffData.titleId || setupService.getTitleId(staffData.title);
+            const statusId = staffData.statusId || setupService.getStatusId(staffData.status);
+            const roleId = staffData.roleId || setupService.getRoleId(staffData.role);
 
             const firstName = (staffData.firstName || staffData.name?.split(" ")[0] || "").trim();
             const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "Staff").trim();
@@ -295,16 +273,21 @@ export const staffService = {
 
     // Creates a new staff account in the database 
     async createStaff(staffData) {
-        const titleId = staffData.titleId || getTitleId(staffData.title);
-        const statusId = staffData.statusId || getStatusId(staffData.status);
-        const roleId = staffData.roleId || getRoleId(staffData.role);
+        const titleId = staffData.titleId || setupService.getTitleId(staffData.title);
+        const statusId = staffData.statusId || setupService.getStatusId(staffData.status);
+        const roleId = staffData.roleId || setupService.getRoleId(staffData.role);
 
         const firstName = (staffData.firstName || staffData.name?.split(" ")[0] || "").trim();
         const lastName = (staffData.lastName || staffData.name?.split(" ").slice(1).join(" ") || "").trim();
         const email = (staffData.emailAddress || staffData.email || "").trim();
         const phone = (staffData.phoneNumber || staffData.phone || "").trim();
         const address = (staffData.address || "").trim();
-        const password = staffData.password || "Tradeflow123!";
+        // [SEC-07 PATCH]: Generate unique secure temporary password instead of predictable hardcoded credentials
+        const generateTempPassword = () => {
+            const randomPart = Math.random().toString(36).slice(-6) + Date.now().toString(36).slice(-3);
+            return `Tf#${randomPart}!9`;
+        };
+        const password = staffData.password || generateTempPassword();
 
         try {
             const formData = new FormData();

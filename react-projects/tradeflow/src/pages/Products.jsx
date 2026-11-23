@@ -7,29 +7,6 @@ import categoryService from "../services/categoryService";
 import setupService from "../services/setupService";
 import { canManageCatalog } from "../utils/permissions";
 
-function ProductTableThumb({ src, alt }) {
-    const [failed, setFailed] = useState(false);
-
-    useEffect(() => {
-        setFailed(false);
-    }, [src]);
-
-    if (src && !failed) {
-        return (
-            <img
-                src={src}
-                alt={alt}
-                className="table-product-thumb"
-                onError={() => setFailed(true)}
-            />
-        );
-    }
-    return (
-        <div className="table-product-thumb-placeholder">
-            <i className="bi bi-box-seam"></i>
-        </div>
-    );
-}
 
 export default function Products() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -123,13 +100,17 @@ export default function Products() {
         });
     }, []);
 
+    const searchDebounceRef = useRef(null);
     const handleSearchChange = (val) => {
         setSearchQuery(val);
-        if (val.trim()) {
-            setSearchParams({ search: val.trim() });
-        } else {
-            setSearchParams({});
-        }
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = setTimeout(() => {
+            if (val.trim()) {
+                setSearchParams({ search: val.trim() });
+            } else {
+                setSearchParams({});
+            }
+        }, 300);
     };
 
     const handleOpenEdit = (prod) => {
@@ -367,7 +348,7 @@ export default function Products() {
                                         <td className="col-sn">{idx + 1}</td>
                                         <td className="col-prod-name">
                                             <div className="product-table-cell">
-                                                <ProductTableThumb src={prod.image} alt={prod.name} />
+                                                <ImageWithFallback src={prod.image} alt={prod.name} className="table-product-thumb" placeholderClass="table-product-thumb-placeholder" />
                                                 <div className="prod-tbl-info">
                                                     <span className="prod-tbl-title">{prod.name}</span>
                                                     {prod.description && (
@@ -426,20 +407,22 @@ export default function Products() {
                 )}
             </div>
 
-            <ProductSlideDrawer
-                isOpen={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                title={drawerTitle}
-                subtitle="Please complete the form below to configure inventory and pricing details."
-                icon="bi bi-box-seam-fill"
-                entityType="Store Product"
-                initialData={selectedProd || {}}
-                categoriesList={categories}
-                isSaving={isSaving}
-                errorMessage={drawerError}
-                onSave={handleSaveProduct}
-                readOnly={!canManageCatalog()}
-            />
+            {drawerOpen && (
+                <ProductSlideDrawer
+                    isOpen={drawerOpen}
+                    onClose={() => setDrawerOpen(false)}
+                    title={drawerTitle}
+                    subtitle="Please complete the form below to configure inventory and pricing details."
+                    icon="bi bi-box-seam-fill"
+                    entityType="Store Product"
+                    initialData={selectedProd || {}}
+                    categoriesList={categories}
+                    isSaving={isSaving}
+                    errorMessage={drawerError}
+                    onSave={handleSaveProduct}
+                    readOnly={!canManageCatalog()}
+                />
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             <StatusModal

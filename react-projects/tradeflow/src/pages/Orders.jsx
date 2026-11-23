@@ -32,13 +32,17 @@ export default function Orders() {
         }
     }, [searchParams]);
 
+    const searchDebounceRef = useRef(null);
     const handleSearchChange = (val) => {
         setSearchQuery(val);
-        if (val.trim()) {
-            setSearchParams({ search: val.trim() });
-        } else {
-            setSearchParams({});
-        }
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = setTimeout(() => {
+            if (val.trim()) {
+                setSearchParams({ search: val.trim() });
+            } else {
+                setSearchParams({});
+            }
+        }, 300);
     };
 
     const loadOrders = async () => {
@@ -358,13 +362,6 @@ export default function Orders() {
                                     ))}
                                 </select>
                             </div>
-                            <button
-                                type="button"
-                                className="btn-add-entity"
-                                onClick={handleOpenAdd}
-                            >
-                                <i className="bi bi-plus-lg"></i> New Order
-                            </button>
                         </>
                     }
                 />
@@ -495,8 +492,9 @@ export default function Orders() {
                 )}
             </div>
 
-            <OrderSlideDrawer
-                isOpen={drawerOpen}
+            {drawerOpen && (
+                <OrderSlideDrawer
+                    isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}
                 subtitle="Please complete the form below to update order status and fulfillment details."
@@ -506,7 +504,8 @@ export default function Orders() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveOrder}
-            />
+                />
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             <StatusModal

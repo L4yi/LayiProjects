@@ -5,6 +5,7 @@ const baseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
 
 const api = axios.create({
     baseURL: baseUrl,
+    timeout: 15000,
     headers: {
         Accept: "application/json",
     },
@@ -26,5 +27,18 @@ api.interceptors.request.use((config) => {
 
     return config;
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem("accessToken");
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("tradeflow_session_update"));
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;

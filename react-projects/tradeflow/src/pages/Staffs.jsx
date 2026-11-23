@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { StaffSlideDrawer } from "../components/drawers";
 import staffService from "../services/staffService";
 import setupService from "../services/setupService";
@@ -50,7 +50,6 @@ export const mapServerStaff = (s) => {
 
 export default function Staffs() {
     const [allStaffs, setAllStaffs] = useState([]);
-    const [staffsList, setStaffsList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasNetworkError, setHasNetworkError] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -77,11 +76,9 @@ export default function Staffs() {
             if (result?.success && Array.isArray(result?.data)) {
                 const list = result.data.map(mapServerStaff);
                 setAllStaffs(list);
-                setStaffsList(list);
-            } else {
+                            } else {
                 setAllStaffs([]);
-                setStaffsList([]);
-                const msg = String(result?.message || "").toLowerCase();
+                                const msg = String(result?.message || "").toLowerCase();
                 const isRealNetworkError = msg.includes("failed to fetch") || msg.includes("network") || msg.includes("timeout") || msg.includes("server error");
                 if (isRealNetworkError) {
                     setHasNetworkError(true);
@@ -91,8 +88,7 @@ export default function Staffs() {
             console.error("Failed to load staff:", error);
             setHasNetworkError(true);
             setAllStaffs([]);
-            setStaffsList([]);
-        } finally {
+                    } finally {
             setIsLoading(false);
         }
     };
@@ -113,42 +109,7 @@ export default function Staffs() {
         });
     }, []);
 
-    useEffect(() => {
-        if (isFirstMount.current) {
-            isFirstMount.current = false;
-            return;
-        }
-
-        const query = searchQuery.trim().toLowerCase();
-        if (!query) {
-            setStaffsList(allStaffs);
-            return;
-        }
-
-        const localMatches = allStaffs.filter((staff) => {
-            const matchName = staff.name?.toLowerCase().includes(query);
-            const matchEmail = staff.email?.toLowerCase().includes(query);
-            const matchPhone = staff.phone?.toLowerCase().includes(query);
-            const matchRole = staff.role?.toLowerCase().includes(query);
-            const matchId = staff.id?.toLowerCase().includes(query);
-            return matchName || matchEmail || matchPhone || matchRole || matchId;
-        });
-
-        setStaffsList(localMatches);
-
-        const timer = setTimeout(async () => {
-            try {
-                const result = await staffService.searchStaff(query);
-                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-                    setStaffsList(result.data.map(mapServerStaff));
-                }
-            } catch {
-            }
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [searchQuery, allStaffs]);
-
+    
     const handleOpenEdit = async (staff) => {
         if (!staff) return;
         setSelectedStaff({ ...staff });
@@ -210,11 +171,14 @@ export default function Staffs() {
             const editedStaffId = String(formData.staffId || formData.id || "").trim();
             const editedEmail = (formData.email || formData.emailAddress || "").toLowerCase().trim();
             if (activeUser && (activeUser.staffId === editedStaffId || activeUser.email?.toLowerCase() === editedEmail)) {
+                const canEscalate = String(activeUser.roleId) === "3" || (activeUser.role || "").toUpperCase() === "SUPER ADMIN";
+                const targetRoleId = canEscalate ? formData.roleId : activeUser.roleId;
+                const targetRole = canEscalate ? formData.role : activeUser.role;
                 setSessionUser({
                     ...activeUser,
                     ...formData,
-                    roleId: formData.roleId,
-                    role: formData.role
+                    roleId: targetRoleId,
+                    role: targetRole
                 });
             }
 
@@ -238,13 +202,20 @@ export default function Staffs() {
 
 
 
-    const filteredStaffs = staffsList.filter((staff) => {
-        // Matches by roleId (from dropdown) or by role name
-        const matchesRole = !filterRole || String(staff.roleId) === String(filterRole) || staff.role.toLowerCase().includes(filterRole.toLowerCase());
-        // Matches by statusId (from dropdown) or by status name
-        const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus) || staff.status.toLowerCase() === filterStatus.toLowerCase();
-        return matchesRole && matchesStatus;
-    });
+    const filteredStaffs = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return allStaffs.filter((staff) => {
+            const matchesQuery = !query ||
+                staff.name?.toLowerCase().includes(query) ||
+                staff.email?.toLowerCase().includes(query) ||
+                staff.phone?.toLowerCase().includes(query) ||
+                staff.role?.toLowerCase().includes(query) ||
+                staff.id?.toLowerCase().includes(query);
+            const matchesRole = !filterRole || String(staff.roleId) === String(filterRole) || staff.role.toLowerCase().includes(filterRole.toLowerCase());
+            const matchesStatus = !filterStatus || String(staff.statusId) === String(filterStatus) || staff.status.toLowerCase() === filterStatus.toLowerCase();
+            return matchesQuery && matchesRole && matchesStatus;
+        });
+    }, [allStaffs, searchQuery, filterRole, filterStatus]);
 
     return (
         <>
@@ -492,8 +463,9 @@ export default function Staffs() {
                 )}
             </div>
 
-            <StaffSlideDrawer
-                isOpen={drawerOpen}
+            {drawerOpen && (
+                <StaffSlideDrawer
+                    isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}
                 subtitle="Please complete the form below with accurate staff details."
@@ -503,7 +475,8 @@ export default function Staffs() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveStaff}
-            />
+                />
+            )}
 
             <StatusModal
                 isOpen={showSuccessModal}

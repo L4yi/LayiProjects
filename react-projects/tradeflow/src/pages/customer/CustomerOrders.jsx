@@ -93,7 +93,7 @@ export default function CustomerOrders() {
 
                     backendOrders = ordersRes.data
                         .filter(o => {
-                            if (!currentId && !currentEmail) return true;
+                            if (!currentId && !currentEmail) return false;
                             const matchId = currentId && String(o.customerId || "").trim() === currentId;
                             const matchEmail = currentEmail && (o.email || "").toLowerCase().trim() === currentEmail;
                             const matchPhone = currentPhone && (o.phone || "").replace(/\D/g, "") === currentPhone;

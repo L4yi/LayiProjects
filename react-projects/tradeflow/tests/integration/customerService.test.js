@@ -22,6 +22,11 @@ describe("Integration: Customer Module Fallbacks & API Contract", () => {
         assert.ok(Array.isArray(res.data));
     });
 
+    test("addToWishlist calls add-to-wishlist with resilient fallback", async () => {
+        const res = await customerService.addToWishlist("CUST20261116225756", "PROD20261112124614");
+        assert.equal(res.success, true);
+    });
+
     test("fetchNotifications returns list shape", async () => {
         const res = await customerService.fetchNotifications("19");
         assert.equal(res.success, true);

@@ -77,16 +77,16 @@ export default function CustomerTrackOrder() {
 
     useEffect(() => {
         // Fetch active orders for this customer to populate selector
-        orderService.fetchAllOrders().then(res => {
-            if (res.success && Array.isArray(res.data)) {
-                const userOrders = res.data.filter(o => !user?.id || o.customerId === user?.id || o.email === user?.email);
-                if (userOrders.length > 0) {
-                    setActiveOrders(userOrders);
+        const cid = user?.customerId || user?.id;
+        if (cid) {
+            orderService.fetchCustomerOrders(cid).then(res => {
+                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+                    setActiveOrders(res.data);
                 }
-            }
-        }).catch(err => {
-            console.warn("Using default active orders:", err);
-        });
+            }).catch(err => {
+                console.warn("Using default active orders:", err);
+            });
+        }
     }, [user?.id, user?.email]);
 
     const handleSearchOrder = async (e) => {

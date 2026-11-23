@@ -1,53 +1,11 @@
+import { ImageWithFallback } from "../../components/common";
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import productService from "../../services/productService";
 import { getCartItems, updateCartQuantity, removeCartItem, addToCart, getCartSubtotal, MAX_CART_ITEMS } from "../../utils/cart";
 import { getWishlistItems, removeFromWishlist } from "../../utils/wishlist";
 
-function CartThumb({ src, alt }) {
-    const [failed, setFailed] = useState(false);
-    useEffect(() => {
-        setFailed(false);
-    }, [src]);
 
-    if (src && !failed) {
-        return (
-            <img
-                src={src}
-                alt={alt}
-                className="cart-prod-img"
-                onError={() => setFailed(true)}
-            />
-        );
-    }
-    return (
-        <div className="cart-item-placeholder">
-            <i className="bi bi-box-seam"></i>
-        </div>
-    );
-}
-
-function WishlistThumb({ src, alt }) {
-    const [failed, setFailed] = useState(false);
-    useEffect(() => {
-        setFailed(false);
-    }, [src]);
-
-    if (src && !failed) {
-        return (
-            <img
-                src={src}
-                alt={alt}
-                onError={() => setFailed(true)}
-            />
-        );
-    }
-    return (
-        <div className="wishlist-img-placeholder">
-            <i className="bi bi-box-seam"></i>
-        </div>
-    );
-}
 
 export default function CustomerCart() {
     const navigate = useNavigate();
@@ -244,7 +202,7 @@ export default function CustomerCart() {
                                     
                                             <div className="cart-item-img-wrap">
                                                 <Link to={`/customer/product/${item.id}`}>
-                                                    <CartThumb src={item.image} alt={item.name} />
+                                                    <ImageWithFallback src={item.image} alt={item.name} className="cart-prod-img" placeholderClass="cart-item-placeholder" />
                                                 </Link>
                                             </div>
 
@@ -351,7 +309,7 @@ export default function CustomerCart() {
                                                 <span className="wishlist-discount-badge">-{wItem.discountPercent}%</span>
                                             )}
                                             <div className="wishlist-img-box">
-                                                <WishlistThumb src={wItem.image} alt={wItem.name} />
+                                                <ImageWithFallback src={wItem.image} alt={wItem.name} placeholderClass="wishlist-img-placeholder" />
                                             </div>
                                             <h5 className="wishlist-item-title">{wItem.name}</h5>
                                             <div className="wishlist-price-row">

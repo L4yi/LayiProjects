@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getSessionUser, setSessionUser } from "../../utils/session";
 import customerService from "../../services/customerService";
@@ -55,7 +55,12 @@ export default function CustomerAddresses() {
     });
     const [toastMessage, setToastMessage] = useState("");
 
+    const isInitialMount = useRef(true);
     useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
         localStorage.setItem("tradeflow_saved_addresses", JSON.stringify(addresses));
     }, [addresses]);
 
@@ -64,8 +69,8 @@ export default function CustomerAddresses() {
         if (customerId) {
             customerService.fetchAddresses(customerId).then(res => {
                 if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-                    const mapped = res.data.map(a => ({
-                        id: a.id || a.addressId || `ADDR_${Math.random()}`,
+                    const mapped = res.data.map((a, index) => ({
+                        id: a.id || a.addressId || `ADDR_${Date.now()}_${index}`,
                         label: a.label || "Home",
                         recipientName: a.recipientName || user.name || "Customer",
                         phone: a.phoneNumber || a.phone || user.phone || "",

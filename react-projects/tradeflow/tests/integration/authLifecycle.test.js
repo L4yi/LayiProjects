@@ -37,7 +37,9 @@ describe("Integration: Authentication Lifecycle & RBAC State Transition", () => 
         clearSessionUser();
         const postLogout = getSessionUser();
         assert.equal(postLogout.id, undefined);
-        assert.equal(postLogout.name, "Staff User");
+        assert.equal(postLogout.name, "Guest");
+        assert.equal(postLogout.role, "GUEST");
+        assert.equal(postLogout.isAuthenticated, false);
     });
 
     test("admin auth lifecycle: login -> permissions granted -> logout", () => {

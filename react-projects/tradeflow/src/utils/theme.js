@@ -1,31 +1,17 @@
 const THEME_KEY = "tradeflow_theme";
 
 /**
- * Returns the currently active theme ('light' or 'dark').
- * Defaults to localStorage, or system preference if not explicitly set.
+ * Returns the currently active theme (enforced as 'light').
  */
 export function getStoredTheme() {
-    if (typeof window === "undefined") return "light";
-    try {
-        const stored = localStorage.getItem(THEME_KEY);
-        if (stored === "dark" || stored === "light") {
-            return stored;
-        }
-        // Fallback to system preference
-        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            return "dark";
-        }
-    } catch (e) {
-        console.warn("Could not read theme from localStorage:", e);
-    }
     return "light";
 }
 
 /**
- * Applies the given theme to documentElement and saves it to localStorage.
+ * Applies light theme to documentElement and clears dark mode attributes.
  */
-export function setStoredTheme(theme) {
-    const nextTheme = theme === "dark" ? "dark" : "light";
+export function setStoredTheme() {
+    const nextTheme = "light";
     try {
         localStorage.setItem(THEME_KEY, nextTheme);
     } catch (e) {
@@ -34,11 +20,7 @@ export function setStoredTheme(theme) {
 
     if (typeof document !== "undefined") {
         document.documentElement.setAttribute("data-theme", nextTheme);
-        if (nextTheme === "dark") {
-            document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-        }
+        document.documentElement.classList.remove("dark");
     }
 
     if (typeof window !== "undefined") {
@@ -49,21 +31,17 @@ export function setStoredTheme(theme) {
 }
 
 /**
- * Toggles between 'light' and 'dark' themes.
+ * Keeps theme locked to light mode.
  */
 export function toggleTheme() {
-    const current = getStoredTheme();
-    const next = current === "dark" ? "light" : "dark";
-    return setStoredTheme(next);
+    return setStoredTheme("light");
 }
 
 /**
  * Initializes the theme on application bootstrap.
  */
 export function initTheme() {
-    const active = getStoredTheme();
-    setStoredTheme(active);
-    return active;
+    return setStoredTheme("light");
 }
 
 // Cross-tab synchronization

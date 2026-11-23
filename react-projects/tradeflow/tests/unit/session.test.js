@@ -53,6 +53,8 @@ describe("Unit: Session & User Identity Normalization", () => {
         clearSessionUser();
         const cleared = getSessionUser();
         assert.equal(cleared.id, undefined);
-        assert.equal(cleared.name, "Staff User");
+        assert.equal(cleared.name, "Guest");
+        assert.equal(cleared.isAuthenticated, false);
+        assert.equal(cleared.role, "GUEST");
     });
 });

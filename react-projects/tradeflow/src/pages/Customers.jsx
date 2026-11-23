@@ -332,8 +332,9 @@ export default function Customers() {
                 )}
             </div>
 
-            <CustomerSlideDrawer
-                isOpen={drawerOpen}
+            {drawerOpen && (
+                <CustomerSlideDrawer
+                    isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 title={drawerTitle}
                 subtitle="Please complete the form below to update customer account details."
@@ -343,7 +344,8 @@ export default function Customers() {
                 isSaving={isSaving}
                 errorMessage={drawerError}
                 onSave={handleSaveCustomer}
-            />
+                />
+            )}
 
             {/* Custom Delete Confirmation Modal */}
             <StatusModal

@@ -19,8 +19,9 @@ describe("Security: Storage Tampering & Corrupted Payload Resilience", () => {
         // Must not crash or throw unhandled syntax errors
         const user = getSessionUser();
         assert.ok(user, "User must fallback to default guest/staff structure");
-        assert.equal(user.name, "Staff User");
-        assert.equal(user.role, "STAFF");
+        assert.equal(user.name, "Guest");
+        assert.equal(user.role, "GUEST");
+        assert.equal(user.isAuthenticated, false);
     });
 
     test("getCartItems gracefully recovers when tradeflow_cart is non-array or corrupt string", () => {

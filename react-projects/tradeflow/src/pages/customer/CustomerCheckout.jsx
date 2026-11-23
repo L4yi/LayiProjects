@@ -148,13 +148,15 @@ export default function CustomerCheckout() {
         let customerId = sessionUser?.customerId || sessionUser?.id;
         if (!customerId || customerId === "CUST-GUEST") {
             try {
-                const custRes = await customerService.fetchAllCustomers();
-                if (custRes.success && Array.isArray(custRes.data)) {
-                    const match = custRes.data.find(c => 
-                        (c.emailAddress || c.email || "").toLowerCase().trim() === formData.email.toLowerCase().trim()
-                    );
-                    if (match) {
-                        customerId = match.id || match.customerId;
+                if (formData.email) {
+                    const custRes = await customerService.searchCustomer(formData.email.trim());
+                    if (custRes.success && Array.isArray(custRes.data)) {
+                        const match = custRes.data.find(c => 
+                            (c.emailAddress || c.email || "").toLowerCase().trim() === formData.email.toLowerCase().trim()
+                        );
+                        if (match) {
+                            customerId = match.id || match.customerId;
+                        }
                     }
                 }
             } catch (err) {
@@ -164,12 +166,14 @@ export default function CustomerCheckout() {
 
         // Fallback default customer account if not authenticated
         if (!customerId || customerId === "CUST-GUEST") {
-            customerId = "CUST20261111143445"; // Default verified customer account
+            customerId = "CUST20261111143445"; // Default guest storefront account
         }
 
         const paymentMethodId = selectedPayment === "wallet" ? 1 : (selectedPayment === "bank_transfer" ? 2 : 3);
-        const deliveryAddress = selectedAddress ? `${selectedAddress.street || ""}, ${selectedAddress.city || ""}, ${selectedAddress.state || ""}`.trim() : (user.address || "Ibara, Abeokuta");
-        const deliveryPhone = selectedAddress?.phone || user.phone || "+2348108725967";
+        const deliveryAddress = formData.address 
+            ? `${formData.address}, ${formData.city || ""}, ${formData.state || ""}`.trim() 
+            : (sessionUser?.address || "Abeokuta, Ogun State");
+        const deliveryPhone = formData.phone || sessionUser?.phone || "";
 
         // Place order directly in MySQL backend database
         let backendAssignedOrderId = null;
@@ -192,16 +196,11 @@ export default function CustomerCheckout() {
                 }
             }
 
-            // If create-order did not return orderId in payload, query latest order for this customer
-            if (!backendAssignedOrderId) {
-                const latestRes = await orderService.fetchAllOrders();
-                if (latestRes.success && Array.isArray(latestRes.data) && latestRes.data.length > 0) {
-                    const matchOrder = latestRes.data.find(o => String(o.customerId) === String(customerId));
-                    if (matchOrder && (matchOrder.orderId || matchOrder.code || matchOrder.id)) {
-                        backendAssignedOrderId = matchOrder.orderId || matchOrder.code || matchOrder.id;
-                    } else if (latestRes.data[0]?.orderId) {
-                        backendAssignedOrderId = latestRes.data[0].orderId;
-                    }
+            // If create-order did not return orderId in payload, query latest order strictly for this customer
+            if (!backendAssignedOrderId && customerId) {
+                const myOrders = await orderService.fetchCustomerOrders(customerId);
+                if (myOrders.success && Array.isArray(myOrders.data) && myOrders.data.length > 0) {
+                    backendAssignedOrderId = myOrders.data[0].orderId || myOrders.data[0].id;
                 }
             }
         } catch (_) {

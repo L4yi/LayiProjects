@@ -62,7 +62,17 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
     ];
 
     const navLinks = isCustomer ? customerNavLinks : adminNavLinks;
-    const logoutDestination = isCustomer ? "/customer/signin" : "/signin";
+    const isAuth = Boolean(user && user.isAuthenticated === true && user.role !== "GUEST" && (user.id || user.customerId || user.staffId));
+    const logoutDestination = isCustomer 
+        ? (isAuth ? "/customer/signin" : "/customer/signin") 
+        : "/signin";
+
+    const displayName = isAuth 
+        ? (user?.name || (isCustomer ? "Customer" : "Staff Member"))
+        : (isCustomer ? "Guest Customer" : "Guest Staff");
+    const displayEmail = isAuth
+        ? (user?.email || (isCustomer ? "customer@tradeflow.com" : "staff@tradeflow.com"))
+        : "Sign in to manage your account";
 
     return (
         <Menu open={isOpen} onOpenChange={(open) => { if (!open) onClose?.(); }}>
@@ -70,15 +80,28 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
                 <div className="profile-card-header">
                     <div className="profile-initial-badge">
                         {user?.profileImage || user?.avatar ? (
-                            <img src={user.profileImage || user.avatar} alt={user.name} className="dropdown-avatar-img" />
-                        ) : (
-                            user?.initials || (isCustomer ? "CU" : "SU")
-                        )}
+                            <img 
+                                src={user.profileImage || user.avatar} 
+                                alt={displayName} 
+                                className="dropdown-avatar-img" 
+                                onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                    const fallback = e.currentTarget.parentElement?.querySelector(".dropdown-avatar-fallback");
+                                    if (fallback) fallback.style.display = "flex";
+                                }}
+                            />
+                        ) : null}
+                        <span 
+                            className="dropdown-avatar-fallback"
+                            style={{ display: (user?.profileImage || user?.avatar) ? "none" : "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
+                        >
+                            {user?.initials || (isCustomer ? (isAuth ? "CU" : "GU") : "SU")}
+                        </span>
                     </div>
                     <div className="profile-user-info">
-                        <div className="profile-user-name">{user?.name || (isCustomer ? "Customer" : "Staff Member")}</div>
-                        <div className="profile-user-email">{user?.email || (isCustomer ? "customer@tradeflow.com" : "staff@tradeflow.com")}</div>
-                        {user?.phone && <div className="profile-user-phone">{user.phone}</div>}
+                        <div className="profile-user-name">{displayName}</div>
+                        <div className="profile-user-email">{displayEmail}</div>
+                        {isAuth && user?.phone && <div className="profile-user-phone">{user.phone}</div>}
                     </div>
                 </div>
 
@@ -120,12 +143,14 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
                             to={logoutDestination}
                             className="profile-logout-pill-btn"
                             onClick={() => {
-                                authService.logout();
+                                if (isAuth) {
+                                    authService.logout();
+                                }
                                 onClose?.();
                             }}
                         >
-                            <i className="bi bi-box-arrow-right"></i>
-                            <span>Log-Out</span>
+                            <i className={`bi ${isAuth ? "bi-box-arrow-right" : "bi-box-arrow-in-right"}`}></i>
+                            <span>{isAuth ? "Log-Out" : "Sign In / Register"}</span>
                         </Link>
                     </MenuItem>
                 </div>
