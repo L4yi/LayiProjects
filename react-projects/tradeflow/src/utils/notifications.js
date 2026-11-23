@@ -13,8 +13,8 @@ export const INITIAL_NOTIFICATIONS = [
         message: "Order #ORD20261111143445 (Samsung Galaxy A15) has been dispatched with TradeFlow Express Logistics. Estimated arrival is Friday, Nov 20.",
         time: "15 minutes ago",
         timestamp: Date.now() - 15 * 60 * 1000,
-        isRead: false,
-        read: false,
+        isRead: true,
+        read: true,
         actionLink: "/customer/track-order?orderId=ORD20261111143445",
         actionText: "Track Package"
     },
@@ -28,8 +28,8 @@ export const INITIAL_NOTIFICATIONS = [
         message: "Your customer identity verification was confirmed. Enjoy zero-limit purchases, live order updates, and priority customer care.",
         time: "2 hours ago",
         timestamp: Date.now() - 2 * 60 * 60 * 1000,
-        isRead: false,
-        read: false,
+        isRead: true,
+        read: true,
         actionLink: "/customer/settings",
         actionText: "Review Profile"
     },
@@ -68,15 +68,25 @@ export const INITIAL_NOTIFICATIONS = [
 export function getNotifications() {
     try {
         if (typeof localStorage !== "undefined") {
+            const migrated = localStorage.getItem("tradeflow_notif_migrated_v2");
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    return parsed.map(item => ({
-                        ...item,
-                        isRead: item.isRead ?? item.read ?? false,
-                        read: item.isRead ?? item.read ?? false
-                    }));
+                    const normalized = parsed.map(item => {
+                        const isLegacySeed = !migrated && (item.id === "NOTIF01" || item.id === "NOTIF02");
+                        const readVal = isLegacySeed ? true : (item.isRead ?? item.read ?? false);
+                        return {
+                            ...item,
+                            isRead: readVal,
+                            read: readVal
+                        };
+                    });
+                    if (!migrated) {
+                        localStorage.setItem("tradeflow_notif_migrated_v2", "true");
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+                    }
+                    return normalized;
                 }
             }
         }
@@ -86,6 +96,7 @@ export function getNotifications() {
     // Initialize defaults on first read
     try {
         if (typeof localStorage !== "undefined") {
+            localStorage.setItem("tradeflow_notif_migrated_v2", "true");
             localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_NOTIFICATIONS));
         }
     } catch (e) { /* ignore storage error */ }

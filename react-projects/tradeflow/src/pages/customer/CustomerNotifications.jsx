@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
     getNotifications, 
+    setNotifications as saveNotifications,
     markAllNotificationsAsRead, 
     toggleNotificationRead, 
     deleteNotification,
@@ -33,9 +34,15 @@ export default function CustomerNotifications() {
                         title: n.title || n.subject || "Notification",
                         message: n.message || n.text || "",
                         date: n.createdAt || n.date || "Just now",
-                        type: n.type || "orders",
-                        isRead: !!(n.isRead === 1 || n.isRead === true || n.read === 1)
+                        time: n.createdAt || n.date || "Just now",
+                        type: n.type || "order",
+                        icon: n.icon || "bi bi-bell",
+                        color: n.color || "#10b981",
+                        bgColor: n.bgColor || "#ecfdf5",
+                        isRead: !!(n.isRead === 1 || n.isRead === true || n.read === 1),
+                        read: !!(n.isRead === 1 || n.isRead === true || n.read === 1)
                     }));
+                    saveNotifications(mapped);
                     setNotifications(mapped);
                 }
             }).catch(() => {});

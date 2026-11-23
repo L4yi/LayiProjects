@@ -12552,22 +12552,62 @@ input.table-filter-search-input,
 /* --------------------------------------------------------------------------
    2. Wishlist Dedicated Styles
    -------------------------------------------------------------------------- */
+.wishlist-header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.btn-move-all-wishlist {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: 9px !important;
+    background-color: #143526 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 6px rgba(20, 53, 38, 0.14) !important;
+}
+
+.btn-move-all-wishlist:hover:not(:disabled) {
+    background-color: #0d2319 !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-move-all-wishlist:disabled {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+}
+
 .btn-clear-wishlist {
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 6px !important;
-    padding: 7px 14px !important;
-    border-radius: 8px !important;
-    border: 1px solid #fee2e2 !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    border-radius: 9px !important;
+    border: 1px solid #fecaca !important;
     background-color: #fef2f2 !important;
     color: #dc2626 !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
+    white-space: nowrap !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
 
-.btn-clear-wishlist:hover {
+.btn-clear-wishlist:hover:not(:disabled) {
     background-color: #fee2e2 !important;
     color: #b91c1c !important;
 }
@@ -12579,6 +12619,7 @@ input.table-filter-search-input,
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+    min-width: 0 !important;
     transition: all 0.2s ease !important;
 }
 
@@ -12590,8 +12631,9 @@ input.table-filter-search-input,
 .wishlist-card-media {
     position: relative !important;
     width: 100% !important;
-    height: 170px !important;
+    height: 185px !important;
     background-color: #f8fafc !important;
+    overflow: hidden !important;
 }
 
 .wishlist-img-link {
@@ -12600,12 +12642,14 @@ input.table-filter-search-input,
     justify-content: center !important;
     width: 100% !important;
     height: 100% !important;
+    overflow: hidden !important;
 }
 
 .wishlist-card-img {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+    display: block !important;
 }
 
 .wishlist-img-fallback {
@@ -12616,6 +12660,7 @@ input.table-filter-search-input,
     justify-content: center !important;
     font-size: 40px !important;
     color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
 }
 
 .btn-wishlist-remove {
@@ -16811,4 +16856,177 @@ html.dark .btn-cancel-order {
 html.dark .btn-cancel-order:hover:not(:disabled) {
     background-color: rgba(239, 68, 68, 0.2) !important;
     border-color: #ef4444 !important;
+}
+
+/* ==========================================================================
+   PROFILE AVATAR ACTION PILLS & FULL-SIZE PREVIEW LIGHTBOX MODAL
+   ========================================================================== */
+.profile-avatar-action-pills {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+.btn-preview-avatar,
+.btn-change-avatar {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 5px 11px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-preview-avatar {
+    background-color: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #047857 !important;
+}
+
+.btn-preview-avatar:hover {
+    background-color: #d1fae5 !important;
+}
+
+.btn-change-avatar {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+.btn-change-avatar:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.avatar-lightbox-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background-color: rgba(15, 23, 42, 0.72) !important;
+    backdrop-filter: blur(6px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 2500 !important;
+    padding: 20px !important;
+}
+
+.avatar-lightbox-card {
+    background-color: #ffffff !important;
+    border-radius: 18px !important;
+    width: 100% !important;
+    max-width: 440px !important;
+    overflow: hidden !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.avatar-lightbox-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.avatar-lightbox-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.avatar-lightbox-close {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.avatar-lightbox-close:hover {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+}
+
+.avatar-lightbox-body {
+    padding: 24px !important;
+    background-color: #f8fafc !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.avatar-lightbox-img {
+    width: 100% !important;
+    max-width: 340px !important;
+    max-height: 340px !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14) !important;
+    border: 3px solid #ffffff !important;
+}
+
+.avatar-lightbox-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    padding: 14px 20px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    background-color: #ffffff !important;
+}
+
+.btn-lightbox-change {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 36px !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    background-color: #143526 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.btn-lightbox-change:hover {
+    background-color: #0d2319 !important;
+}
+
+.btn-lightbox-close {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 36px !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    background-color: #f1f5f9 !important;
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+.btn-lightbox-close:hover {
+    background-color: #e2e8f0 !important;
 }

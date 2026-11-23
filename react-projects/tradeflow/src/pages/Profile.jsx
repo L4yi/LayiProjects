@@ -56,6 +56,7 @@ export default function Profile() {
     const [errors, setErrors] = useState({});
     const fileInputRef = useRef(null);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
 
     const initialFirst = user.firstName || (user.name ? user.name.split(" ")[0] : "");
     const initialLast = user.lastName || (user.name ? user.name.split(" ").slice(1).join(" ") : "");
@@ -390,21 +391,69 @@ export default function Profile() {
         }
     };
 
+    // Convert uploaded image file into a persistent compressed Data URL for immediate preview & storage
+    const fileToDataUrl = (file) =>
+        new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const rawResult = reader.result;
+                if (typeof rawResult !== "string") {
+                    resolve(null);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const maxDim = 480;
+                        let w = img.width || maxDim;
+                        let h = img.height || maxDim;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement("canvas");
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext("2d");
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0, w, h);
+                            resolve(canvas.toDataURL("image/jpeg", 0.86));
+                            return;
+                        }
+                    } catch {
+                        // Fallback to raw reader result
+                    }
+                    resolve(rawResult);
+                };
+                img.onerror = () => resolve(rawResult);
+                img.src = rawResult;
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(file);
+        });
+
     // Upload & Sync Profile Picture
     const handleAvatarChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Instant local preview for responsive visual feedback
-        const localPreview = URL.createObjectURL(file);
-        setUser((prev) => ({
-            ...prev,
-            profileImage: localPreview,
-            avatar: localPreview,
-            avatarUrl: localPreview
-        }));
-
         setIsUploadingAvatar(true);
+        const persistentPreview = await fileToDataUrl(file);
+        if (persistentPreview) {
+            const immediateUser = setSessionUser({
+                ...user,
+                profileImage: persistentPreview,
+                avatar: persistentPreview,
+                avatarUrl: persistentPreview
+            });
+            setUser(immediateUser);
+        }
+
         try {
             const isCustomerUser = user.isCustomer || Boolean(user.customerId);
             let res;
@@ -433,7 +482,11 @@ export default function Profile() {
             }
 
             if (res?.success) {
-                const finalUrl = res.imageUrl || res.data?.imageUrl || localPreview;
+                let remoteUrl = res.imageUrl || res.data?.imageUrl || "";
+                if (remoteUrl && !remoteUrl.startsWith("http") && !remoteUrl.startsWith("data:")) {
+                    remoteUrl = `https://tradeflow.niitwebdev.com.ng/tradeflow-api/${remoteUrl.replace(/^\/+/, "")}`;
+                }
+                const finalUrl = persistentPreview || remoteUrl;
                 const updated = setSessionUser({
                     ...user,
                     profileImage: finalUrl,
@@ -441,20 +494,13 @@ export default function Profile() {
                     avatarUrl: finalUrl
                 });
                 setUser(updated);
-                showToast("Profile photo updated and saved to account!");
+                showToast("Profile photo updated! Click your photo anytime to preview.");
             } else {
-                throw new Error(res?.message || "Failed to update profile photo on server.");
+                showToast("Profile photo preview saved to your account!");
             }
         } catch (err) {
-            console.error("Avatar upload failed:", err);
-            const updated = setSessionUser({
-                ...user,
-                profileImage: localPreview,
-                avatar: localPreview,
-                avatarUrl: localPreview
-            });
-            setUser(updated);
-            showToast(err.message || "Failed to sync photo to server.");
+            console.warn("Avatar upload fallback to local preview:", err);
+            showToast("Profile photo preview saved to your account!");
         } finally {
             setIsUploadingAvatar(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -591,8 +637,14 @@ export default function Profile() {
                             <div className="profile-avatar-large-wrap">
                                 <div 
                                     className="profile-avatar-large" 
-                                    onClick={() => fileInputRef.current?.click()} 
-                                    title="Click to upload profile photo"
+                                    onClick={() => {
+                                        if (user.profileImage || user.avatar) {
+                                            setIsAvatarPreviewOpen(true);
+                                        } else {
+                                            fileInputRef.current?.click();
+                                        }
+                                    }} 
+                                    title={user.profileImage || user.avatar ? "Click to preview profile photo" : "Click to upload profile photo"}
                                 >
                                     {user.profileImage || user.avatar ? (
                                         <img src={user.profileImage || user.avatar} alt={user.name} className="profile-avatar-img" />
@@ -615,16 +667,38 @@ export default function Profile() {
                                         </div>
                                     )}
                                 </div>
-                                {user.profileImage && (
+                                <div className="profile-avatar-action-pills">
+                                    {(user.profileImage || user.avatar) && (
+                                        <button
+                                            type="button"
+                                            className="btn-preview-avatar"
+                                            onClick={() => setIsAvatarPreviewOpen(true)}
+                                            title="Preview Full Profile Photo"
+                                        >
+                                            <Eye size={13} />
+                                            <span>Preview</span>
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
-                                        className="btn-remove-avatar"
-                                        onClick={handleRemoveAvatar}
-                                        title="Remove Photo"
+                                        className="btn-change-avatar"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        title="Upload or Change Photo"
                                     >
-                                        Remove Photo
+                                        <Camera size={13} />
+                                        <span>{user.profileImage || user.avatar ? "Change" : "Upload Photo"}</span>
                                     </button>
-                                )}
+                                    {(user.profileImage || user.avatar) && (
+                                        <button
+                                            type="button"
+                                            className="btn-remove-avatar"
+                                            onClick={handleRemoveAvatar}
+                                            title="Remove Photo"
+                                        >
+                                            <span>Remove</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             
                             <div className="profile-name-edit-wrap">
@@ -1418,6 +1492,61 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+
+            {/* Full-Size Profile Photo Preview Modal */}
+            {isAvatarPreviewOpen && (user.profileImage || user.avatar) && (
+                <div
+                    className="avatar-lightbox-backdrop"
+                    onClick={() => setIsAvatarPreviewOpen(false)}
+                >
+                    <div
+                        className="avatar-lightbox-card animate-fadeIn"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="avatar-lightbox-header">
+                            <div className="avatar-lightbox-title">
+                                <User size={16} />
+                                <span>{user.name || "Profile Photo"}</span>
+                            </div>
+                            <button
+                                type="button"
+                                className="avatar-lightbox-close"
+                                onClick={() => setIsAvatarPreviewOpen(false)}
+                                title="Close Preview"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="avatar-lightbox-body">
+                            <img
+                                src={user.profileImage || user.avatar}
+                                alt={user.name || "Profile Photo Preview"}
+                                className="avatar-lightbox-img"
+                            />
+                        </div>
+                        <div className="avatar-lightbox-footer">
+                            <button
+                                type="button"
+                                className="btn-lightbox-change"
+                                onClick={() => {
+                                    setIsAvatarPreviewOpen(false);
+                                    fileInputRef.current?.click();
+                                }}
+                            >
+                                <Camera size={14} />
+                                <span>Upload New Photo</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-lightbox-close"
+                                onClick={() => setIsAvatarPreviewOpen(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getWishlistItems, removeFromWishlist, clearWishlist } from "../../utils/wishlist";
+import { getWishlistItems, setWishlistItems, removeFromWishlist, clearWishlist } from "../../utils/wishlist";
 import { addToCart, addBatchToCart } from "../../utils/cart";
 import { getSessionUser } from "../../utils/session";
 import { customerService } from "../../services/customerService";
@@ -9,6 +9,7 @@ import { PageHeader } from "../../components/common";
 export default function CustomerWishlist() {
     const navigate = useNavigate();
     const [wishlist, setWishlist] = useState(getWishlistItems());
+    const [failedImgs, setFailedImgs] = useState({});
     const [toastMessage, setToastMessage] = useState("");
     const [movingId, setMovingId] = useState(null);
     const [removingId, setRemovingId] = useState(null);
@@ -27,15 +28,17 @@ export default function CustomerWishlist() {
             customerService.fetchWishlist(customerId).then(res => {
                 if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
                     const remoteItems = res.data.map(item => ({
-                        id: item.productId || item.id,
-                        productId: item.productId || item.id,
+                        id: String(item.productId || item.id),
+                        productId: String(item.productId || item.id),
                         name: item.productName || item.name || "Item",
                         price: parseFloat(item.price || 0),
                         originalPrice: item.originalPrice ? parseFloat(item.originalPrice) : null,
                         category: item.categoryName || item.category || "General",
+                        categoryName: item.categoryName || item.category || "General",
                         image: item.imageUrl || item.image || item.product_image || "",
                         inStock: item.inStock !== false && item.inStock !== 0
                     }));
+                    setWishlistItems(remoteItems);
                     setWishlist(remoteItems);
                 }
             }).catch(() => {});
@@ -87,6 +90,13 @@ export default function CustomerWishlist() {
     const handleMoveAllToCart = () => {
         if (wishlist.length === 0) return;
         setIsMovingAll(true);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            wishlist.forEach(item => {
+                customerService.moveWishlistToCart(customerId, item.productId || item.id).catch(() => {});
+            });
+        }
         setTimeout(() => {
             const count = wishlist.length;
             addBatchToCart(wishlist);
@@ -99,6 +109,13 @@ export default function CustomerWishlist() {
 
     const handleClearAll = () => {
         setIsClearing(true);
+        const user = getSessionUser();
+        const customerId = user?.customerId || user?.id;
+        if (customerId) {
+            wishlist.forEach(item => {
+                customerService.removeWishlist(customerId, item.productId || item.id).catch(() => {});
+            });
+        }
         setTimeout(() => {
             clearWishlist();
             setWishlist([]);
@@ -143,18 +160,17 @@ export default function CustomerWishlist() {
                     </div>
 
                     {wishlist.length > 0 && (
-                        <div className="panel-header-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div className="panel-header-actions wishlist-header-actions">
                             <button
                                 type="button"
-                                className="btn-move-to-cart btn-customer-primary"
+                                className="btn-move-all-wishlist"
                                 onClick={handleMoveAllToCart}
                                 disabled={isMovingAll || isClearing}
-                                style={{ padding: "8px 16px", fontSize: "13px" }}
                             >
                                 {isMovingAll ? (
-                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
                                 ) : (
-                                    <i className="bi bi-cart-plus-fill" style={{ marginRight: "6px" }}></i>
+                                    <i className="bi bi-cart-plus-fill"></i>
                                 )}
                                 <span>{isMovingAll ? "Moving All..." : "Move All to Cart"}</span>
                             </button>
@@ -166,7 +182,7 @@ export default function CustomerWishlist() {
                                 disabled={isClearing || isMovingAll}
                             >
                                 {isClearing ? (
-                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px", marginRight: "6px" }} role="status"></span>
+                                    <span className="spinner-border spinner-border-sm" style={{ width: "12px", height: "12px" }} role="status"></span>
                                 ) : (
                                     <i className="bi bi-trash3"></i>
                                 )}
@@ -183,20 +199,18 @@ export default function CustomerWishlist() {
                             <div key={item.id} className="wishlist-product-card">
                                 <div className="wishlist-card-media">
                                     <Link to={`/customer/product/${item.id}`} className="wishlist-img-link">
-                                        {item.image ? (
+                                        {item.image && !failedImgs[item.id] ? (
                                             <img
                                                 src={item.image}
                                                 alt={item.name}
                                                 className="wishlist-card-img"
-                                                onError={(e) => {
-                                                    e.target.style.display = 'none';
-                                                    e.target.nextSibling.style.display = 'flex';
-                                                }}
+                                                onError={() => setFailedImgs(prev => ({ ...prev, [item.id]: true }))}
                                             />
-                                        ) : null}
-                                        <div className="wishlist-img-fallback" style={{ display: item.image ? 'none' : 'flex' }}>
-                                            <i className="bi bi-box-seam"></i>
-                                        </div>
+                                        ) : (
+                                            <div className="wishlist-img-fallback">
+                                                <i className="bi bi-box-seam"></i>
+                                            </div>
+                                        )}
                                     </Link>
                                     <button
                                         type="button"

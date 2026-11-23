@@ -4,9 +4,11 @@ import ProfileDropdown from "./ProfileDropdown";
 import { BrandLogo } from "./common";
 import { getSessionUser } from "../utils/session";
 import { getCartCount } from "../utils/cart";
-import { getWishlistCount } from "../utils/wishlist";
+import { getWishlistCount, setWishlistItems } from "../utils/wishlist";
+import customerService from "../services/customerService";
 import { 
     getNotifications, 
+    setNotifications as saveNotifications,
     getUnreadCount, 
     markAllNotificationsAsRead, 
     markNotificationAsRead, 
@@ -114,6 +116,46 @@ export default function CustomerLayout() {
         window.addEventListener("tradeflow_wishlist_update", handleWishlistUpdate);
         window.addEventListener(NOTIFICATION_UPDATE_EVENT, handleNotificationsUpdate);
         window.addEventListener("tradeflow_theme_update", handleThemeUpdate);
+
+        // Hydrate wishlist & notifications from backend if logged in so counts strictly reflect real items
+        const activeUser = getSessionUser();
+        const customerId = activeUser?.customerId || activeUser?.id;
+        if (customerId) {
+            customerService.fetchWishlist(customerId).then(res => {
+                if (res?.success && Array.isArray(res.data)) {
+                    const remoteItems = res.data.map(item => ({
+                        id: String(item.productId || item.id),
+                        productId: String(item.productId || item.id),
+                        name: item.productName || item.name || "Item",
+                        price: parseFloat(item.price || 0),
+                        originalPrice: item.originalPrice ? parseFloat(item.originalPrice) : null,
+                        categoryName: item.categoryName || item.category || "Catalog",
+                        image: item.imageUrl || item.image || item.product_image || "",
+                        inStock: item.inStock !== false && item.inStock !== 0
+                    }));
+                    setWishlistItems(remoteItems);
+                }
+            }).catch(() => {});
+
+            customerService.fetchNotifications(customerId).then(res => {
+                if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+                    const mapped = res.data.map(n => ({
+                        id: n.id || n.notificationId,
+                        title: n.title || n.subject || "Notification",
+                        message: n.message || n.text || "",
+                        date: n.createdAt || n.date || "Just now",
+                        time: n.createdAt || n.date || "Just now",
+                        type: n.type || "order",
+                        icon: n.icon || "bi bi-bell",
+                        color: n.color || "#10b981",
+                        bgColor: n.bgColor || "#ecfdf5",
+                        isRead: !!(n.isRead === 1 || n.isRead === true || n.read === 1),
+                        read: !!(n.isRead === 1 || n.isRead === true || n.read === 1)
+                    }));
+                    saveNotifications(mapped);
+                }
+            }).catch(() => {});
+        }
 
         return () => {
             document.removeEventListener("click", handleClickOutside);
