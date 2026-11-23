@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ProfileDropdown from "./ProfileDropdown";
+import AdminNotificationDropdown from "./AdminNotificationDropdown";
 import { getSessionUser } from "../utils/session";
 import productService from "../services/productService";
 import customerService from "../services/customerService";
+import adminNotificationService from "../services/adminNotificationService";
+import { getAdminUnreadCount, ADMIN_NOTIF_EVENT } from "../utils/adminNotifications";
 import { getStoredTheme, toggleTheme } from "../utils/theme";
 
 export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
@@ -15,8 +18,11 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
     const [isSearching, setIsSearching] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
+    const [notifUnreadCount, setNotifUnreadCount] = useState(() => getAdminUnreadCount());
     const [user, setUser] = useState(getSessionUser());
     const dropdownRef = useRef(null);
+    const notifRef = useRef(null);
     const searchRef = useRef(null);
 
     // Live search query for products with 250ms debounce
@@ -94,9 +100,15 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsProfileOpen(false);
             }
+            if (notifRef.current && !notifRef.current.contains(event.target)) {
+                setIsNotifOpen(false);
+            }
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setShowSuggestions(false);
             }
+        };
+        const handleNotifUpdate = (e) => {
+            setNotifUnreadCount(getAdminUnreadCount(e?.detail));
         };
         const handleSessionUpdate = () => {
             setUser(getSessionUser());
@@ -104,15 +116,29 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
         const handleThemeUpdate = (e) => {
             setTheme(e?.detail?.theme || getStoredTheme());
         };
+        const handleWindowFocus = async () => {
+            const res = await adminNotificationService.getUnreadCount();
+            if (res?.success && typeof res.unreadCount === "number") {
+                setNotifUnreadCount(res.unreadCount);
+            }
+        };
+
+        // Poll unread count every 45s
+        const pollInterval = setInterval(handleWindowFocus, 45000);
 
         document.addEventListener("click", handleClickOutside);
         window.addEventListener("tradeflow_session_update", handleSessionUpdate);
         window.addEventListener("tradeflow_theme_update", handleThemeUpdate);
+        window.addEventListener(ADMIN_NOTIF_EVENT, handleNotifUpdate);
+        window.addEventListener("focus", handleWindowFocus);
 
         return () => {
+            clearInterval(pollInterval);
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("tradeflow_session_update", handleSessionUpdate);
             window.removeEventListener("tradeflow_theme_update", handleThemeUpdate);
+            window.removeEventListener(ADMIN_NOTIF_EVENT, handleNotifUpdate);
+            window.removeEventListener("focus", handleWindowFocus);
         };
     }, []);
 
@@ -271,18 +297,34 @@ export default function TopHeader({ title = "Dashboard", onToggleSidebar }) {
                 )}
             </div>
 
-            <div className="header-actions" ref={dropdownRef}>
-                <button
-                    type="button"
-                    className="header-icon-btn"
-                    title="Notifications"
-                    onClick={() => navigate("/dashboard")}
-                >
-                    <i className="bi bi-bell"></i>
-                    <span className="badge-dot"></span>
-                </button>
+            <div className="header-actions">
+                <div className="admin-notif-trigger-wrap" ref={notifRef}>
+                    <button
+                        type="button"
+                        className={`header-icon-btn ${isNotifOpen ? "active" : ""}`}
+                        title="Admin Notifications"
+                        aria-label="Admin Notifications"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsNotifOpen(prev => !prev);
+                            setIsProfileOpen(false);
+                        }}
+                    >
+                        <i className="bi bi-bell"></i>
+                        {notifUnreadCount > 0 && (
+                            <span className="admin-bell-badge">
+                                {notifUnreadCount > 9 ? "9+" : notifUnreadCount}
+                            </span>
+                        )}
+                    </button>
 
-                <div className="user-profile-relative">
+                    <AdminNotificationDropdown
+                        isOpen={isNotifOpen}
+                        onClose={() => setIsNotifOpen(false)}
+                    />
+                </div>
+
+                <div className="user-profile-relative" ref={dropdownRef}>
                     <button
                         type="button"
                         className="user-avatar-btn-trigger"
