@@ -83,7 +83,7 @@ export default function ResetPassword() {
                                         <h2>Reset Password</h2>
                                         <p>
                                             Remembered your password?{" "}
-                                            <Link to={isCustomer ? "/customer/signin" : "/signin"} className="link">
+                                            <Link to="/signin" className="link">
                                                 Sign In &rarr;
                                             </Link>
                                         </p>
@@ -232,7 +232,7 @@ export default function ResetPassword() {
                 title="PASSWORD RESET SUCCESSFULLY!"
                 message="Your password has been securely updated. You can now log in with your new credentials."
                 buttonText="Okay, Continue"
-                onConfirm={() => navigate(isCustomer ? "/customer/signin" : "/signin")}
+                onConfirm={() => navigate("/signin")}
             />
         </>
     );

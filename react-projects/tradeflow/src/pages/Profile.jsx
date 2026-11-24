@@ -610,7 +610,7 @@ export default function Profile() {
 
     const isCustomerPortal = user.role === "Customer" || window.location.pathname.startsWith("/customer");
     const dashboardLink = isCustomerPortal ? "/customer/dashboard" : "/dashboard";
-    const logoutLink = isCustomerPortal ? "/customer/signin" : "/signin";
+    const logoutLink = "/signin";
 
     return (
         <section className="profile-page-section">

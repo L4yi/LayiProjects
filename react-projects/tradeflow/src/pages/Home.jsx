@@ -24,9 +24,9 @@ export default function Home() {
                                 </button>
                             </Link>
 
-                            <Link to="/customer/signin">
-                                <button className="btn sign-up-btn" title="Customer Portal">
-                                    Customer Portal
+                            <Link to="/customer/signup">
+                                <button className="btn sign-up-btn" title="Create Account">
+                                    Create Account
                                 </button>
                             </Link>
                         </div>

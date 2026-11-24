@@ -11,7 +11,8 @@ import {
   canAccessStaffs, 
   canAccessCustomers, 
   canAccessTransactions, 
-  canAccessReports 
+  canAccessReports,
+  isCustomer 
 } from "../utils/permissions";
 import { 
   ErrorPage, 
@@ -79,7 +80,6 @@ const CustomerAddresses = lazy(() => import("./customer/CustomerAddresses"));
 const CustomerPaymentMethods = lazy(() => import("./customer/CustomerPaymentMethods"));
 const CustomerSupport = lazy(() => import("./customer/CustomerSupport"));
 const CustomerCheckout = lazy(() => import("./customer/CustomerCheckout"));
-const CustomerSignIn = lazy(() => import("./customer/CustomerSignIn"));
 const CustomerSignUp = lazy(() => import("./customer/CustomerSignUp"));
 
 // Route suspense wrapper for silky-smooth lazy loading
@@ -133,7 +133,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/customer/signin",
-    element: S(CustomerSignIn),
+    element: <Navigate to="/signin" replace />,
     errorElement: <ServerError500 />
   },
   {
@@ -165,7 +165,7 @@ export const router = createBrowserRouter([
       {
         path: "/customer/orders",
         element: (
-          <RoleRouteGuard authRedirect="/customer/signin">
+          <RoleRouteGuard authRedirect="/signin">
             {S(CustomerOrders)}
           </RoleRouteGuard>
         )
@@ -193,7 +193,7 @@ export const router = createBrowserRouter([
       {
         path: "/customer/notifications",
         element: (
-          <RoleRouteGuard authRedirect="/customer/signin">
+          <RoleRouteGuard authRedirect="/signin">
             {S(CustomerNotifications)}
           </RoleRouteGuard>
         )
@@ -201,7 +201,7 @@ export const router = createBrowserRouter([
       {
         path: "/customer/addresses",
         element: (
-          <RoleRouteGuard authRedirect="/customer/signin">
+          <RoleRouteGuard authRedirect="/signin">
             {S(CustomerAddresses)}
           </RoleRouteGuard>
         )
@@ -209,7 +209,7 @@ export const router = createBrowserRouter([
       {
         path: "/customer/payment-methods",
         element: (
-          <RoleRouteGuard authRedirect="/customer/signin">
+          <RoleRouteGuard authRedirect="/signin">
             {S(CustomerPaymentMethods)}
           </RoleRouteGuard>
         )
@@ -221,7 +221,7 @@ export const router = createBrowserRouter([
       {
         path: "/customer/settings",
         element: (
-          <RoleRouteGuard authRedirect="/customer/signin">
+          <RoleRouteGuard authRedirect="/signin">
             {S(Profile)}
           </RoleRouteGuard>
         )
@@ -234,7 +234,11 @@ export const router = createBrowserRouter([
   },
   {
     element: (
-      <RoleRouteGuard authRedirect="/signin">
+      <RoleRouteGuard
+        authRedirect="/signin"
+        permissionCheck={(u) => !isCustomer(u)}
+        fallbackTo="/customer/dashboard"
+      >
         <DashboardLayout />
       </RoleRouteGuard>
     ),

@@ -1,11 +1,11 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { getSessionUser } from "../../utils/session";
 
 /**
  * Protects a route based on authentication and an optional permission predicate function.
- * If authentication fails, redirects safely to /signin (or /customer/signin).
- * If permission fails, redirects safely to /403.
+ * If authentication fails, redirects safely to /signin.
+ * If permission fails, redirects safely to /403 (or fallbackTo).
  */
 export default function RoleRouteGuard({ 
     permissionCheck, 
@@ -14,12 +14,11 @@ export default function RoleRouteGuard({
     authRedirect, 
     fallbackTo = "/403" 
 }) {
-    const location = useLocation();
     const user = getSessionUser();
     const isAuth = Boolean(user && user.isAuthenticated === true && user.role !== "GUEST" && (user.id || user.customerId || user.staffId));
 
     if (requireAuth && !isAuth) {
-        const targetRedirect = authRedirect || (location.pathname.startsWith("/customer") ? "/customer/signin" : "/signin");
+        const targetRedirect = authRedirect || "/signin";
         return <Navigate to={targetRedirect} replace />;
     }
 

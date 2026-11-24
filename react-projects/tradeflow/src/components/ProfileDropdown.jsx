@@ -63,9 +63,7 @@ export default function ProfileDropdown({ isOpen, onClose, isCustomer = false })
 
     const navLinks = isCustomer ? customerNavLinks : adminNavLinks;
     const isAuth = Boolean(user && user.isAuthenticated === true && user.role !== "GUEST" && (user.id || user.customerId || user.staffId));
-    const logoutDestination = isCustomer 
-        ? (isAuth ? "/customer/signin" : "/customer/signin") 
-        : "/signin";
+    const logoutDestination = "/signin";
 
     const displayName = isAuth 
         ? (user?.name || (isCustomer ? "Customer" : "Staff Member"))

@@ -1,13 +1,23 @@
-import setupService from './setupService';
-import api from "../api/axios";
-import { extractErrorMessage } from "../utils/apiResponse";
-import { setSessionUser, clearSessionUser } from "../utils/session";
-import customerService from "./customerService";
+import setupService from './setupService.js';
+import api from "../api/axios.js";
+import { extractErrorMessage } from "../utils/apiResponse.js";
+import { setSessionUser, clearSessionUser } from "../utils/session.js";
+import customerService from "./customerService.js";
 
 
 export const authService = {
     async signIn(emailAddress, password) {
         const cleanEmail = (emailAddress || "").trim();
+        if (!cleanEmail) {
+            return { success: false, message: "Email address is required." };
+        }
+        if (!password) {
+            return { success: false, message: "Password is required." };
+        }
+
+        let adminErrorMessage = "";
+
+        // Step 1: Verify credentials against the Admin/Staff database first
         try {
             const formData = new FormData();
             formData.append("emailAddress", cleanEmail);
@@ -28,9 +38,43 @@ export const authService = {
                 const normalizedRoleId = rawRoleId || setupService.getRoleId(rawRoleName);
                 const photo = serverUser.profileImage || serverUser.profile_image || serverUser.imageUrl || serverUser.image || serverUser.avatar || "";
 
+                const hasCustomerId = Boolean(serverUser.customerId || serverUser.customer_id);
+                const hasStaffId = Boolean(serverUser.staffId || serverUser.staff_id);
+                const isCustomerAccount = (rawRoleId === "19" || String(rawRoleName).toUpperCase().includes("CUSTOMER")) || (hasCustomerId && !hasStaffId);
+
+                if (isCustomerAccount) {
+                    const customerId = serverUser.customerId || serverUser.customer_id || serverUser.id || "";
+                    const custSession = setSessionUser({
+                        customerId,
+                        id: customerId,
+                        name: fullName,
+                        firstName,
+                        lastName,
+                        email: serverUser.emailAddress || serverUser.email_address || cleanEmail,
+                        phone: serverUser.phoneNumber || serverUser.phone_number || "",
+                        address: serverUser.address || "",
+                        role: "Customer",
+                        roleId: "19",
+                        status: serverUser.statusName || serverUser.status_name || "ACTIVE",
+                        statusId: serverUser.statusId || serverUser.status_id || "1",
+                        profileImage: photo,
+                        avatar: photo,
+                        avatarUrl: photo,
+                        imageUrl: photo,
+                        lastLogin: serverUser.lastLoginDate || serverUser.last_login_date || "Just now"
+                    });
+                    return {
+                        success: true,
+                        portal: "customer",
+                        redirectTo: "/customer/dashboard",
+                        message: resData.message || "CUSTOMER SIGN IN SUCCESSFUL",
+                        user: custSession
+                    };
+                }
+
                 const userData = {
-                    staffId: serverUser.staffId || serverUser.staff_id,
-                    id: serverUser.staffId || serverUser.staff_id,
+                    staffId: serverUser.staffId || serverUser.staff_id || serverUser.id,
+                    id: serverUser.staffId || serverUser.staff_id || serverUser.id,
                     name: fullName,
                     firstName,
                     lastName,
@@ -60,21 +104,38 @@ export const authService = {
 
                 return {
                     success: true,
+                    portal: "admin",
+                    redirectTo: "/dashboard",
                     message: resData.message || "LOGIN SUCCESSFUL",
                     user: userData
                 };
             }
 
-            return {
-                success: false,
-                message: resData?.message || "Invalid login credentials. Please try again."
-            };
+            adminErrorMessage = resData?.message || "";
         } catch (error) {
+            adminErrorMessage = extractErrorMessage(error, "");
+        }
+
+        // Step 2: Did not tally with admin DB — verify against Customer portal authentication
+        const custRes = await customerService.customerAuthSignIn({
+            emailAddress: cleanEmail,
+            password
+        });
+
+        if (custRes.success) {
             return {
-                success: false,
-                message: extractErrorMessage(error, "Failed to connect to authentication server. Please check your network.")
+                success: true,
+                portal: "customer",
+                redirectTo: "/customer/dashboard",
+                message: custRes.message || "CUSTOMER SIGN IN SUCCESSFUL",
+                user: custRes.user
             };
         }
+
+        return {
+            success: false,
+            message: custRes.message || adminErrorMessage || "Invalid email or password. Please check your credentials or create an account."
+        };
     },
 
     async forgotPassword(emailAddress) {

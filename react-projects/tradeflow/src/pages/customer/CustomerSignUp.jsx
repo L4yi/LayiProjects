@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { setSessionUser } from "../../utils/session";
 import customerService from "../../services/customerService";
 import { BrandLogo } from "../../components/common";
 
 export default function CustomerSignUp() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(location.state?.email || "");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -105,13 +106,10 @@ export default function CustomerSignUp() {
                                 <BrandLogo to="/" />
 
                                 <div className="form-header">
-                                    <div className="portal-indicator-pill">
-                                        <i className="bi bi-person-plus-fill"></i> Customer Portal
-                                    </div>
-                                    <h2>Customer Registration</h2>
+                                    <h2>Create an Account</h2>
                                     <p>
                                         Already registered?{" "}
-                                        <Link to="/customer/signin" className="link">
+                                        <Link to="/signin" className="link">
                                             Sign In here
                                         </Link>
                                     </p>
@@ -269,13 +267,6 @@ export default function CustomerSignUp() {
                                         )}
                                     </button>
                                 </form>
-
-                                <div className="portal-switch-footer">
-                                    <span>Staff or Institute Administrator?</span>
-                                    <Link to="/signin" className="admin-return-link">
-                                        <i className="bi bi-shield-lock"></i> Go to Admin Portal
-                                    </Link>
-                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,201 +1,172 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import authService from "../services/authService";
-import { InputField, StatusModal, Button, BrandLogo } from "../components/common";
-import AuthShowcase from "../components/AuthShowcase";
+import { BrandLogo } from "../components/common";
 
 export default function SignIn() {
     const navigate = useNavigate();
-    const [email, setEmail] = useState("");
+    const location = useLocation();
+    const [email, setEmail] = useState(location.state?.email || "");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState({});
-    const [apiError, setApiError] = useState("");
-    const [isCustomerAccount, setIsCustomerAccount] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [serverError, setServerError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const validateForm = () => {
-        const errors = {};
-        if (!email.trim()) {
-            errors.email = "Email address is required.";
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            errors.email = "Please enter a valid email address.";
+        const newErrors = {};
+        const trimmedEmail = email.trim();
+        if (!trimmedEmail) {
+            newErrors.email = "Email address is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+            newErrors.email = "Please enter a valid email address.";
         }
 
         if (!password) {
-            errors.password = "Password is required.";
-        } else if (password.length < 4) {
-            errors.password = "Password must be at least 4 characters.";
+            newErrors.password = "Password is required.";
         }
 
-        setFieldErrors(errors);
-        return Object.keys(errors).length === 0;
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSignIn = async (e) => {
         e.preventDefault();
-        setApiError("");
-        setIsCustomerAccount(false);
+        setServerError("");
+        if (!validateForm() || isSubmitting) return;
 
-        if (!validateForm()) {
-            return;
-        }
+        setIsSubmitting(true);
+        try {
+            const res = await authService.signIn(email.trim(), password);
 
-        if (loading) return;
-        setLoading(true);
-
-        const result = await authService.signIn(email.trim(), password);
-        setLoading(false);
-
-        if (result.success) {
-            setShowSuccessModal(true);
-        } else {
-            if (result.isCustomerAccount) {
-                setIsCustomerAccount(true);
+            if (res.success) {
+                const destination = res.redirectTo || (res.portal === "admin" ? "/dashboard" : "/customer/dashboard");
+                navigate(destination, { replace: true });
+            } else {
+                setServerError(res.message || "Invalid email or password. Please try again.");
             }
-            setApiError(result.message || "Invalid credentials. Please check your email and password.");
+        } catch (err) {
+            setServerError(err.message || "Sign in failed. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <>
-            <section className="auth-section">
-                <div className="auth-background">
-                    <div className="overlay-bg">
-                        <div className="form-container">
-                            <div className="form-content">
-                                <div className="inner-form">
-                                    <BrandLogo to="/" />
+        <section className="auth-section">
+            <div className="auth-background">
+                <div className="overlay-bg">
+                    <div className="form-container customer-auth-container">
+                        <div className="form-content">
+                            <div className="inner-form">
+                                <BrandLogo to="/" />
 
-                                    <div className="form-header">
-                                        <h2>Staff Sign In</h2>
-                                        <p style={{ marginTop: "6px", fontSize: "0.88rem", color: "#64748b" }}>
-                                            Are you a shopper?{" "}
-                                            <Link to="/customer/signin" className="link" style={{ fontWeight: 600, color: "#10b981" }}>
-                                                Customer Portal &rarr;
-                                            </Link>
-                                        </p>
+                                <div className="form-header">
+                                    <h2>Sign In to TradeFlow</h2>
+                                    <p>
+                                        New user?{" "}
+                                        <Link to="/customer/signup" state={{ email: email.trim() }} className="link">
+                                            Create an account
+                                        </Link>
+                                    </p>
+                                </div>
+
+                                {serverError && (
+                                    <div className="auth-error-alert" role="alert">
+                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                        <span>{serverError}</span>
                                     </div>
+                                )}
 
-                                    {apiError && (
-                                        <div
-                                            className="auth-alert-error"
-                                            style={{
-                                                marginBottom: "1.2rem",
-                                                color: isCustomerAccount ? "#065f46" : "#991b1b",
-                                                background: isCustomerAccount ? "#ecfdf5" : "#fee2e2",
-                                                border: `1px solid ${isCustomerAccount ? "#a7f3d0" : "#f87171"}`,
-                                                borderRadius: "8px",
-                                                padding: "10px 14px",
-                                                fontSize: "0.88rem",
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "8px"
-                                            }}
-                                            role="alert"
-                                        >
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                <i className={`bi bi-${isCustomerAccount ? "info-circle-fill" : "exclamation-triangle-fill"}`}></i>
-                                                <span>{apiError}</span>
-                                            </div>
-                                            {isCustomerAccount && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate("/customer/signin")}
-                                                    style={{
-                                                        alignSelf: "flex-start",
-                                                        padding: "6px 12px",
-                                                        background: "#10b981",
-                                                        color: "#ffffff",
-                                                        border: "none",
-                                                        borderRadius: "6px",
-                                                        fontWeight: 600,
-                                                        fontSize: "0.82rem",
-                                                        cursor: "pointer"
-                                                    }}
-                                                >
-                                                    Switch to Customer Sign In
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <form onSubmit={handleSignIn} className="input-container" noValidate>
-                                        <InputField
-                                            label="E-mail"
-                                            id="emailAddress"
-                                            type="email"
-                                            placeholder="example@gmail.com"
+                                <form onSubmit={handleSignIn} className="input-container" noValidate>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="signInEmail">E-mail Address</label>
+                                        <input
+                                            type="text"
+                                            inputMode="email"
+                                            className={`text-field ${errors.email ? "is-invalid" : ""}`}
+                                            id="signInEmail"
+                                            placeholder="name@example.com"
                                             value={email}
                                             onChange={(e) => {
                                                 setEmail(e.target.value);
-                                                if (fieldErrors.email) {
-                                                    setFieldErrors((prev) => ({ ...prev, email: "" }));
-                                                }
-                                                setApiError("");
-                                                setIsCustomerAccount(false);
+                                                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                                                if (serverError) setServerError("");
                                             }}
-                                            error={fieldErrors.email}
                                             autoComplete="email"
-                                            required
                                         />
+                                        {errors.email && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.email}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                        <InputField
-                                            label="Password"
-                                            id="password"
-                                            type="password"
-                                            placeholder="@#*%"
-                                            value={password}
-                                            onChange={(e) => {
-                                                setPassword(e.target.value);
-                                                if (fieldErrors.password) {
-                                                    setFieldErrors((prev) => ({ ...prev, password: "" }));
-                                                }
-                                                setApiError("");
-                                            }}
-                                            error={fieldErrors.password}
-                                            autoComplete="current-password"
-                                            required
-                                        />
-
-                                        <div className="form-options">
-                                            <label className="checkbox-label">
-                                                <input type="checkbox" id="rememberMe" />
-                                                <span>Remember me</span>
-                                            </label>
-                                            <Link to="/forgot-password" className="forgot-link">
-                                                Forgot Password?
-                                            </Link>
+                                    <div className="input-wrapper">
+                                        <label htmlFor="signInPassword">Password</label>
+                                        <div className="password-input-group">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                className={`text-field ${errors.password ? "is-invalid" : ""}`}
+                                                id="signInPassword"
+                                                placeholder="@#*%"
+                                                value={password}
+                                                onChange={(e) => {
+                                                    setPassword(e.target.value);
+                                                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                                                    if (serverError) setServerError("");
+                                                }}
+                                                autoComplete="current-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="password-toggle-btn"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                title="Toggle Password Visibility"
+                                            >
+                                                <i className={`bi bi-eye${showPassword ? "-slash" : ""}`}></i>
+                                            </button>
                                         </div>
+                                        {errors.password && (
+                                            <span className="inline-error">
+                                                <i className="bi bi-exclamation-circle"></i> {errors.password}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                        <Button
-                                            type="submit"
-                                            variant="primary"
-                                            size="md"
-                                            isLoading={loading}
-                                            loadingText="Signing in..."
-                                            style={{ width: "100%", height: "48px", marginTop: "8px" }}
-                                        >
-                                            Sign in
-                                        </Button>
-                                    </form>
-                                </div>
+                                    <div className="form-options">
+                                        <label className="checkbox-label">
+                                            <input type="checkbox" id="rememberAccount" />
+                                            <span>Remember me</span>
+                                        </label>
+                                        <Link to="/forgot-password" className="forgot-link">
+                                            Forgot Password?
+                                        </Link>
+                                    </div>
+
+                                    <button
+                                        className="btn-primary customer-primary-btn"
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        title="Sign In"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Verifying...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-box-arrow-in-right"></i> Sign In
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
                             </div>
-
-                            <AuthShowcase />
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <StatusModal
-                isOpen={showSuccessModal}
-                type="success"
-                title="USER LOGIN SUCCESSFULLY!"
-                message="Welcome back to TradeFlow. Click continue to proceed to your dashboard."
-                buttonText="Okay, Continue"
-                onConfirm={() => navigate("/dashboard")}
-            />
-        </>
+            </div>
+        </section>
     );
 }

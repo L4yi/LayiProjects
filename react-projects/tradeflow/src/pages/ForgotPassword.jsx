@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { InputField, StatusModal, Button, BrandLogo } from "../components/common";
 import AuthShowcase from "../components/AuthShowcase";
 
 export default function ForgotPassword() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const isCustomerPortal = new URLSearchParams(location.search).get("portal") === "customer";
-    const signInLink = isCustomerPortal ? "/customer/signin" : "/signin";
+    const signInLink = "/signin";
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [fieldError, setFieldError] = useState("");
