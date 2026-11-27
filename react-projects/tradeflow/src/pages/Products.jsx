@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProductSlideDrawer } from "../components/drawers";
-import { PageHeader, TableCard, StatusModal, LoadingSpinner } from "../components/common";
+import { PageHeader, TableCard, StatusModal, LoadingSpinner, ImageWithFallback } from "../components/common";
 import productService from "../services/productService";
 import categoryService from "../services/categoryService";
 import setupService from "../services/setupService";

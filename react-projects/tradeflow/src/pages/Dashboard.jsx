@@ -34,45 +34,44 @@ export default function Dashboard() {
                     transactionService.fetchAllTransactions()
                 ]);
 
-                if (staffRes.status === "fulfilled" && staffRes.value?.success && Array.isArray(staffRes.value?.data)) {
-                    setStaffCount(staffRes.value.data.length);
-                }
+                const nextData = {
+                    staffCount: (staffRes.status === "fulfilled" && staffRes.value?.success && Array.isArray(staffRes.value?.data))
+                        ? staffRes.value.data.length
+                        : 0,
+                    categoryCount: (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data))
+                        ? catRes.value.data.length
+                        : 0,
+                    productCount: (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data))
+                        ? prodRes.value.data.length
+                        : 0,
+                    orderCount: (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value?.data))
+                        ? ordRes.value.data.length
+                        : 0,
+                    customerCount: (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value?.data))
+                        ? custRes.value.data.length
+                        : 0,
+                    topProducts: (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data))
+                        ? prodRes.value.data.map(p => ({
+                            id: p.product_id || p.productId,
+                            name: p.product_name || p.productName,
+                            code: p.product_id || p.productId,
+                            price: p.product_price || p.productPrice,
+                            img: p.image || null
+                        }))
+                        : [],
+                    recentTransactions: (txnRes.status === "fulfilled" && txnRes.value?.success && Array.isArray(txnRes.value?.data))
+                        ? txnRes.value.data.slice(0, 5).map(t => ({
+                            id: t.id,
+                            code: t.code,
+                            date: t.date || "Recent",
+                            status: t.status,
+                            statusDot: t.status === "Refunded" ? "red" : "green",
+                            amount: t.amount || 0
+                        }))
+                        : []
+                };
 
-                if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data)) {
-                    setCategoryCount(catRes.value.data.length);
-                }
-
-                if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value?.data)) {
-                    setProductCount(prodRes.value.data.length);
-                    const mapped = prodRes.value.data.map(p => ({
-                        id: p.product_id || p.productId,
-                        name: p.product_name || p.productName,
-                        code: p.product_id || p.productId,
-                        price: p.product_price || p.productPrice,
-                        img: p.image || null
-                    }));
-                    setTopProducts(mapped);
-                }
-
-                if (ordRes.status === "fulfilled" && ordRes.value?.success && Array.isArray(ordRes.value?.data)) {
-                    setOrderCount(ordRes.value.data.length);
-                }
-
-                if (txnRes.status === "fulfilled" && txnRes.value?.success && Array.isArray(txnRes.value?.data)) {
-                    const mappedTxns = txnRes.value.data.slice(0, 5).map(t => ({
-                        id: t.id,
-                        code: t.code,
-                        date: t.date || "Recent",
-                        status: t.status,
-                        statusDot: t.status === "Refunded" ? "red" : "green",
-                        amount: t.amount || 0
-                    }));
-                    setRecentTransactions(mappedTxns);
-                }
-
-                if (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value?.data)) {
-                    setCustomerCount(custRes.value.data.length);
-                }
+                setDashboardData(nextData);
             } catch (e) {
                 console.error("Dashboard metrics load error:", e);
             } finally {
@@ -98,7 +97,7 @@ export default function Dashboard() {
                         <MetricCard
                             title="Active Staff Members"
                             timeSubtitle="Staff Accounts"
-                            statNumber={String(staffCount)}
+                            statNumber={String(dashboardData.staffCount)}
                             statTag="Staff"
                             trend="Live"
                             trendUp={true}
@@ -110,7 +109,7 @@ export default function Dashboard() {
                         <MetricCard
                             title="Product Categories"
                             timeSubtitle="Configured taxonomies"
-                            statNumber={String(categoryCount)}
+                            statNumber={String(dashboardData.categoryCount)}
                             statTag="Categories"
                             trend="Live"
                             trendUp={true}
@@ -124,8 +123,8 @@ export default function Dashboard() {
                             timeSubtitle="Live products recorded"
                             isSplit={true}
                             splitData={{
-                                left: { label: "Products", value: String(productCount), sub: "In Catalog" },
-                                right: { label: "Orders", value: String(orderCount), isNegative: false }
+                                left: { label: "Products", value: String(dashboardData.productCount), sub: "In Catalog" },
+                                right: { label: "Orders", value: String(dashboardData.orderCount), isNegative: false }
                             }}
                             detailsLink="/products"
                         />

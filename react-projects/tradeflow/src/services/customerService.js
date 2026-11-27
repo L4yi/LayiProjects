@@ -450,11 +450,13 @@ export const customerService = {
 
     // Fetch all categories for customer storefront
     async fetchAllCategories() {
+        const { default: categoryService } = await import("./categoryService.js");
         return categoryService.fetchAllCategories();
     },
 
     // Fetch all products for customer storefront
     async fetchAllProducts() {
+        const { default: productService } = await import("./productService.js");
         return productService.fetchAllProducts();
     },
 
@@ -973,6 +975,7 @@ export const customerService = {
 
     // 7. Customer Orders History
     async fetchCustomerOrders(customerId, statusId = null) {
+        const { default: orderService } = await import("./orderService.js");
         return orderService.fetchCustomerOrders(customerId, statusId);
     },
 

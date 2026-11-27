@@ -25,6 +25,11 @@ export default function CustomerCategories() {
                     : [];
 
                 if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value?.data) && catRes.value.data.length > 0) {
+                    const productCountByCat = new Map();
+                    for (const p of rawProducts) {
+                        const cId = p.categories_id || p.categoryId || p.category_id;
+                        if (cId) productCountByCat.set(cId, (productCountByCat.get(cId) || 0) + 1);
+                    }
                     const mapped = catRes.value.data.map((cat) => {
                         const catId = cat.categories_id || cat.categoryId || cat.id;
                         const catName = cat.categories_name || cat.category_name || cat.name || "Category";
